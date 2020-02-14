@@ -44,11 +44,12 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import m5
+import sys
 
 import _m5.stats
 from m5.objects import Root
 from m5.params import isNullPointer
-from m5.util import attrdict, fatal
+from m5.util import attrdict, fatal, mcpat
 
 # Stat exports
 from _m5.stats import schedStatEvent as schedEvent
@@ -382,6 +383,9 @@ def dump(root=None):
             output.begin()
             _dump_to_visitor(output, root=root)
             output.end()
+
+    mcpat.run()
+
 
 def reset():
     '''Reset all statistics to the base state'''

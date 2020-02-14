@@ -153,6 +153,11 @@ def parse_options():
     option("--remote-gdb-port", type='int', default=7000,
         help="Remote gdb base port (set to 0 to disable listening)")
 
+    # Statistics options
+    group("McPat Options")
+    option("--mcpat", type='str', default="",
+        help="Set the path to mcpat [Default: %default]")
+
     # Help options
     group("Help Options")
     option("--list-sim-objects", action='store_true', default=False,
