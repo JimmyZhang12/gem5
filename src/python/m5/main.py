@@ -155,8 +155,14 @@ def parse_options():
 
     # Statistics options
     group("McPat Options")
-    option("--mcpat", type='str', default="",
-        help="Set the path to mcpat [Default: %default]")
+    option("--mcpat_path", type='str', default="",
+        help="set the path to mcpat")
+    option("--mcpat_template", type='str', default="",
+        help="set the path to template file")
+    option("--mcpat_out", type='str', default="",
+        help="set the path for mcpat output")
+    option("--mcpat_testname", type='str', default="",
+        help="name for the output")
 
     # Help options
     group("Help Options")

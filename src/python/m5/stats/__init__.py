@@ -384,7 +384,7 @@ def dump(root=None):
             _dump_to_visitor(output, root=root)
             output.end()
 
-    mcpat.run()
+    mcpat.m5_to_mcpat()
 
 
 def reset():
