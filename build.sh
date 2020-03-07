@@ -1,3 +1,3 @@
 #!/bin/bash
 
-scons -j16 ./build/ARM/gem5.opt
+scons -j16 ./build/X86/gem5.opt

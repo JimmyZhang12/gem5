@@ -63,6 +63,8 @@ PySource('m5.util', 'm5/util/pybind.py')
 PySource('m5.util', 'm5/util/fdthelper.py')
 PySource('m5.util', 'm5/util/terminal_formatter.py')
 PySource('m5.util', 'm5/util/mcpat.py')
+#PySource('m5.util', 'm5/util/vsim.py')
+#PySource('m5.util', 'm5/util/dvfs.py')
 
 PySource('m5.internal', 'm5/internal/__init__.py')
 PySource('m5.internal', 'm5/internal/params.py')

@@ -337,12 +337,14 @@ void
 m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
 {
     DPRINTF(PseudoInst, "PseudoInst::m5checkpoint(%i, %i)\n", delay, period);
-    if (!tc->getCpuPtr()->params()->do_checkpoint_insts)
+    if (!tc->getCpuPtr()->params()->do_checkpoint_insts) {
         return;
+    }
 
     if (DistIface::readyToCkpt(delay, period)) {
         Tick when = curTick() + delay * SimClock::Int::ns;
         Tick repeat = period * SimClock::Int::ns;
+        DPRINTF(PseudoInst, "HERE\n");
         exitSimLoop("checkpoint", 0, when, repeat);
     }
 }
