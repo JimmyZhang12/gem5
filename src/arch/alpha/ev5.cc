@@ -63,25 +63,6 @@ getDTBPtr(T *tc)
 
 ////////////////////////////////////////////////////////////////////////
 //
-//  Machine dependent functions
-//
-void
-initCPU(ThreadContext *tc, int cpuId)
-{
-    initIPRs(tc, cpuId);
-
-    tc->setIntReg(16, cpuId);
-    tc->setIntReg(0, cpuId);
-
-    AlphaFault *reset = new ResetFault;
-
-    tc->pcState(tc->readMiscRegNoEffect(IPR_PAL_BASE) + reset->vect());
-
-    delete reset;
-}
-
-////////////////////////////////////////////////////////////////////////
-//
 //
 //
 void

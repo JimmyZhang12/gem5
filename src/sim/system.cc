@@ -349,8 +349,6 @@ void
 System::initState()
 {
     if (FullSystem) {
-        for (int i = 0; i < threadContexts.size(); i++)
-            TheISA::startupCPU(threadContexts[i], i);
         // Moved from the constructor to here since it relies on the
         // address map being resolved in the interconnect
         /**
@@ -434,8 +432,7 @@ System::allocPhysPages(int npages)
 
     Addr next_return_addr = pagePtr << PageShift;
 
-    AddrRange m5opRange(0xffff0000, 0x100000000);
-    if (m5opRange.contains(next_return_addr)) {
+    if (_m5opRange.contains(next_return_addr)) {
         warn("Reached m5ops MMIO region\n");
         return_addr = 0xffffffff;
         pagePtr = 0xffffffff >> PageShift;
