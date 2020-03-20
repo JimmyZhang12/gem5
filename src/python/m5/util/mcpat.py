@@ -272,6 +272,45 @@ def replace(xml_line, stats, config):
     return "".join(split_line)
   return xml_line
 
+def dump():
+  ''' Dumps the tree data to csv '''
+  from m5 import options
+  global mcpat_trees
+
+  def calc_total_power(data):
+    # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
+    # Gating
+    return float(data[0]) + float(data[7]) + float(data[5])
+
+  def calc_req(power, voltage):
+    return voltage*voltage/power
+
+  mcpat_output_path = os.path.join(options.mcpat_out,
+                                   options.mcpat_testname)
+  testname = options.mcpat_testname
+  sfile = os.path.join(mcpat_output_path, testname+".csv")
+  with open(sfile, "w") as csv:
+    i = 0
+    for epoch in mcpat_trees:
+      data_line = []
+      header = []
+      for key, value in epoch.find("Processor").data.items():
+        header.append(key)
+        data_line.append(value.split(" ")[0])
+
+      # Calculate Total Power:
+      power = calc_total_power(data_line)
+      data = []
+      #data.append(str(power))
+      #header.append("Total Power")
+      req = calc_req(power, 1.0)
+      data.append(str(i*float(cycles_per_epoch)/float(freq)))
+      data.append(str(req))
+      #header.append("Req")
+      csv.write(",".join(data)+"\n")
+      #print(",".join(data))
+      i+=1
+
 def m5_to_mcpat():
   from m5 import options
 

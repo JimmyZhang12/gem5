@@ -44,6 +44,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import m5
+import math
 import sys
 
 import _m5.stats
@@ -354,12 +355,15 @@ def _dump_to_visitor(visitor, root=None):
             visitor.endGroup()
 
 lastDump = 0
+numDump = 0
 
 def dump(root=None):
     '''Dump all statistics data to the registered outputs'''
+    from m5 import options
 
     now = m5.curTick()
     global lastDump
+    global numDump
     assert lastDump <= now
     new_dump = lastDump != now
     lastDump = now
@@ -369,22 +373,31 @@ def dump(root=None):
     if not new_dump and root is None:
         return
 
-    # Only prepare stats the first time we dump them in the same tick.
-    if new_dump:
-        _m5.stats.processDumpQueue()
-        # Notify new-style stats group that we are about to dump stats.
-        sim_root = Root.getInstance()
-        if sim_root:
-            sim_root.preDumpStats();
-        prepare()
+    if(now >= options.power_profile_start and
+       now < options.power_profile_start+options.power_profile_duration):
+        numDump += 1
+        # Only prepare stats the first time we dump them in the same tick.
+        if new_dump:
+            _m5.stats.processDumpQueue()
+            # Notify new-style stats group that we are about to dump stats.
+            sim_root = Root.getInstance()
+            if sim_root:
+                sim_root.preDumpStats();
+            prepare()
 
-    for output in outputList:
-        if output.valid():
-            output.begin()
-            _dump_to_visitor(output, root=root)
-            output.end()
+        for output in outputList:
+            if output.valid():
+                output.begin()
+                _dump_to_visitor(output, root=root)
+                output.end()
 
-    #mcpat.m5_to_mcpat()
+        mcpat.m5_to_mcpat()
+        max = math.floor(options.power_profile_duration/
+                         options.power_profile_interval)
+        if(numDump == max):
+            mcpat.dump()
+            print("Ending after "+str(numDump)+" datapoints")
+            sys.exit()
 
 
 def reset():

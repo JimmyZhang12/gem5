@@ -153,8 +153,8 @@ def parse_options():
     option("--remote-gdb-port", type='int', default=7000,
         help="Remote gdb base port (set to 0 to disable listening)")
 
-    # Statistics options
-    group("McPat Options")
+    # statistics options
+    group("mcpat options")
     option("--mcpat_path", type='str', default="",
         help="set the path to mcpat")
     option("--mcpat_template", type='str', default="",
@@ -163,6 +163,15 @@ def parse_options():
         help="set the path for mcpat output")
     option("--mcpat_testname", type='str', default="",
         help="name for the output")
+
+    # statistics options
+    group("power profile options")
+    option("--power_profile_start", type='int', default=100000000,
+        help="Begin profiling at cycle")
+    option("--power_profile_duration", type='int', default=100000,
+        help="End profiling after X cycles or terminating")
+    option("--power_profile_interval", type="int", default=1000,
+        help="Interval for dumping stats in cycles")
 
     # Help options
     group("Help Options")

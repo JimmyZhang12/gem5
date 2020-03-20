@@ -406,6 +406,9 @@ def addSEOptions(parser):
                            "Usage: gem5.opt [...] --redirects /dir1=/path/"
                            "to/host/dir1 --redirects /dir2=/path/to/host/dir2")
 
+    parser.add_option("--power_profile_interval", type="int", default=1000,
+                      help="Interval for dumping stats in cycles")
+
 
 
 def addFSOptions(parser):

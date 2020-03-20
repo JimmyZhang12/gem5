@@ -278,7 +278,7 @@ else:
     MemConfig.config_mem(options, system)
     config_filesystem(system, options)
 
-m5.stats.periodicStatDump(50000000)
+m5.stats.periodicStatDump(options.power_profile_interval)
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)
