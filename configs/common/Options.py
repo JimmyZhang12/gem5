@@ -123,6 +123,7 @@ def addNoISAOptions(parser):
                       help="use external port for SystemC TLM cosimulation")
     parser.add_option("--caches", action="store_true")
     parser.add_option("--l2cache", action="store_true")
+    parser.add_option("--l3cache", action="store_true")
     parser.add_option("--num-dirs", type="int", default=1)
     parser.add_option("--num-l2caches", type="int", default=1)
     parser.add_option("--num-l3caches", type="int", default=1)
@@ -207,6 +208,12 @@ def addCommonOptions(parser):
                       choices=ObjectList.hwp_list.get_names(),
                       help = """
                       type of hardware prefetcher to use with the L2 cache.
+                      (if not set, use the default prefetcher of
+                      the selected cache)""")
+    parser.add_option("--l3-hwp-type", type="choice", default=None,
+                      choices=ObjectList.hwp_list.get_names(),
+                      help = """
+                      type of hardware prefetcher to use with the L3 cache.
                       (if not set, use the default prefetcher of
                       the selected cache)""")
     parser.add_option("--checker", action="store_true");
@@ -406,9 +413,8 @@ def addSEOptions(parser):
                            "Usage: gem5.opt [...] --redirects /dir1=/path/"
                            "to/host/dir1 --redirects /dir2=/path/to/host/dir2")
 
-    parser.add_option("--power_profile_interval", type="int", default=1000,
+    parser.add_option("--power_profile_interval", type="int", default=0,
                       help="Interval for dumping stats in cycles")
-
 
 
 def addFSOptions(parser):

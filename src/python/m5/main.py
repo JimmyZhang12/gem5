@@ -155,6 +155,8 @@ def parse_options():
 
     # statistics options
     group("mcpat options")
+    option("--mcpat_disable", action="store_true", default=False,
+        help="If set, then mcpat and power profiling is disabled")
     option("--mcpat_path", type='str', default="",
         help="set the path to mcpat")
     option("--mcpat_template", type='str', default="",
