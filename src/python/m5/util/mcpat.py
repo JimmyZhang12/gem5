@@ -95,6 +95,47 @@ class Epoch(object):
 
     return _find(path, self.dev_tree)
 
+  def print_csv_line_data(self, file):
+    devices = []
+    def _traverse(subtree, devices):
+      devices.append(subtree.device)
+      """ Base Case """
+      if subtree == None:
+        return
+      """ Recursive Case """
+      for i in subtree.children:
+        _traverse(i, devices)
+      return
+    _traverse(self.dev_tree, devices)
+    for i in devices:
+      for key,value in i.data.items():
+        file.write(str(value)+",")
+    file.write("\n")
+    return
+
+  def print_csv_line_header(self, file):
+    devices = []
+    def _traverse(subtree, devices):
+      devices.append(subtree.device)
+
+      """ Base Case """
+      if subtree == None:
+        return
+
+      """ Recursive Case """
+      for i in subtree.children:
+        _traverse(i, devices)
+      return
+
+    _traverse(self.dev_tree, devices)
+
+    for i in devices:
+      file.write(i.name+" ")
+      for key,value in i.data.items():
+        file.write(str(key)+",")
+    file.write("\n")
+    return
+
 def parse_output(output_file):
   def strip_header(lines):
     start = False
@@ -253,21 +294,37 @@ def print_config(config):
 # replace
 # Replaces the REPLACE{...} with the appropriate value from the dictionary
 # Returns a string with the substituted lines
-def replace(xml_line, stats, config):
+stat_trace = []
+def replace(xml_line, stats, config, used_stats):
   if('REPLACE{' in xml_line):
     split_line = re.split('REPLACE{|}', xml_line)
     #print(split_line)
     keys = [x.strip().split(" ") for x in re.split(',', split_line[1])]
     for i in range(len(keys)):
       for j in range(len(keys[i])):
+        if "stats" in keys[i][j]:
+          if keys[i][j] in stats:
+            used_stats[keys[i][j]] = stats[keys[i][j]][1]
+          else:
+            used_stats[keys[i][j]] = "0"
         if keys[i][j] in stats:
-          keys[i][j] = stats[keys[i][j]][1]
+          keys[i][j] = str(float(stats[keys[i][j]][1]))
         elif keys[i][j] in config:
-          keys[i][j] = config[keys[i][j]]
+          keys[i][j] = str(float(config[keys[i][j]]))
         elif "stats" in keys[i][j] or "config" in keys[i][j]:
           keys[i][j] = "0"
-    #print(keys)
+
     split_line[1] = ",".join([" ".join(y) for y in keys])
+    # Evaluate
+    expr = split_line[1].split(",")
+    for i in range(len(expr)):
+      try:
+        expr[i] = str(int(max(math.ceil(eval(expr[i])),0)))
+      except:
+        expr[i] = "0"
+    split_line[1] = ",".join(expr)
+
+    #print(keys)
     #print("".join(split_line))
     return "".join(split_line)
   return xml_line
@@ -276,6 +333,7 @@ def dump():
   ''' Dumps the tree data to csv '''
   from m5 import options
   global mcpat_trees
+  global stat_trace
 
   def calc_total_power(data):
     # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
@@ -288,10 +346,24 @@ def dump():
   mcpat_output_path = os.path.join(options.mcpat_out,
                                    options.mcpat_testname)
   testname = options.mcpat_testname
+  cfile = os.path.join(mcpat_output_path, testname+"_all.csv")
+  gfile = os.path.join(mcpat_output_path, testname+"_g5.csv")
   sfile = os.path.join(mcpat_output_path, testname+".csv")
-  with open(sfile, "w") as csv:
+  with open(sfile, "w") as csv, \
+       open(cfile, "w") as full_dump, \
+       open(gfile, "w") as m5_csv:
     i = 0
+    # Print the header line:
+    mcpat_trees[0].print_csv_line_header(full_dump)
+    # Print the header line:
+    for key,value in sorted(stat_trace[0].items()):
+      m5_csv.write(key+",")
+    m5_csv.write("\n")
     for epoch in mcpat_trees:
+      epoch.print_csv_line_data(full_dump)
+      for key,value in sorted(stat_trace[i].items()):
+        m5_csv.write(value+",")
+      m5_csv.write("\n")
       data_line = []
       header = []
       for key, value in epoch.find("Processor").data.items():
@@ -304,18 +376,21 @@ def dump():
       #data.append(str(power))
       #header.append("Total Power")
       req = calc_req(power, 1.0)
-      data.append(str(i*float(cycles_per_epoch)/float(freq)))
+      data.append(str(i*float(options.power_profile_interval)))
       data.append(str(req))
+      data.append(str(power))
       #header.append("Req")
       csv.write(",".join(data)+"\n")
       #print(",".join(data))
       i+=1
+
 
 def m5_to_mcpat():
   from m5 import options
 
   global iter
   global mcpat_trees
+  global stat_trace
 
   iter += 1
   m5_stats_file = os.path.join(options.outdir, options.stats_file)
@@ -338,8 +413,11 @@ def m5_to_mcpat():
   with open(t_f, "r") as tf, open(i_f, "w") as inf:
     in_xml = tf.readlines()
     out_xml = []
+    s = {}
     for line in in_xml:
-      out_xml.append(replace(line, epoch, config))
+      out_xml.append(replace(line, epoch, config, s))
+    # To trace the stats reported
+    stat_trace.append(s)
     inf.writelines(out_xml)
   run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees.append(parse_output(o_f))
