@@ -50,7 +50,9 @@ import sys
 import _m5.stats
 from m5.objects import Root
 from m5.params import isNullPointer
-from m5.util import attrdict, fatal, mcpat
+from m5.util import attrdict, fatal
+import m5.mcpat as mcpat
+import m5.vpi_shm as vpi_shm
 
 # Stat exports
 from _m5.stats import schedStatEvent as schedEvent
@@ -391,7 +393,7 @@ def dump(root=None):
                     _dump_to_visitor(output, root=root)
                     output.end()
 
-            mcpat.m5_to_mcpat()
+            mcpat.m5_to_mcpat(1.0)
             max = math.floor(options.power_profile_duration/
                              options.power_profile_interval)
             if(numDump == max):

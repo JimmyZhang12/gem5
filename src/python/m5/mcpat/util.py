@@ -9,132 +9,9 @@ from m5.SimObject import SimObject
 from m5.util import fatal
 from m5.params import *
 
-iter = 0
-mcpat_trees = []
-
-class Device(object):
-  def __init__(self, name="", data={}, depth=0):
-    self.name = name
-    self.data = data
-    self.depth = depth
-  def __str__(self):
-    return "  "*self.depth+self.name+" "+str(self.data)
-  def __repr__(self):
-    return "  "*self.depth+self.name+" "+str(self.data)
-
-class Node(object):
-  def __init__(self, children=[], device=None):
-    self.children = children
-    self.device = device
-  def __str__(self):
-    modules = []
-    modules.append(str(self.device))
-    for child in self.children:
-      modules.append(str(child))
-    return "\n".join(modules)
-  def __repr__(self):
-    modules = []
-    modules.append(str(self.device))
-    for child in self.children:
-      modules.append(str(child))
-    return "\n".join(modules)
-
-class Epoch(object):
-  def __init__(self, device_list = []):
-    if len(device_list) != 0:
-      self.dev_tree = self.build(device_list)
-    else:
-      self.dev_tree = None
-  def __str__(self):
-    return str(self.dev_tree)
-  def __repr__(self):
-    return str(self.dev_tree)
-
-  def build(self, devices):
-    """ Base Cases """
-    if len(devices) == 0:
-      return None
-    if len(devices) == 1 and isinstance(devices[0], Device):
-      return Node([], devices[0])
-
-    """ Recursive Case """
-    root = devices[0]
-    children = []
-    sublist = []
-    for dev in devices[1:]:
-      if dev.depth == root.depth + 1:
-        node = self.build(sublist)
-        if node != None:
-          children.append(node)
-          #print(node)
-        sublist = []
-      sublist.append(dev)
-    node = self.build(sublist)
-    if node != None:
-      children.append(node)
-
-    """ Post-Order Build Tree: """
-    return Node(children, root)
-
-  def find(self, path):
-    def _find(path, subtree):
-      #print(path, subtree.device.name)
-
-      """ Base Case """
-      if path.split(":")[0] == subtree.device.name \
-        and len(path.split(":")) == 1:
-        return subtree.device
-      elif len(path.split(":")) == 1:
-        return None
-
-      """ Recursive Case """
-      for i in subtree.children:
-        if i.device.name == path.split(":")[1]:
-          return _find(":".join(path.split(":")[1:]), i)
-      return None
-
-    return _find(path, self.dev_tree)
-
-  def print_csv_line_data(self, file):
-    devices = []
-    def _traverse(subtree, devices):
-      devices.append(subtree.device)
-      """ Base Case """
-      if subtree == None:
-        return
-      """ Recursive Case """
-      for i in subtree.children:
-        _traverse(i, devices)
-      return
-    _traverse(self.dev_tree, devices)
-    for i in devices:
-      for key,value in i.data.items():
-        file.write(str(value)+",")
-    file.write("\n")
-    return
-
-  def print_csv_line_header(self, file):
-    devices = []
-    def _traverse(subtree, devices):
-      devices.append(subtree.device)
-
-      """ Base Case """
-      if subtree == None:
-        return
-
-      """ Recursive Case """
-      for i in subtree.children:
-        _traverse(i, devices)
-      return
-
-    _traverse(self.dev_tree, devices)
-
-    for i in devices:
-      file.write(i.name+" ")
-      for key,value in i.data.items():
-        file.write(str(key)+",")
-    file.write("\n")
-    return
+from node import Node
+from device import Device
+from epoch import Epoch
 
 def parse_output(output_file):
   def strip_header(lines):
@@ -294,7 +171,6 @@ def print_config(config):
 # replace
 # Replaces the REPLACE{...} with the appropriate value from the dictionary
 # Returns a string with the substituted lines
-stat_trace = []
 def replace(xml_line, stats, config, used_stats):
   if('REPLACE{' in xml_line):
     split_line = re.split('REPLACE{|}', xml_line)
@@ -329,12 +205,9 @@ def replace(xml_line, stats, config, used_stats):
     return "".join(split_line)
   return xml_line
 
-def dump():
+def dump_stats(mcpat_trees, stat_trace):
   ''' Dumps the tree data to csv '''
   from m5 import options
-  global mcpat_trees
-  global stat_trace
-
   def calc_total_power(data):
     # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
     # Gating
@@ -383,50 +256,3 @@ def dump():
       csv.write(",".join(data)+"\n")
       #print(",".join(data))
       i+=1
-
-
-def m5_to_mcpat():
-  from m5 import options
-
-  global iter
-  global mcpat_trees
-  global stat_trace
-
-  iter += 1
-  m5_stats_file = os.path.join(options.outdir, options.stats_file)
-  m5_config_file = os.path.join(options.outdir, options.dump_config)
-  mcpat_path = options.mcpat_path
-  mcpat_template = options.mcpat_template
-  mcpat_output_path = os.path.join(options.mcpat_out, options.mcpat_testname)
-  testname = options.mcpat_testname
-
-  epoch = parse_stats(m5_stats_file)[-1]
-  config = parse_config(m5_config_file)
-
-  if not os.path.isdir(mcpat_output_path):
-    os.mkdir(mcpat_output_path)
-
-  t_f = options.mcpat_template
-  i_f = os.path.join(mcpat_output_path,"mp_arm_"+str(iter)+".xml")
-  o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
-  e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
-  with open(t_f, "r") as tf, open(i_f, "w") as inf:
-    in_xml = tf.readlines()
-    out_xml = []
-    s = {}
-    for line in in_xml:
-      out_xml.append(replace(line, epoch, config, s))
-    # To trace the stats reported
-    stat_trace.append(s)
-    inf.writelines(out_xml)
-  run_mcpat(i_f, "5", "1", o_f, e_f)
-  mcpat_trees.append(parse_output(o_f))
-  print(mcpat_trees[-1].find("Processor").data)
-
-  #sfile = os.path.join(mcpat_output_path, testname+".pickle")
-
-  #with open(sfile, "w") as mpe:
-  #  pickle.dump(mcpat_trees, mpe)
-  #with open(sfile, "r") as mpe:
-  #  mcpat_trees = pickle.load(mpe)
-  #plot(mcpat_trees, testname, mcpat_output_path)
