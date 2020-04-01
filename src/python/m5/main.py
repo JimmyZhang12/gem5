@@ -167,6 +167,15 @@ def parse_options():
         help="name for the output")
 
     # statistics options
+    group("ncverilog options")
+    option("--ncverilog_disable", action="store_true", default=False,
+        help="If set, ncverilog is disabled")
+    option("--ncverilog_path", type='str', default="",
+        help="set the path to ncverilog project, dockerfile, and runscripts")
+    option("--ncverilog_step", type="int", default=250,
+        help="Synchonization with PSU: num_cycles*clk_period")
+
+    # statistics options
     group("power profile options")
     option("--power_profile_start", type='int', default=100000000,
         help="Begin profiling at cycle")

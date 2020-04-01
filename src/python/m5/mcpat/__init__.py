@@ -18,7 +18,7 @@ iter = 0
 mcpat_trees = []
 stat_trace=[]
 
-def m5_to_mcpat(voltage):
+def m5_to_mcpat(voltage, temperature):
   from m5 import options
 
   global iter
@@ -48,7 +48,7 @@ def m5_to_mcpat(voltage):
     out_xml = []
     s = {}
     for line in in_xml:
-      out_xml.append(replace(line, epoch, config, s))
+      out_xml.append(replace(line, epoch, config, voltage, temperature, s))
     # To trace the stats reported
     stat_trace.append(s)
     inf.writelines(out_xml)
@@ -58,3 +58,20 @@ def m5_to_mcpat(voltage):
 
 def dump():
   dump_stats(mcpat_trees, stat_trace)
+
+def get_last_p(voltage):
+  global mcpat_trees
+  data_line = []
+  for key, value in mcpat_trees[-1].find("Processor").data.items():
+    data_line.append(value.split(" ")[0])
+  # Calculate Total Power:
+  return calc_total_power(data_line)
+
+def get_last_r(voltage):
+  global mcpat_trees
+  data_line = []
+  for key, value in mcpat_trees[-1].find("Processor").data.items():
+    data_line.append(value.split(" ")[0])
+  # Calculate Total Power:
+  power = calc_total_power(data_line)
+  return calc_req(power, voltage)

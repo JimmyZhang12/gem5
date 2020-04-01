@@ -358,6 +358,8 @@ def _dump_to_visitor(visitor, root=None):
 
 lastDump = 0
 numDump = 0
+init_ncsim = True
+lastVoltage = 0
 
 def dump(root=None):
     '''Dump all statistics data to the registered outputs'''
@@ -366,6 +368,8 @@ def dump(root=None):
     now = m5.curTick()
     global lastDump
     global numDump
+    global init_ncsim
+    global lastVoltage
     assert lastDump <= now
     new_dump = lastDump != now
     lastDump = now
@@ -393,13 +397,46 @@ def dump(root=None):
                     _dump_to_visitor(output, root=root)
                     output.end()
 
-            mcpat.m5_to_mcpat(1.0)
+            # Initialilze the Verilog Sim:
+            power = 0
+            resistance = 0
+            voltage = 0
+            if(not options.ncverilog_disable):
+                if init_ncsim:
+                    # Run an Initial McPAT stats run with 1.0v
+                    mcpat.m5_to_mcpat(1.0, 380.0)
+                    resistance = mcpat.get_last_r(1.0)
+                    power = mcpat.get_last_p(1.0)
+                    # Run Init and warmup PowerSupply
+                    vpi_shm.initialize(options.mcpat_testname, \
+                                 options.ncverilog_step)
+                    for i in range(500): # warmup
+                        vpi_shm.set_driver_signals(1.0, \
+                                                resistance, 0)
+                        lastVoltage = vpi_shm.get_voltage()
+                    init_ncsim = False
+                else:
+                    mcpat.m5_to_mcpat(lastVoltage, 380.0)
+                    resistance = mcpat.get_last_r(lastVoltage)
+                    power = mcpat.get_last_p(lastVoltage)
+                    vpi_shm.set_driver_signals(1.0, \
+                                            resistance, 0)
+                    lastVoltage = vpi_shm.get_voltage()
+            else:
+                mcpat.m5_to_mcpat(1.0, 380.0)
+
             max = math.floor(options.power_profile_duration/
                              options.power_profile_interval)
             if(numDump == max):
                 mcpat.dump()
                 print("Ending after "+str(numDump)+
                       " datapoints")
+                # Clean up simulation:
+                if(not options.ncverilog_disable):
+                    vpi_shm.set_driver_signals(1.0, \
+                                          resistance, 1)
+                    lastVoltage = vpi_shm.get_voltage()
+
                 sys.exit()
     else:
         if new_dump:

@@ -171,7 +171,7 @@ def print_config(config):
 # replace
 # Replaces the REPLACE{...} with the appropriate value from the dictionary
 # Returns a string with the substituted lines
-def replace(xml_line, stats, config, used_stats):
+def replace(xml_line, stats, config, voltage, temperature, used_stats):
   if('REPLACE{' in xml_line):
     split_line = re.split('REPLACE{|}', xml_line)
     #print(split_line)
@@ -187,6 +187,10 @@ def replace(xml_line, stats, config, used_stats):
           keys[i][j] = str(float(stats[keys[i][j]][1]))
         elif keys[i][j] in config:
           keys[i][j] = str(float(config[keys[i][j]]))
+        elif "temperature" in keys[i][j]:
+          keys[i][j] = str(temperature)
+        elif "voltage" in keys[i][j]:
+          keys[i][j] = str(voltage)
         elif "stats" in keys[i][j] or "config" in keys[i][j]:
           keys[i][j] = "0"
 
@@ -205,16 +209,17 @@ def replace(xml_line, stats, config, used_stats):
     return "".join(split_line)
   return xml_line
 
+def calc_total_power(data):
+  # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
+  # Gating
+  return float(data[0]) + float(data[7]) + float(data[5])
+
+def calc_req(power, voltage):
+  return voltage*voltage/power
+
 def dump_stats(mcpat_trees, stat_trace):
   ''' Dumps the tree data to csv '''
   from m5 import options
-  def calc_total_power(data):
-    # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
-    # Gating
-    return float(data[0]) + float(data[7]) + float(data[5])
-
-  def calc_req(power, voltage):
-    return voltage*voltage/power
 
   mcpat_output_path = os.path.join(options.mcpat_out,
                                    options.mcpat_testname)

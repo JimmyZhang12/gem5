@@ -1,5 +1,5 @@
-import m5
 import math
+import os
 import sys
 import re
 import subprocess
@@ -12,6 +12,7 @@ import _m5.vpi_shm as vpi
 thread = None
 
 def initialize(name, step):
+  from m5 import options
   global thread
   """ This function will launch the docker container for the verilog
   simulation. """
@@ -28,15 +29,15 @@ def initialize(name, step):
 
   def verilog_thread(name, step):
     """ This is the thread function for executing the verilog sim """
-    run_command(["./run_cadence.sh", name, str(step)])
-
+    run_command([os.path.join(options.ncverilog_path,"run_cadence.sh"), \
+                name, str(step)])
 
   thread = Thread(target=verilog_thread, args=[name, step])
   thread.setDaemon(True)
   thread.start()
 
   # Wait for the container to launch and the sim to run
-  time.sleep(10)
+  sleep(10)
   vpi.create_shm(0, name)
   return
 

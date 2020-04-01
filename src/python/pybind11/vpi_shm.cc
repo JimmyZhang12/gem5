@@ -130,9 +130,9 @@ set_driver_signals(double v_set, double r, uint32_t term)
         if (shm_ptr->pv.new_data == NO_NEW_DATA)
         {
             //printf("Sending V:%lf R:%lf\n", voltage_setpoint, resistance);
-            shm_ptr->pv.data.v_set = voltage_setpoint;
-            shm_ptr->pv.data.curr_r_load = resistance;
-            shm_ptr->pv.data.sim_over = terminate_sim;
+            shm_ptr->pv.data.v_set = v_set;
+            shm_ptr->pv.data.curr_r_load = r;
+            shm_ptr->pv.data.sim_over = term;
             shm_ptr->pv.new_data = NEW_DATA;
             sem_post(&shm_ptr->pv.sem);
             return;
