@@ -40,7 +40,7 @@ def m5_to_mcpat(voltage, temperature):
     os.mkdir(mcpat_output_path)
 
   t_f = options.mcpat_template
-  i_f = os.path.join(mcpat_output_path,"mp_arm_"+str(iter)+".xml")
+  i_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".xml")
   o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
   e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
   with open(t_f, "r") as tf, open(i_f, "w") as inf:

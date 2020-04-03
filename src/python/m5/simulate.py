@@ -166,7 +166,7 @@ def simulate(*args, **kwargs):
 
         # Python exit handlers happen in reverse order.
         # We want to dump stats last.
-        atexit.register(stats.dump)
+        atexit.register(stats.dump, None, True)
 
         # register our C++ exit callback function with Python
         atexit.register(_m5.core.doExitCleanup)

@@ -361,7 +361,7 @@ numDump = 0
 init_ncsim = True
 lastVoltage = 0
 
-def dump(root=None):
+def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
     from m5 import options
 
@@ -427,7 +427,7 @@ def dump(root=None):
 
             max = math.floor(options.power_profile_duration/
                              options.power_profile_interval)
-            if(numDump == max):
+            if(numDump == max or exit):
                 mcpat.dump()
                 print("Ending after "+str(numDump)+
                       " datapoints")

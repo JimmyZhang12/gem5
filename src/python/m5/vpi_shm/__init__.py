@@ -37,7 +37,7 @@ def initialize(name, step):
   thread.start()
 
   # Wait for the container to launch and the sim to run
-  sleep(10)
+  sleep(20)
   vpi.create_shm(0, name)
   return
 

@@ -7,6 +7,6 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get install -y gcc make python python-pip && \
     pip install --upgrade pip && \
-    pip install six scons 
+    pip install six scons pybind11 file_read_backwards
 
 WORKDIR /build/
