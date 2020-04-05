@@ -416,9 +416,9 @@ def dump(root=None, exit=False):
                         lastVoltage = vpi_shm.get_voltage()
                     init_ncsim = False
                 else:
-                    mcpat.m5_to_mcpat(lastVoltage, 380.0)
-                    resistance = mcpat.get_last_r(lastVoltage)
-                    power = mcpat.get_last_p(lastVoltage)
+                    mcpat.m5_to_mcpat(1.0, 380.0)
+                    resistance = mcpat.get_last_r(1.0)
+                    power = mcpat.get_last_p(1.0)
                     vpi_shm.set_driver_signals(1.0, \
                                             resistance, 0)
                     lastVoltage = vpi_shm.get_voltage()

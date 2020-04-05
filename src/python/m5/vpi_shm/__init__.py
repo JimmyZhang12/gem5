@@ -32,12 +32,16 @@ def initialize(name, step):
     run_command([os.path.join(options.ncverilog_path,"run_cadence.sh"), \
                 name, str(step)])
 
+  if os.path.exists(os.path.join("/dev/shm", name)):
+    os.remove(os.path.join("/dev/shm", name))
+
   thread = Thread(target=verilog_thread, args=[name, step])
   thread.setDaemon(True)
   thread.start()
 
   # Wait for the container to launch and the sim to run
-  sleep(20)
+  while not os.path.isfile(os.path.join("/dev/shm", name)):
+    sleep(1)
   vpi.create_shm(0, name)
   return
 
