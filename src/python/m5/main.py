@@ -183,6 +183,8 @@ def parse_options():
         help="End profiling after X cycles or terminating")
     option("--power_profile_interval", type="int", default=1000,
         help="Interval for dumping stats in cycles")
+    option("--system_period", type="int", default=0.5,
+        help="Clock period in ns, default 0.5")
 
     # Help options
     group("Help Options")

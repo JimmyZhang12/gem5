@@ -73,6 +73,13 @@ pythonReset()
     m.attr("reset")();
 }
 
+void
+pythonBeginProfile()
+{
+    py::module m = py::module::import("m5.stats");
+    m.attr("beginProfile")();
+}
+
 }
 
 void

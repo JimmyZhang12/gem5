@@ -4,6 +4,7 @@ import re
 import pickle
 import subprocess
 import math
+from file_read_backwards import FileReadBackwards
 from collections import defaultdict
 from m5.SimObject import SimObject
 from m5.util import fatal
@@ -112,14 +113,15 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
 def parse_stats(stat_file):
   epoch = []
   stats = {}
-  with open(stat_file, "r") as sf:
+  with FileReadBackwards(stat_file, encoding="utf-8") as sf:
     for line in sf:
       if line.strip() == "":
         continue
       elif "End Simulation Statistics" in line:
-        epoch.append(stats)
-      elif "Begin Simulation Statistics" in line:
         stats = {}
+      elif "Begin Simulation Statistics" in line:
+        epoch.append(stats)
+        return epoch
       else:
         stat = []
         sstr = re.sub('\s+', ' ', line).strip()
@@ -138,7 +140,7 @@ def parse_stats(stat_file):
           stat.append("single")
           stat.append(sstr.split(' ')[1])
         stats["stats."+sstr.split(' ')[0]] = stat
-  print("Read "+str(len(epoch))+" Epochs")
+  #print("Read "+str(len(epoch))+" Epochs")
   return epoch
 
 def print_stats(stats):
@@ -185,6 +187,8 @@ def replace(xml_line, stats, config, voltage, temperature, used_stats):
             used_stats[keys[i][j]] = "0"
         if keys[i][j] in stats:
           keys[i][j] = str(float(stats[keys[i][j]][1]))
+          if "nan" in keys[i][j] or "inf" in keys[i][j]:
+            keys[i][j] = "0"
         elif keys[i][j] in config:
           keys[i][j] = str(float(config[keys[i][j]]))
         elif "temperature" in keys[i][j]:

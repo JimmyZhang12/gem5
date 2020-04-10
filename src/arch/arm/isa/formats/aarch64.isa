@@ -3044,6 +3044,7 @@ namespace Aarch64
           case M5OP_DUMP_STATS: return new Dumpstats64(machInst);
           case M5OP_DUMP_RESET_STATS: return new Dumpresetstats64(machInst);
           case M5OP_CHECKPOINT: return new M5checkpoint64(machInst);
+          case M5OP_BEGIN_PROFILE: return new BeginProfile64(machInst);
           case M5OP_WRITE_FILE: return new M5writefile64(machInst);
           case M5OP_READ_FILE: return new M5readfile64(machInst);
           case M5OP_DEBUG_BREAK: return new M5break(machInst);

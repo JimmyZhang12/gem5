@@ -349,6 +349,16 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     }
 }
 
+void
+beginprofile(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "PseudoInst::beginprofile()\n");
+    if (!tc->getCpuPtr()->params()->do_statistics_insts)
+        return;
+
+    Stats::pythonBeginProfile();
+}
+
 uint64_t
 readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 {

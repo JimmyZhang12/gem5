@@ -65,6 +65,7 @@
 #define M5OP_DUMP_STATS         0x41
 #define M5OP_DUMP_RESET_STATS   0x42
 #define M5OP_CHECKPOINT         0x43
+#define M5OP_BEGIN_PROFILE      0x44
 #define M5OP_WRITE_FILE         0x4F
 #define M5OP_READ_FILE          0x50
 #define M5OP_DEBUG_BREAK        0x51
@@ -120,6 +121,7 @@
     M5OP(m5_dump_stats, M5OP_DUMP_STATS, 0);                    \
     M5OP(m5_dump_reset_stats, M5OP_DUMP_RESET_STATS, 0);        \
     M5OP(m5_checkpoint, M5OP_CHECKPOINT, 0);                    \
+    M5OP(m5_begin_profile, M5OP_BEGIN_PROFILE, 0);              \
     M5OP(m5_read_file, M5OP_READ_FILE, 0);                      \
     M5OP(m5_write_file, M5OP_WRITE_FILE, 0);                    \
     M5OP(m5_debug_break, M5OP_DEBUG_BREAK, 0);                  \

@@ -190,6 +190,9 @@
                     0x43: m5checkpoint({{
                         PseudoInst::m5checkpoint(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
+                    0x44: beginprofile({{
+                        PseudoInst::beginprofile(xc->tcBase());
+                    }}, IsNonSpeculative);
                     0x50: m5readfile({{
                         Rax = PseudoInst::readfile(
                             xc->tcBase(), Rdi, Rsi, Rdx);

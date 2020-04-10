@@ -1036,6 +1036,9 @@ decode OPCODE default Unknown::unknown() {
             0x43: m5checkpoint({{
                 PseudoInst::m5checkpoint(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
+            0x44: beginprofile({{
+                PseudoInst::beginprofile(xc->tcBase());
+            }}, IsNonSpeculative);
             0x50: m5readfile({{
                 R0 = PseudoInst::readfile(xc->tcBase(), R16, R17, R18);
             }}, IsNonSpeculative);

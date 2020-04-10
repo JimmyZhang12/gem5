@@ -360,6 +360,11 @@ lastDump = 0
 numDump = 0
 init_ncsim = True
 lastVoltage = 0
+runtime_begin_profile=False
+
+def beginProfile():
+    global runtime_begin_profile
+    runtime_begin_profile = True
 
 def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
@@ -370,6 +375,7 @@ def dump(root=None, exit=False):
     global numDump
     global init_ncsim
     global lastVoltage
+    global runtime_begin_profile
     assert lastDump <= now
     new_dump = lastDump != now
     lastDump = now
@@ -380,9 +386,11 @@ def dump(root=None, exit=False):
         return
 
     if(not options.mcpat_disable):
-        if(now >= options.power_profile_start and
-           now < options.power_profile_start+
-                 options.power_profile_duration):
+        if((options.power_profile_start != -1 and
+            now >= options.power_profile_start and
+            now < options.power_profile_start+
+                  options.power_profile_duration) or
+            runtime_begin_profile):
             numDump += 1
             if new_dump:
                 _m5.stats.processDumpQueue()
@@ -410,7 +418,7 @@ def dump(root=None, exit=False):
                     # Run Init and warmup PowerSupply
                     vpi_shm.initialize(options.mcpat_testname, \
                                  options.ncverilog_step)
-                    for i in range(500): # warmup
+                    for i in range(int(100000/options.ncverilog_step)):
                         vpi_shm.set_driver_signals(1.0, \
                                                 resistance, 0)
                         lastVoltage = vpi_shm.get_voltage()
@@ -429,6 +437,7 @@ def dump(root=None, exit=False):
                              options.power_profile_interval)
             if(numDump == max or exit):
                 mcpat.dump()
+                runtime_begin_profile = False
                 print("Ending after "+str(numDump)+
                       " datapoints")
                 # Clean up simulation:

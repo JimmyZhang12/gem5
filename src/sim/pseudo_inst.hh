@@ -116,6 +116,7 @@ void resetstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
 void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
+void beginprofile(ThreadContext *tc);
 void debugbreak(ThreadContext *tc);
 void switchcpu(ThreadContext *tc);
 void workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid);
@@ -196,6 +197,10 @@ pseudoInst(ThreadContext *tc, uint8_t func)
 
       case M5OP_CHECKPOINT:
         invokeSimcall<ABI>(tc, m5checkpoint);
+        break;
+
+      case M5OP_BEGIN_PROFILE:
+        invokeSimcall<ABI>(tc, beginprofile);
         break;
 
       case M5OP_WRITE_FILE:

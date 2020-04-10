@@ -57,6 +57,8 @@ Tick statFinalTick();
 
 void initSimStats();
 
+extern void pythonBeginProfile();
+
 /**
  * Update the events after resuming from a checkpoint. When resuming from a
  * checkpoint, curTick will be updated, and any already scheduled events can

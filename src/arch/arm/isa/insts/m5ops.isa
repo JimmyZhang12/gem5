@@ -411,6 +411,30 @@ let {{
     decoder_output += BasicConstructor.subst(m5checkpointIop)
     exec_output += PredOpExecute.subst(m5checkpointIop)
 
+    beginprofile_code = '''
+    PseudoInst::beginprofile(xc->tcBase());
+    '''
+
+    beginprofile_code64 = '''
+    PseudoInst::beginprofile(xc->tcBase());
+    '''
+
+    beginprofileIop = InstObjParams("beginprofile", "BeginProfile", "PredOp",
+                           { "code": beginprofile_code,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(beginprofileIop)
+    decoder_output += BasicConstructor.subst(beginprofileIop)
+    exec_output += PredOpExecute.subst(beginprofileIop)
+
+    beginprofileIop = InstObjParams("beginprofile", "BeginProfile64", "PredOp",
+                           { "code": beginprofile_code64,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(beginprofileIop)
+    decoder_output += BasicConstructor.subst(beginprofileIop)
+    exec_output += PredOpExecute.subst(beginprofileIop)
+
     m5readfileCode = '''
     int n = 4;
     uint64_t offset = getArgument(xc->tcBase(), n, sizeof(uint64_t), false);
