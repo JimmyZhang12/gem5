@@ -279,6 +279,11 @@ else:
     config_filesystem(system, options)
 
 m5.stats.periodicStatDump(options.power_profile_interval)
+
+coarseGrainedPowerPredClass = \
+    TestPowerPredictor(period=options.power_profile_interval)
+system.cgpp = coarseGrainedPowerPredClass
+
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

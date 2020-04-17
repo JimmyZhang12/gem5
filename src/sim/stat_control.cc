@@ -57,6 +57,7 @@
 #include "base/statistics.hh"
 #include "base/time.hh"
 #include "cpu/base.hh"
+#include "debug/StatEvent.hh"
 #include "sim/global_event.hh"
 
 using namespace std;
@@ -230,6 +231,7 @@ class StatEvent : public GlobalEvent
     virtual void
     process()
     {
+        DPRINTF(StatEvent, "StatEvent::process() curTick: %i\n", curTick());
         if (dump)
             Stats::dump();
 
