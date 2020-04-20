@@ -26,17 +26,19 @@
 #
 # Authors: Andrew Smith
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
+from m5.objects.ClockedObject import ClockedObject
+
 from m5.params import *
 from m5.proxy import *
 
-class PowerPredictor(SimObject):
+class PowerPredictor(ClockedObject):
     type = 'PowerPredictor'
     cxx_class = 'PPredUnit'
     cxx_header = "cpu/power/ppred_unit.hh"
     abstract = True
 
-    period = Param.Unsigned(250, "Number of cycles per epoch")
+    period = Param.Unsigned(250, "Number of cpu-cycles per epoch")
 
 class TestPowerPredictor(PowerPredictor):
     type = 'TestPowerPredictor'

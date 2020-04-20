@@ -51,11 +51,23 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/TestPowerPred.hh"
+#include "python/pybind11/vpi_shm.h"
 
 Test::Test(const Params *params)
     : PPredUnit(params)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
+}
+
+void
+Test::regStats()
+{
+    PPredUnit::regStats();
+
+    action_taken
+        .name(name() + ".action_taken")
+        .desc("Number of times the action is taken")
+        ;
 }
 
 int
@@ -67,6 +79,12 @@ Test::lookup(void)
 
 void
 Test::update(void)
+{
+    DPRINTF(TestPowerPred, "Test::update()\n");
+}
+
+void
+Test::action(int lookup_val)
 {
     DPRINTF(TestPowerPred, "Test::update()\n");
 }

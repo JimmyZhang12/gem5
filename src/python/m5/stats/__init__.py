@@ -435,6 +435,8 @@ def dump(root=None, exit=False):
 
             max = math.floor(options.power_profile_duration/
                              options.power_profile_interval)
+            if options.power_profile_duration == -1:
+                max = -1
             if(numDump == max or exit):
                 mcpat.dump()
                 runtime_begin_profile = False

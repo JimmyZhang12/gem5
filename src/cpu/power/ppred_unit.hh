@@ -52,10 +52,12 @@
 #include "cpu/static_inst.hh"
 #include "debug/PowerPred.hh"
 #include "params/PowerPredictor.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/clocked_object.hh"
 #include "sim/global_event.hh"
 #include "sim/sim_object.hh"
 
-class PPredUnit : public SimObject
+class PPredUnit : public ClockedObject
 {
   public:
     typedef PowerPredictorParams Params;
@@ -67,7 +69,7 @@ class PPredUnit : public SimObject
     /**
      * Registers statistics.
      */
-    void regStats() override;
+    virtual void regStats() override;
 
     /**
      * Makes a prediction on what the power will be in the next epoch.
@@ -97,16 +99,25 @@ class PPredUnit : public SimObject
      */
     virtual void update(void) = 0;
 
+    /**
+     * Based on the result of the lookup, perform an action. This
+     * action is specific to the type of predictor and the
+     * granularity of the control loop.
+     * @param lookup_val The value returned by the lookup method
+     */
+    virtual void action(int lookup_val) = 0;
+
     void dump();
 
     void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
 
     void updateEvents();
 
-  private:
+  protected:
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
 
+  private:
     GlobalEvent* powerEvent;
     int period;
 };

@@ -52,7 +52,7 @@
 #include "debug/PowerPred.hh"
 
 PPredUnit::PPredUnit(const Params *params)
-    : SimObject(params),
+    : ClockedObject(params),
     powerEvent(NULL),
     period(params->period)
 
@@ -95,7 +95,7 @@ PPredUnit::regStats()
 
     lookups
         .name(name() + ".lookups")
-        .desc("Number of BP lookups")
+        .desc("Number of PP lookups")
         ;
 }
 
@@ -103,7 +103,7 @@ void
 PPredUnit::predict(void)
 {
     DPRINTF(PowerPred, "PPredUnit::predict()\n");
-    lookup();
+    action(lookup());
     ++lookups;
 }
 

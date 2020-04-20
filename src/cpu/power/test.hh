@@ -66,6 +66,11 @@ class Test : public PPredUnit
     Test(const Params *p);
 
     /**
+     * Registers statistics.
+     */
+    void regStats() override;
+
+    /**
      * Performs a lookup on the power prediction module based on the current
      * PC.
      * @param tid The thread ID.
@@ -84,7 +89,14 @@ class Test : public PPredUnit
      */
     void update(void);
 
+    /**
+     * The action taken by the Test predictor is none.
+     * @param lookup_val The value returned by the lookup method
+     */
+    void action(int lookup_val);
+
   private:
+    Stats::Scalar action_taken;
 
 };
 

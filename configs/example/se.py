@@ -192,7 +192,7 @@ system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs
-system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
+system.cpu_clk_domain = SrcClockDomain(clock = options.sys_clock,
                                        voltage_domain =
                                        system.cpu_voltage_domain)
 
@@ -283,6 +283,7 @@ m5.stats.periodicStatDump(options.power_profile_interval)
 coarseGrainedPowerPredClass = \
     TestPowerPredictor(period=options.power_profile_interval)
 system.cgpp = coarseGrainedPowerPredClass
+system.cgpp.clk_domain = system.cpu_clk_domain
 
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
