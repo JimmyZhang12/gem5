@@ -45,6 +45,7 @@
 
 #include <deque>
 #include <string>
+#include <unordered_map>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -95,8 +96,19 @@ class Test : public PPredUnit
      */
     void action(int lookup_val);
 
+    uint64_t last_PC_address;
+
+  protected:
+    uint64_t num_entries;
+    uint8_t num_correlation_bits;
+    uint64_t pc_start;
+    uint64_t last_index;
+
+    std::unordered_map<uint64_t, uint8_t> pred_table;
+
   private:
     Stats::Scalar action_taken;
+    Stats::Scalar error;
 
 };
 

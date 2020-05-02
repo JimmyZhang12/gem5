@@ -240,6 +240,15 @@ for i in range(np):
         bpClass = ObjectList.bp_list.get(options.bp_type)
         system.cpu[i].branchPred = bpClass()
 
+    if options.power_pred_type:
+        powerPredClass = ObjectList.power_pred_list.get(\
+            options.power_pred_type)
+        system.cpu[i].powerPred = powerPredClass( \
+            period=options.power_profile_interval)
+        system.cpu[i].powerPred.clk_domain = \
+            system.cpu_clk_domain
+
+
     if options.indirect_bp_type:
         indirectBPClass = \
             ObjectList.indirect_bp_list.get(options.indirect_bp_type)
@@ -279,12 +288,13 @@ else:
     config_filesystem(system, options)
 
 m5.stats.periodicStatDump(options.power_profile_interval)
-
-coarseGrainedPowerPredClass = \
-    TestPowerPredictor(period=options.power_profile_interval)
-system.cgpp = coarseGrainedPowerPredClass
-system.cgpp.clk_domain = system.cpu_clk_domain
-
+if options.power_pred_type:
+    powerPredClass = ObjectList.power_pred_list.get(\
+        options.power_pred_type)
+    system.powerPred = powerPredClass( \
+        period=options.power_profile_interval)
+    system.powerPred.clk_domain = \
+        system.cpu_clk_domain
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

@@ -25,6 +25,9 @@ mapped* shm_ptr = NULL;
 
 char name_buff[256] = "";
 
+double prediction;
+bool new_prediction;
+
 void
 init_shm(mapped* p)
 {
@@ -32,11 +35,14 @@ init_shm(mapped* p)
     p->pv.new_data = NO_NEW_DATA;
     p->pv.data.v_set = 0;
     p->pv.data.curr_r_load = 0;
+    p->pv.data.prediction = 0;
+    p->pv.data.enable = 0;
     p->pv.data.sim_over = 0;
 
     sem_init(&p->vp.sem, 1, 1);
     p->vp.new_data = NO_NEW_DATA;
     p->vp.data.curr_v = 0;
+    p->vp.data.curr_i = 0;
     p->vp.data.sim_done = 0;
 }
 
@@ -111,7 +117,6 @@ get_voltage()
         if (shm_ptr->vp.new_data == NEW_DATA)
         {
             ret = shm_ptr->vp.data.curr_v;
-            shm_ptr->vp.new_data = NO_NEW_DATA;
             sem_post(&shm_ptr->vp.sem);
             return ret;
         }
@@ -119,6 +124,42 @@ get_voltage()
     }
     return ret;
 }
+
+double
+get_current()
+{
+    double ret = 0;
+    while (1)
+    {
+        sem_wait(&shm_ptr->vp.sem);
+        if (shm_ptr->vp.new_data == NEW_DATA)
+        {
+            ret = shm_ptr->vp.data.curr_i;
+            sem_post(&shm_ptr->vp.sem);
+            return ret;
+        }
+        sem_post(&shm_ptr->vp.sem);
+    }
+    return ret;
+}
+
+void
+ack_supply()
+{
+    while (1)
+    {
+        sem_wait(&shm_ptr->vp.sem);
+        if (shm_ptr->vp.new_data == NEW_DATA)
+        {
+            shm_ptr->vp.new_data = NO_NEW_DATA;
+            sem_post(&shm_ptr->vp.sem);
+            return;
+        }
+        sem_post(&shm_ptr->vp.sem);
+    }
+    return;
+}
+
 
 void
 set_driver_signals(double v_set, double r, uint32_t term)
@@ -129,6 +170,16 @@ set_driver_signals(double v_set, double r, uint32_t term)
         sem_wait(&shm_ptr->pv.sem);
         if (shm_ptr->pv.new_data == NO_NEW_DATA)
         {
+            if (new_prediction)
+            {
+                shm_ptr->pv.data.prediction = prediction;
+                shm_ptr->pv.data.enable = 1;
+                new_prediction = false;
+            }
+            else
+            {
+                shm_ptr->pv.data.enable = 0;
+            }
             //printf("Sending V:%lf R:%lf\n", voltage_setpoint, resistance);
             shm_ptr->pv.data.v_set = v_set;
             shm_ptr->pv.data.curr_r_load = r;
@@ -139,6 +190,13 @@ set_driver_signals(double v_set, double r, uint32_t term)
         }
         sem_post(&shm_ptr->pv.sem);
     }
+}
+
+void
+set_prediction(double prediction)
+{
+    prediction = prediction;
+    new_prediction = true;
 }
 
 } // namespace vpi_shm
@@ -155,4 +213,8 @@ pybind_init_vpi_shm(py::module &m_native)
           "Send voltage and resistance to simulation");
     m.def("get_voltage", &vpi_shm::get_voltage,
           "Get the instantaneous voltage value from the sim");
+    m.def("get_current", &vpi_shm::get_current,
+          "Get the instantaneous current value from the sim");
+    m.def("ack_supply", &vpi_shm::ack_supply,
+          "Ack the sim");
 }

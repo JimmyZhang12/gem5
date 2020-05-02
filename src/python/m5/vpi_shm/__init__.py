@@ -51,5 +51,11 @@ def set_driver_signals(voltage_setpoint, resistance, term_sim):
 def get_voltage():
   return vpi.get_voltage()
 
+def get_current():
+  return vpi.get_current()
+
+def ack_supply():
+  return vpi.ack_supply()
+
 def stop():
   subprocess.Popen(['reset']).wait()

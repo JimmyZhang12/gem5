@@ -154,6 +154,7 @@ class CPUList(ObjectList):
                     self._sub_classes[name] = cls
 
 bp_list = ObjectList(getattr(m5.objects, 'BranchPredictor', None))
+power_pred_list = ObjectList(getattr(m5.objects, 'PowerPredictor', None))
 cpu_list = CPUList(getattr(m5.objects, 'BaseCPU', None))
 hwp_list = ObjectList(getattr(m5.objects, 'BasePrefetcher', None))
 indirect_bp_list = ObjectList(getattr(m5.objects, 'IndirectPredictor', None))

@@ -53,9 +53,10 @@
 
 PPredUnit::PPredUnit(const Params *params)
     : ClockedObject(params),
+    min_current((double)params->min_current),
+    max_current((double)params->max_current),
     powerEvent(NULL),
     period(params->period)
-
 {
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
 
@@ -103,8 +104,16 @@ void
 PPredUnit::predict(void)
 {
     DPRINTF(PowerPred, "PPredUnit::predict()\n");
+    update();
     action(lookup());
     ++lookups;
+}
+
+void
+PPredUnit::sendPC(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                 TheISA::PCState pc, ThreadID tid)
+{
+  this->PC = pc.instAddr();
 }
 
 void

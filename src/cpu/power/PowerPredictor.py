@@ -38,11 +38,21 @@ class PowerPredictor(ClockedObject):
     cxx_header = "cpu/power/ppred_unit.hh"
     abstract = True
 
+    min_current = Param.Unsigned(0, "Minimum Current Supply " \
+        "(Amps) of the PSU")
+    max_current = Param.Unsigned(20, "Maximum Current Supply " \
+        "(Amps) of the PSU")
+
     period = Param.Unsigned(250, "Number of cpu-cycles per epoch")
 
 class TestPowerPredictor(PowerPredictor):
     type = 'TestPowerPredictor'
     cxx_class = 'Test'
     cxx_header = 'cpu/power/test.hh'
+
+    num_entries = Param.Unsigned(1024, "Entries in predictor table lookup")
+    num_correlation_bits = Param.Unsigned(10, "Number of bits to form " \
+        "a correlation")
+    pc_start = Param.Unsigned(10, "how many bits to shift the pc by")
 
 

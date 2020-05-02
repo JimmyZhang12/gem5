@@ -416,6 +416,10 @@ def addSEOptions(parser):
     parser.add_option("--power_profile_interval", type="int", default=0,
                       help="Interval for dumping stats in cycles")
 
+    parser.add_option("--power_pred_type", type="str",
+                      default="TestPowerPredictor",
+                      help="Power Predictor Type")
+
 
 def addFSOptions(parser):
     from .FSConfig import os_types

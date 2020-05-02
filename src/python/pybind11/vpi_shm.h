@@ -24,11 +24,14 @@ namespace vpi_shm {
 typedef struct {
     double v_set;
     double curr_r_load;
+    double prediction;
+    uint32_t enable;
     uint32_t sim_over;
 } v_incoming_signals;
 
 typedef struct {
     double curr_v;
+    double curr_i;
     uint32_t sim_done;
 } p_incoming_signals;
 
@@ -57,7 +60,13 @@ void destroy_shm();
 
 void set_driver_signals(double v_set, double r, uint32_t term);
 
+void set_prediction(double prediction);
+
 double get_voltage();
+
+double get_current();
+
+void ack_supply();
 
 } // namespace vpi_shm
 

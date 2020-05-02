@@ -49,6 +49,7 @@
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "cpu/translation.hh"
@@ -434,6 +435,9 @@ class DefaultFetch
 
     /** BPredUnit. */
     BPredUnit *branchPred;
+
+    /** BPredUnit. */
+    PPredUnit *powerPred;
 
     TheISA::PCState pc[Impl::MaxThreads];
 

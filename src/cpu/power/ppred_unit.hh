@@ -107,6 +107,15 @@ class PPredUnit : public ClockedObject
      */
     virtual void action(int lookup_val) = 0;
 
+    /**
+     * Send the PC to the branch pred unit.
+     * @param inst The branch instruction.
+     * @param PC The predicted PC is passed back through this parameter.
+     * @param tid The thread id.
+     */
+    void sendPC(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                 TheISA::PCState pc, ThreadID tid);
+
     void dump();
 
     void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
@@ -116,6 +125,10 @@ class PPredUnit : public ClockedObject
   protected:
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
+
+    double min_current;
+    double max_current;
+    Addr PC;
 
   private:
     GlobalEvent* powerEvent;

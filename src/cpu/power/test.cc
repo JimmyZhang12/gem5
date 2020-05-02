@@ -53,10 +53,15 @@
 #include "debug/TestPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 
+
 Test::Test(const Params *params)
-    : PPredUnit(params)
+    : PPredUnit(params),
+    num_entries((uint64_t)params->num_entries),
+    num_correlation_bits((uint8_t)params->num_correlation_bits),
+    pc_start(params->pc_start)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
+
 }
 
 void
@@ -68,25 +73,73 @@ Test::regStats()
         .name(name() + ".action_taken")
         .desc("Number of times the action is taken")
         ;
+    error
+        .name(name() + ".error")
+        .desc("Error between the table and the"
+              " supply current")
+        ;
+
 }
 
 int
 Test::lookup(void)
 {
-    DPRINTF(TestPowerPred, "Test::update()\n");
-    return 0;
+    uint64_t last_PC_address = (uint64_t)PC;
+    uint8_t ret_val;
+    uint64_t mask = ~(~0 >> num_correlation_bits) << num_correlation_bits;
+     last_index = (last_PC_address >> pc_start) & mask;
+
+    auto lookup_iter = pred_table.find(last_index);
+
+    if (lookup_iter==pred_table.end()){
+        // If index is not found then insert index with default value 63 for
+        // 25% current because it is quantized to 8 bits
+        pred_table[last_index]=63;
+        ret_val = 63;
+    }
+    else
+        ret_val= lookup_iter->second;
+
+
+    DPRINTF(TestPowerPred, "Test::lookup()\n");
+
+    return ret_val;
 }
 
 void
 Test::update(void)
 {
+    //double supply_voltage = vpi_shm::get_voltage();
+    double supply_current = vpi_shm::get_current();
+    vpi_shm::ack_supply();
+
+
+    uint8_t quantized_prediction = (uint8_t)(min_current + \
+        ((max_current-min_current)*supply_current)/256);
+
+    auto lookup_iter = pred_table.find(last_index);
+
+    if (lookup_iter->second!=quantized_prediction){
+
+        error = quantized_prediction - lookup_iter->second;
+
+        // Update value
+        pred_table[last_index]=quantized_prediction;
+        //Add stats
+
+    }
+
     DPRINTF(TestPowerPred, "Test::update()\n");
 }
 
 void
 Test::action(int lookup_val)
 {
-    DPRINTF(TestPowerPred, "Test::update()\n");
+    double prediction = (double)(min_current + \
+        (max_current-min_current)*lookup_val/255);
+    vpi_shm::set_prediction(prediction);
+    DPRINTF(TestPowerPred, "Test::action(), "
+        "Prediction: %lf[A]\n", prediction);
 }
 
 Test*
