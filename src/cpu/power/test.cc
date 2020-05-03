@@ -44,6 +44,8 @@
 #include "cpu/power/test.hh"
 
 #include <algorithm>
+#include <cassert>
+#include <cstdlib>
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
@@ -52,7 +54,7 @@
 #include "config/the_isa.hh"
 #include "debug/TestPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
-
+#include "sim/stat_control.hh"
 
 Test::Test(const Params *params)
     : PPredUnit(params),
@@ -61,7 +63,8 @@ Test::Test(const Params *params)
     pc_start(params->pc_start)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
-
+    lut.resize(num_entries, 63);
+    last_index = 0;
 }
 
 void
@@ -84,62 +87,49 @@ Test::regStats()
 int
 Test::lookup(void)
 {
-    uint64_t last_PC_address = (uint64_t)PC;
-    uint8_t ret_val;
-    uint64_t mask = ~(~0 >> num_correlation_bits) << num_correlation_bits;
-     last_index = (last_PC_address >> pc_start) & mask;
-
-    auto lookup_iter = pred_table.find(last_index);
-
-    if (lookup_iter==pred_table.end()){
-        // If index is not found then insert index with default value 63 for
-        // 25% current because it is quantized to 8 bits
-        pred_table[last_index]=63;
-        ret_val = 63;
-    }
-    else
-        ret_val= lookup_iter->second;
-
-
     DPRINTF(TestPowerPred, "Test::lookup()\n");
+    uint64_t mask = ~0;
+    mask = mask >> num_correlation_bits;
+    mask = mask << num_correlation_bits;
+    mask = ~mask;
+    int index = ((uint64_t)PC >> pc_start) & mask;
 
-    return ret_val;
+    DPRINTF(TestPowerPred, "Test::lookup(): PC = %x;"
+        "index = %d; mask = %x; val = %d; \n",
+        (uint64_t)PC, index, mask, lut[index]);
+
+    last_index = index;
+
+    return lut[index];
 }
 
 void
 Test::update(void)
 {
-    //double supply_voltage = vpi_shm::get_voltage();
-    double supply_current = vpi_shm::get_current();
-    vpi_shm::ack_supply();
-
-
-    uint8_t quantized_prediction = (uint8_t)(min_current + \
-        ((max_current-min_current)*supply_current)/256);
-
-    auto lookup_iter = pred_table.find(last_index);
-
-    if (lookup_iter->second!=quantized_prediction){
-
-        error = quantized_prediction - lookup_iter->second;
-
-        // Update value
-        pred_table[last_index]=quantized_prediction;
-        //Add stats
-
-    }
-
     DPRINTF(TestPowerPred, "Test::update()\n");
+    double supply_voltage = Stats::pythonGetVoltage();
+    double supply_current = Stats::pythonGetCurrent();
+
+    uint8_t observed = (uint8_t)((supply_current/max_current)*255.0);
+    DPRINTF(TestPowerPred, "Test::update(): current = %d;"
+        "voltage = %d; qp = %d;\n",
+        supply_current, supply_voltage, observed);
+
+    if (lut[last_index] != observed)
+    {
+        error = abs(lut[last_index] - observed);
+        lut[last_index] = observed;
+    }
+    DPRINTF(TestPowerPred, "Test::update(): val = %d;\n", lut[last_index]);
 }
 
 void
 Test::action(int lookup_val)
 {
-    double prediction = (double)(min_current + \
-        (max_current-min_current)*lookup_val/255);
+    double prediction = (double)(max_current)*(double)lookup_val/255.0;
     vpi_shm::set_prediction(prediction);
     DPRINTF(TestPowerPred, "Test::action(), "
-        "Prediction: %lf[A]\n", prediction);
+        "Prediction: %lf[A]; lookup_val = %d;\n", prediction, lookup_val);
 }
 
 Test*

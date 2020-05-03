@@ -102,9 +102,13 @@ class Test : public PPredUnit
     uint64_t num_entries;
     uint8_t num_correlation_bits;
     uint64_t pc_start;
+
+    // Update:
     uint64_t last_index;
 
-    std::unordered_map<uint64_t, uint8_t> pred_table;
+    std::vector<uint8_t> lut;
+
+    //std::unordered_map<uint64_t, uint8_t> pred_table;
 
   private:
     Stats::Scalar action_taken;

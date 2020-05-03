@@ -288,13 +288,6 @@ else:
     config_filesystem(system, options)
 
 m5.stats.periodicStatDump(options.power_profile_interval)
-if options.power_pred_type:
-    powerPredClass = ObjectList.power_pred_list.get(\
-        options.power_pred_type)
-    system.powerPred = powerPredClass( \
-        period=options.power_profile_interval)
-    system.powerPred.clk_domain = \
-        system.cpu_clk_domain
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

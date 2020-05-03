@@ -80,6 +80,20 @@ pythonBeginProfile()
     m.attr("beginProfile")();
 }
 
+double
+pythonGetVoltage()
+{
+    py::module m = py::module::import("m5.stats");
+    return m.attr("get_voltage")().cast<double>();
+}
+
+double
+pythonGetCurrent()
+{
+    py::module m = py::module::import("m5.stats");
+    return m.attr("get_current")().cast<double>();
+}
+
 }
 
 void

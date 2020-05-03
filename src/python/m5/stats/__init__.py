@@ -359,12 +359,29 @@ def _dump_to_visitor(visitor, root=None):
 lastDump = 0
 numDump = 0
 init_ncsim = True
-lastVoltage = 0
+lastVoltage = []
+lastCurrent = []
 runtime_begin_profile=False
 
 def beginProfile():
     global runtime_begin_profile
     runtime_begin_profile = True
+
+def get_current():
+    global lastCurrent
+    if len(lastCurrent) == 0:
+        return 0.0
+    avg = sum(lastCurrent)/len(lastCurrent)
+    lastCurrent = []
+    return avg
+
+def get_voltage():
+    global lastVoltage
+    if len(lastVoltage) == 0:
+        return 0.0
+    avg = sum(lastVoltage)/len(lastVoltage)
+    lastVoltage = []
+    return avg
 
 def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
@@ -375,6 +392,7 @@ def dump(root=None, exit=False):
     global numDump
     global init_ncsim
     global lastVoltage
+    global lastCurrent
     global runtime_begin_profile
     assert lastDump <= now
     new_dump = lastDump != now
@@ -412,45 +430,50 @@ def dump(root=None, exit=False):
             if(not options.ncverilog_disable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v
-                    mcpat.m5_to_mcpat(1.0, 380.0)
-                    resistance = mcpat.get_last_r(1.0)
-                    power = mcpat.get_last_p(1.0)
+                    mcpat.m5_to_mcpat(1.2, 380.0)
+                    resistance = mcpat.get_last_r(1.2)
+                    power = mcpat.get_last_p(1.2)
                     # Run Init and warmup PowerSupply
                     vpi_shm.initialize(options.mcpat_testname, \
                                  options.ncverilog_step)
                     for i in range(int(100000/options.ncverilog_step)):
-                        vpi_shm.set_driver_signals(1.0, \
+                        vpi_shm.set_driver_signals(1.2, \
                                                 resistance, 0)
-                        lastVoltage = vpi_shm.get_voltage()
-                        lastCurrent = vpi_shm.get_current()
+                        lastVoltage.append(vpi_shm.get_voltage())
+                        lastCurrent.append(vpi_shm.get_current())
                         vpi_shm.ack_supply()
                     init_ncsim = False
                 else:
 
-                    mcpat.m5_to_mcpat(1.0, 380.0)
-                    resistance = mcpat.get_last_r(1.0)
-                    power = mcpat.get_last_p(1.0)
-                    vpi_shm.set_driver_signals(1.0, \
+                    mcpat.m5_to_mcpat(1.2, 380.0)
+                    resistance = mcpat.get_last_r(1.2)
+                    power = mcpat.get_last_p(1.2)
+                    vpi_shm.set_driver_signals(1.2, \
                                             resistance, 0)
-                    lastVoltage = vpi_shm.get_voltage()
+                    lastVoltage.append(vpi_shm.get_voltage())
+                    lastCurrent.append(vpi_shm.get_current())
+                    vpi_shm.ack_supply()
             else:
-                mcpat.m5_to_mcpat(1.0, 380.0)
+                mcpat.m5_to_mcpat(1.2, 380.0)
 
             max = math.floor(options.power_profile_duration/
                              options.power_profile_interval)
             if options.power_profile_duration == -1:
                 max = -1
-            if(numDump == max or exit):
+            #print("NumDump = "+str(numDump)+" Max = \
+            # "+str(max)+" Exit = "+str(exit))
+            if(numDump == max - 1 or exit):
                 mcpat.dump()
                 runtime_begin_profile = False
                 print("Ending after "+str(numDump)+
                       " datapoints")
                 # Clean up simulation:
                 if(not options.ncverilog_disable):
-                    vpi_shm.set_driver_signals(1.0, \
+                    vpi_shm.set_driver_signals(1.2, \
                                           resistance, 1)
-                    lastVoltage = vpi_shm.get_voltage()
-
+                    lastVoltage.append(vpi_shm.get_voltage())
+                    lastCurrent.append(vpi_shm.get_current())
+                    vpi_shm.ack_supply()
                 sys.exit()
     else:
         if new_dump:
