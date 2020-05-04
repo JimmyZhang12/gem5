@@ -41,10 +41,11 @@
  */
 
 
-#include "cpu/power/test.hh"
+#include "cpu/power/simple_history.hh"
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 
 #include "arch/isa_traits.hh"
@@ -52,23 +53,31 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "debug/TestPowerPred.hh"
+#include "debug/SimpleHistoryPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Test::Test(const Params *params)
+SimpleHistory::SimpleHistory(const Params *params)
     : PPredUnit(params),
     num_entries((uint64_t)params->num_entries),
-    num_correlation_bits((uint8_t)params->num_correlation_bits),
-    pc_start(params->pc_start)
+    nbits_pc((uint8_t)params->nbits_pc),
+    pc_start(params->pc_start),
+    history_size(params->history_size),
+    quantization_levels(params->quantization_levels)
 {
-    DPRINTF(TestPowerPred, "Test::Test()\n");
-    lut.resize(num_entries, 63);
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::SimpleHistory()\n");
     last_index = 0;
+    assert((quantization_levels & (quantization_levels - 1)) == 0 &&
+        quantization_levels != 0);
+    assert((num_entries & (num_entries - 1)) == 0 &&
+        num_entries != 0);
+    assert(pow(2, nbits_pc*(history_size+1)) <= num_entries);
+    lut.resize(num_entries, (quantization_levels--)/4);
+    history.resize(history_size, 0);
 }
 
 void
-Test::regStats()
+SimpleHistory::regStats()
 {
     PPredUnit::regStats();
 
@@ -88,18 +97,15 @@ Test::regStats()
 }
 
 int
-Test::lookup(void)
+SimpleHistory::lookup(void)
 {
-    DPRINTF(TestPowerPred, "Test::lookup()\n");
-    uint64_t mask = ~0;
-    mask = mask >> num_correlation_bits;
-    mask = mask << num_correlation_bits;
-    mask = ~mask;
-    int index = ((uint64_t)PC >> pc_start) & mask;
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::lookup()\n");
+    int index = get_index();
 
-    DPRINTF(TestPowerPred, "Test::lookup(): PC = %x;"
-        "index = %d; mask = %x; val = %d; \n",
-        (uint64_t)PC, index, mask, lut[index]);
+    assert(index < lut.size());
+
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::lookup(): PC = %x;"
+        "index = %d; val = %d; \n", (uint64_t)PC, index, lut[index]);
 
     last_index = index;
     look_up_index = index;
@@ -108,14 +114,15 @@ Test::lookup(void)
 }
 
 void
-Test::update(void)
+SimpleHistory::update(void)
 {
-    DPRINTF(TestPowerPred, "Test::update()\n");
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::update()\n");
     double supply_voltage = Stats::pythonGetVoltage();
     double supply_current = Stats::pythonGetCurrent();
 
-    uint8_t observed = (uint8_t)((supply_current/max_current)*255.0);
-    DPRINTF(TestPowerPred, "Test::update(): current = %d;"
+    uint8_t observed = (uint8_t)((supply_current/max_current)
+                       *quantization_levels);
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::update(): current = %d;"
         "voltage = %d; qp = %d;\n",
         supply_current, supply_voltage, observed);
 
@@ -129,20 +136,54 @@ Test::update(void)
         lut[last_index] += (uint8_t)(diff*0.5);
     }
     error = diff;
-    DPRINTF(TestPowerPred, "Test::update(): val = %d;\n", lut[last_index]);
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::update(): val = %d;\n",
+        lut[last_index]);
 }
 
 void
-Test::action(int lookup_val)
+SimpleHistory::action(int lookup_val)
 {
-    double prediction = (double)(max_current)*(double)lookup_val/255.0;
-    vpi_shm::set_prediction(prediction);
-    DPRINTF(TestPowerPred, "Test::action(), "
-        "Prediction: %lf[A]; lookup_val = %d;\n", prediction, lookup_val);
+    double p = (double)(max_current)*(double)lookup_val/quantization_levels;
+    vpi_shm::set_prediction(p);
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::action(), "
+        "Prediction: %lf[A]; lookup_val = %d;\n", p, lookup_val);
 }
 
-Test*
-TestPowerPredictorParams::create()
+unsigned int
+SimpleHistory::get_index()
 {
-    return new Test(this);
+    unsigned int index = 0;
+    unsigned int mask = get_mask();
+
+    for (size_t i = 0; i < history.size(); i++)
+    {
+        index |= ((history[i] & mask) << i*nbits_pc);
+    }
+    index |= (PC & mask) << history.size()*nbits_pc;
+    return index;
+}
+
+void
+SimpleHistory::push_history()
+{
+    for (size_t i = history.size()-1; i>0; i--){
+        history[i]=history[i-1];
+    }
+    history[0]=PC;
+}
+
+unsigned int
+SimpleHistory::get_mask()
+{
+    uint64_t mask = ~0;
+    mask = mask >> nbits_pc;
+    mask = mask << nbits_pc;
+    mask = ~mask;
+    return mask;
+}
+
+SimpleHistory*
+SimpleHistoryPowerPredictorParams::create()
+{
+    return new SimpleHistory(this);
 }

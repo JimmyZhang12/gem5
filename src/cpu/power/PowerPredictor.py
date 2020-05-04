@@ -55,4 +55,18 @@ class TestPowerPredictor(PowerPredictor):
         "a correlation")
     pc_start = Param.Unsigned(10, "how many bits to shift the pc by")
 
+class SimpleHistoryPowerPredictor(PowerPredictor):
+    type = 'SimpleHistoryPowerPredictor'
+    cxx_class = 'SimpleHistory'
+    cxx_header = 'cpu/power/simple_history.hh'
+
+    num_entries = Param.Unsigned(1024, "Entries in predictor table lookup")
+    nbits_pc = Param.Unsigned(4, "Number of bits to form " \
+        "a correlation")
+    pc_start = Param.Unsigned(10, "how many bits to shift the pc by")
+    history_size = Param.Unsigned(1, "How many PC values to use in the "
+        "history")
+    quantization_levels = Param.Unsigned(256, "Default number of levels " \
+        "to quantize the current supply prediction by")
+
 

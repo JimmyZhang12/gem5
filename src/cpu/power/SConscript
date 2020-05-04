@@ -37,5 +37,7 @@ SimObject('PowerPredictor.py')
 
 DebugFlag('PowerPred')
 DebugFlag('TestPowerPred')
+DebugFlag('SimpleHistoryPowerPred')
 Source('ppred_unit.cc')
 Source('test.cc')
+Source('simple_history.cc')

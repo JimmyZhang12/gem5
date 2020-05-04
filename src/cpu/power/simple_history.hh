@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __CPU_POWER_SIMPLE_HISTORY_HH__
+#define __CPU_POWER_SIMPLE_HISTORY_HH__
 
 #include <deque>
 #include <string>
@@ -52,19 +52,19 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
-#include "params/TestPowerPredictor.hh"
+#include "params/SimpleHistoryPowerPredictor.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class Test : public PPredUnit
+class SimpleHistory : public PPredUnit
 {
   public:
-    typedef TestPowerPredictorParams Params;
+    typedef SimpleHistoryPowerPredictorParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    Test(const Params *p);
+    SimpleHistory(const Params *p);
 
     /**
      * Registers statistics.
@@ -91,22 +91,23 @@ class Test : public PPredUnit
     void update(void);
 
     /**
-     * The action taken by the Test predictor is none.
+     * The action taken by the SimpleHistory predictor is none.
      * @param lookup_val The value returned by the lookup method
      */
     void action(int lookup_val);
 
-    uint64_t last_PC_address;
-
   protected:
-    uint64_t num_entries;
-    uint8_t num_correlation_bits;
-    uint64_t pc_start;
+    unsigned int num_entries;
+    unsigned int nbits_pc;
+    unsigned int pc_start;
+    unsigned int history_size;
+    unsigned int quantization_levels;
 
     // Update:
     uint64_t last_index;
 
     std::vector<uint8_t> lut;
+    std::vector<uint64_t> history;
 
     //std::unordered_map<uint64_t, uint8_t> pred_table;
 
@@ -115,6 +116,9 @@ class Test : public PPredUnit
     Stats::Scalar error;
     Stats::Scalar look_up_index;
 
+    unsigned int get_index();
+    void push_history();
+    unsigned int get_mask();
 };
 
-#endif // __CPU_PRED_TEST_HH__
+#endif // __CPU_PRED_SIMPLE_HISTORY_HH__
