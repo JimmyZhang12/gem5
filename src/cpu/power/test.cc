@@ -60,10 +60,15 @@ Test::Test(const Params *params)
     : PPredUnit(params),
     num_entries((uint64_t)params->num_entries),
     num_correlation_bits((uint8_t)params->num_correlation_bits),
-    pc_start(params->pc_start)
+    pc_start(params->pc_start),
+    quantization_levels(params->quantization_levels),
+    confidence_level(params->confidence_level),
+    limit(params->limit)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
     lut.resize(num_entries, 63);
+    error_array.resize(10, params->quantization_levels);
+    ea_idx = 0;
     last_index = 0;
 }
 
@@ -78,8 +83,11 @@ Test::regStats()
         ;
     error
         .name(name() + ".error")
-        .desc("Error between the table and the"
-              " supply current")
+        .desc("Prediction Error")
+        ;
+    rolling_error
+        .name(name() + ".rolling_error")
+        .desc("Rolling average of the prediction error")
         ;
     look_up_index
         .name(name() + ".index")
@@ -111,8 +119,9 @@ void
 Test::update(void)
 {
     DPRINTF(TestPowerPred, "Test::update()\n");
-    double supply_voltage = Stats::pythonGetVoltage();
-    double supply_current = Stats::pythonGetCurrent();
+    supply_voltage = Stats::pythonGetVoltage();
+    supply_current = Stats::pythonGetCurrent();
+    bool enable = Stats::pythonGetProfiling();
 
     uint8_t observed = (uint8_t)((supply_current/max_current)*255.0);
     DPRINTF(TestPowerPred, "Test::update(): current = %d;"
@@ -120,25 +129,60 @@ Test::update(void)
         supply_current, supply_voltage, observed);
 
     uint diff = abs(lut[last_index] - observed);
-    if (lut[last_index] - observed > 0)
+    if (enable)
     {
-        lut[last_index] -= (uint8_t)(diff*0.5);
+        if (lut[last_index] - observed > 0)
+        {
+            lut[last_index] -= (uint8_t)(diff*0.75);
+        }
+        else
+        {
+            lut[last_index] += (uint8_t)(diff*0.75);
+        }
+        add_error(diff);
+        error = diff;
     }
-    else
-    {
-        lut[last_index] += (uint8_t)(diff*0.5);
-    }
-    error = diff;
     DPRINTF(TestPowerPred, "Test::update(): val = %d;\n", lut[last_index]);
 }
 
 void
 Test::action(int lookup_val)
 {
-    double prediction = (double)(max_current)*(double)lookup_val/255.0;
-    vpi_shm::set_prediction(prediction);
+    double p = ((double)(max_current)* \
+        (double)lookup_val/(double)quantization_levels) - supply_current;
+    bool enable = Stats::pythonGetProfiling();
+    double avg = average_error();
+    rolling_error = avg;
+    if (p > limit)
+    {
+        p = limit;
+    }
+    if (p < -limit)
+    {
+        p = -limit;
+    }
+    if (enable && (avg < confidence_level))
+    {
+        vpi_shm::set_prediction(p);
+    }
     DPRINTF(TestPowerPred, "Test::action(), "
-        "Prediction: %lf[A]; lookup_val = %d;\n", prediction, lookup_val);
+        "Prediction: %lf[A]; lookup_val = %d; enable = %d; average_error\n",
+        p, lookup_val, enable, avg);
+}
+
+double
+Test::average_error() {
+    double avg = 0.0;
+    for (auto it = error_array.begin(); it != error_array.end(); it++) {
+        avg += (double)*it;
+    }
+    return (avg/((double)error_array.size()))/(double)quantization_levels;
+}
+
+void
+Test::add_error(unsigned int e) {
+    error_array[ea_idx] = e;
+    ea_idx = (ea_idx + 1)%error_array.size();
 }
 
 Test*

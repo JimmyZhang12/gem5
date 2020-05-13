@@ -362,12 +362,15 @@ init_ncsim = True
 lastVoltage = []
 lastCurrent = []
 runtime_begin_profile=False
+profiling = False
 
 def beginProfile():
     global runtime_begin_profile
     runtime_begin_profile = True
 
 def get_current():
+    if not profiling:
+        return 20
     global lastCurrent
     if len(lastCurrent) == 0:
         return 0.0
@@ -376,12 +379,17 @@ def get_current():
     return avg
 
 def get_voltage():
+    if not profiling:
+        return 1.2
     global lastVoltage
     if len(lastVoltage) == 0:
         return 0.0
     avg = sum(lastVoltage)/len(lastVoltage)
     lastVoltage = []
     return avg
+
+def get_profiling():
+    return profiling
 
 def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
@@ -394,6 +402,7 @@ def dump(root=None, exit=False):
     global lastVoltage
     global lastCurrent
     global runtime_begin_profile
+    global profiling
     assert lastDump <= now
     new_dump = lastDump != now
     lastDump = now
@@ -409,6 +418,7 @@ def dump(root=None, exit=False):
             now < options.power_profile_start+
                   options.power_profile_duration) or
             runtime_begin_profile):
+            profiling = True
             numDump += 1
             if new_dump:
                 _m5.stats.processDumpQueue()
@@ -436,7 +446,7 @@ def dump(root=None, exit=False):
                     # Run Init and warmup PowerSupply
                     vpi_shm.initialize(options.mcpat_testname, \
                                  options.ncverilog_step)
-                    for i in range(int(100000/options.ncverilog_step)):
+                    for i in range(int(2000000/options.ncverilog_step)):
                         vpi_shm.set_driver_signals(1.2, \
                                                 resistance, 0)
                         lastVoltage.append(vpi_shm.get_voltage())

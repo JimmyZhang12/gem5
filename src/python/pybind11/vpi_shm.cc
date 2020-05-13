@@ -25,7 +25,7 @@ mapped* shm_ptr = NULL;
 
 char name_buff[256] = "";
 
-double prediction;
+double ppred;
 bool new_prediction;
 
 void
@@ -172,7 +172,7 @@ set_driver_signals(double v_set, double r, uint32_t term)
         {
             if (new_prediction)
             {
-                shm_ptr->pv.data.prediction = prediction;
+                shm_ptr->pv.data.prediction = ppred;
                 shm_ptr->pv.data.enable = 1;
                 new_prediction = false;
             }
@@ -195,7 +195,7 @@ set_driver_signals(double v_set, double r, uint32_t term)
 void
 set_prediction(double prediction)
 {
-    prediction = prediction;
+    ppred = prediction;
     new_prediction = true;
 }
 

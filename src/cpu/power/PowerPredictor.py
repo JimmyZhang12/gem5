@@ -44,6 +44,7 @@ class PowerPredictor(ClockedObject):
         "(Amps) of the PSU")
 
     period = Param.Unsigned(250, "Number of cpu-cycles per epoch")
+    delta = Param.Float(0.75, "Rate at which to train")
 
 class TestPowerPredictor(PowerPredictor):
     type = 'TestPowerPredictor'
@@ -54,6 +55,11 @@ class TestPowerPredictor(PowerPredictor):
     num_correlation_bits = Param.Unsigned(10, "Number of bits to form " \
         "a correlation")
     pc_start = Param.Unsigned(10, "how many bits to shift the pc by")
+    quantization_levels = Param.Unsigned(256, "Default number of levels " \
+        "to quantize the current supply prediction by")
+    confidence_level = Param.Float(0.10, "Prediction error before enabiling " \
+        "the auxiliary circuit.")
+    limit = Param.Float(10, "Limit on the istep")
 
 class SimpleHistoryPowerPredictor(PowerPredictor):
     type = 'SimpleHistoryPowerPredictor'
@@ -68,5 +74,8 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
         "history")
     quantization_levels = Param.Unsigned(256, "Default number of levels " \
         "to quantize the current supply prediction by")
+    confidence_level = Param.Float(0.10, "Prediction error before enabiling " \
+        "the auxiliary circuit.")
+    limit = Param.Float(10, "Limit on the istep")
 
 

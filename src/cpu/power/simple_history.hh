@@ -102,6 +102,8 @@ class SimpleHistory : public PPredUnit
     unsigned int pc_start;
     unsigned int history_size;
     unsigned int quantization_levels;
+    double confidence_level;
+    double limit;
 
     // Update:
     uint64_t last_index;
@@ -112,13 +114,20 @@ class SimpleHistory : public PPredUnit
     //std::unordered_map<uint64_t, uint8_t> pred_table;
 
   private:
-    Stats::Scalar action_taken;
-    Stats::Scalar error;
-    Stats::Scalar look_up_index;
+    std::vector<uint64_t> error_array;
+    int ea_idx;
 
     unsigned int get_index();
     void push_history();
     unsigned int get_mask();
+
+    double average_error();
+    void add_error(uint e);
+
+    Stats::Scalar action_taken;
+    Stats::Scalar error;
+    Stats::Scalar rolling_error;
+    Stats::Scalar look_up_index;
 };
 
 #endif // __CPU_PRED_SIMPLE_HISTORY_HH__

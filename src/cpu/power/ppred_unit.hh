@@ -128,6 +128,8 @@ class PPredUnit : public ClockedObject
 
     double min_current;
     double max_current;
+    double supply_voltage;
+    double supply_current;
     Addr PC;
 
   private:

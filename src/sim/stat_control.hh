@@ -63,6 +63,8 @@ extern double pythonGetVoltage();
 
 extern double pythonGetCurrent();
 
+extern bool pythonGetProfiling();
+
 /**
  * Update the events after resuming from a checkpoint. When resuming from a
  * checkpoint, curTick will be updated, and any already scheduled events can

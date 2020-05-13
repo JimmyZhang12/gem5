@@ -59,6 +59,8 @@ PPredUnit::PPredUnit(const Params *params)
     period(params->period)
 {
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
+    supply_voltage = 0.0;
+    supply_current = 0.0;
 
     /*
      * If the period is set to 0, then we do not want to dump

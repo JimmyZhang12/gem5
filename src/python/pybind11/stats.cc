@@ -94,6 +94,13 @@ pythonGetCurrent()
     return m.attr("get_current")().cast<double>();
 }
 
+bool
+pythonGetProfiling()
+{
+    py::module m = py::module::import("m5.stats");
+    return m.attr("get_profiling")().cast<bool>();
+}
+
 }
 
 void

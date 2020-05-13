@@ -102,6 +102,9 @@ class Test : public PPredUnit
     uint64_t num_entries;
     uint8_t num_correlation_bits;
     uint64_t pc_start;
+    uint64_t quantization_levels;
+    double confidence_level;
+    double limit;
 
     // Update:
     uint64_t last_index;
@@ -111,10 +114,16 @@ class Test : public PPredUnit
     //std::unordered_map<uint64_t, uint8_t> pred_table;
 
   private:
+    std::vector<uint64_t> error_array;
+    int ea_idx;
+
+    double average_error();
+    void add_error(uint e);
+
     Stats::Scalar action_taken;
     Stats::Scalar error;
+    Stats::Scalar rolling_error;
     Stats::Scalar look_up_index;
-
 };
 
 #endif // __CPU_PRED_TEST_HH__
