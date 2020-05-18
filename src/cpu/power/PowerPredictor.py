@@ -57,6 +57,7 @@ class TestPowerPredictor(PowerPredictor):
     pc_start = Param.Unsigned(10, "how many bits to shift the pc by")
     quantization_levels = Param.Unsigned(256, "Default number of levels " \
         "to quantize the current supply prediction by")
+    error_array_size = Param.Unsigned(100, "size of the rolling error array")
     confidence_level = Param.Float(0.10, "Prediction error before enabiling " \
         "the auxiliary circuit.")
     limit = Param.Float(10, "Limit on the istep")
@@ -74,6 +75,7 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
         "history")
     quantization_levels = Param.Unsigned(256, "Default number of levels " \
         "to quantize the current supply prediction by")
+    error_array_size = Param.Unsigned(100, "size of the rolling error array")
     confidence_level = Param.Float(0.10, "Prediction error before enabiling " \
         "the auxiliary circuit.")
     limit = Param.Float(10, "Limit on the istep")

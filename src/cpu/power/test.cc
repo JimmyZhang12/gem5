@@ -67,7 +67,8 @@ Test::Test(const Params *params)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
     lut.resize(num_entries, 63);
-    error_array.resize(10, params->quantization_levels);
+    error_array.resize(params->error_array_size,
+        params->quantization_levels);
     ea_idx = 0;
     last_index = 0;
 }
@@ -122,6 +123,7 @@ Test::update(void)
     supply_voltage = Stats::pythonGetVoltage();
     supply_current = Stats::pythonGetCurrent();
     bool enable = Stats::pythonGetProfiling();
+    double avg = average_error();
 
     uint8_t observed = (uint8_t)((supply_current/max_current)*255.0);
     DPRINTF(TestPowerPred, "Test::update(): current = %d;"
@@ -129,7 +131,7 @@ Test::update(void)
         supply_current, supply_voltage, observed);
 
     uint diff = abs(lut[last_index] - observed);
-    if (enable)
+    if (enable && avg >= confidence_level)
     {
         if (lut[last_index] - observed > 0)
         {
@@ -139,6 +141,9 @@ Test::update(void)
         {
             lut[last_index] += (uint8_t)(diff*0.75);
         }
+    }
+    if (enable)
+    {
         add_error(diff);
         error = diff;
     }

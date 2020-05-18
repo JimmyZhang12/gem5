@@ -48,6 +48,7 @@ from __future__ import absolute_import
 import optparse
 import sys
 import os
+import math
 
 import m5
 from m5.defines import buildEnv
@@ -243,8 +244,28 @@ for i in range(np):
     if options.power_pred_type:
         powerPredClass = ObjectList.power_pred_list.get(\
             options.power_pred_type)
-        system.cpu[i].powerPred = powerPredClass( \
-            period=options.power_profile_interval)
+        if options.power_pred_type == "TestPowerPredictor":
+            ncb = math.floor(math.log(options.power_pred_table_size, 2))
+            system.cpu[i].powerPred = \
+                powerPredClass(period=options.power_profile_interval,
+                    num_entries=options.power_pred_table_size,
+                    num_correlation_bits=ncb,
+                    pc_start=options.power_pred_pc_start,
+                    error_array_size=100,
+                    confidence_level=0.075,
+                    limit=5.0)
+        elif options.power_pred_type == "SimpleHistoryPowerPredictor":
+            ncb = math.floor(math.log(options.power_pred_table_size, 2)/
+                (options.power_pred_history_size+1))
+            system.cpu[i].powerPred = \
+                powerPredClass(period=options.power_profile_interval,
+                    num_entries=options.power_pred_table_size,
+                    nbits_pc=ncb,
+                    history_size=options.power_pred_history_size,
+                    pc_start=options.power_pred_pc_start,
+                    error_array_size=100,
+                    confidence_level=0.075,
+                    limit=5.0)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain
 

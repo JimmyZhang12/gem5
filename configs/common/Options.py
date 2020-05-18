@@ -419,6 +419,15 @@ def addSEOptions(parser):
     parser.add_option("--power_pred_type", type="str",
                       default="TestPowerPredictor",
                       help="Power Predictor Type")
+    parser.add_option("--power_pred_table_size", type="int",
+                      default=1024,
+                      help="Power Predictor Table Size")
+    parser.add_option("--power_pred_pc_start", type="int",
+                      default=6,
+                      help="Power Predictor PC Start Addr")
+    parser.add_option("--power_pred_history_size", type="int",
+                      default=1,
+                      help="Number of PCs to concat")
 
 
 def addFSOptions(parser):
