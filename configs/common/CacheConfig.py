@@ -97,15 +97,45 @@ def config_cache(options, system):
         fatal("When elastic trace is enabled, do not configure L2 caches.")
 
     if options.l2cache:
-        # Provide a clock for the L2 and the L1-to-L2 bus here as they
-        # are not connected using addTwoLevelCacheHierarchy. Use the
-        # same clock as the CPUs.
-        system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
-                                   size=options.l2_size,
-                                   assoc=options.l2_assoc)
+        if not options.sharedl2cache:
+            # Assert that the number of L2 Caches is the number of cpus.
+            assert(options.num_cpus == options.num_l2caches)
+            # Create array of private caches and l2 busses to connect in the
+            # next section:
+            system.l2 = [l2_cache_class(clk_domain=system.cpu_clk_domain,
+                                        size=options.l2_size,
+                                        assoc=options.l2_assoc)
+                                        for i in range(options.num_cpus)]
+            system.tol2bus = [L2XBar(clk_domain=system.cpu_clk_domain)
+                              for i in range(options.num_cpus)]
+            for i in range(options.num_cpus):
+                system.l2[i].cpu_side = system.tol2bus[i].master
+                if options.l2_hwp_type:
+                    hwpClass = ObjectList.hwp_list.get(options.l2_hwp_type)
+                    if system.l2[i].prefetcher != "Null":
+                        print("Warning: l2-hwp-type is set (", hwpClass, "), \
+                        but the current l2 has a default Hardware Prefetcher \
+                        of type (",type(system.l2[i].prefetcher),") using the \
+                        specified by the flag option.")
+                    system.l2[i].prefetcher = hwpClass()
+        else:
+            # Provide a clock for the L2 and the L1-to-L2 bus here as they
+            # are not connected using addTwoLevelCacheHierarchy. Use the
+            # same clock as the CPUs.
+            system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
+                                       size=options.l2_size,
+                                       assoc=options.l2_assoc)
 
-        system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
-        system.l2.cpu_side = system.tol2bus.master
+            system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
+            system.l2.cpu_side = system.tol2bus.master
+            if options.l2_hwp_type:
+                hwpClass = ObjectList.hwp_list.get(options.l2_hwp_type)
+                if system.l2.prefetcher != "Null":
+                    print("Warning: l2-hwp-type is set (", hwpClass, "), but",
+                          "the current l2 has a default Hardware Prefetcher",
+                          "of type", type(system.l2.prefetcher), ", using the",
+                          "specified by the flag option.")
+                system.l2.prefetcher = hwpClass()
         if options.l3cache:
            # Provide a clock for the L3 and the L2-to-L3 bus here as they
            # are not connected using addTwoLevelCacheHierarchy. Use the
@@ -125,20 +155,21 @@ def config_cache(options, system):
                          "of type", type(system.l3.prefetcher), ", using the",
                          "specified by the flag option.")
                system.l3.prefetcher = hwpClass()
-           system.l2.mem_side = system.tol3bus.slave
+           if not options.sharedl2cache:
+               for i in range(options.num_cpus):
+                   system.l2[i].mem_side = system.tol3bus.slave
+           else:
+               system.l2.mem_side = system.tol3bus.slave
         else:
-           system.l2.mem_side = system.membus.slave
-        if options.l2_hwp_type:
-            hwpClass = ObjectList.hwp_list.get(options.l2_hwp_type)
-            if system.l2.prefetcher != "Null":
-                print("Warning: l2-hwp-type is set (", hwpClass, "), but",
-                      "the current l2 has a default Hardware Prefetcher",
-                      "of type", type(system.l2.prefetcher), ", using the",
-                      "specified by the flag option.")
-            system.l2.prefetcher = hwpClass()
+            if not options.sharedl2cache:
+                for i in range(options.num_cpus):
+                    system.l2[i].mem_side = system.membus.slave
+            else:
+                system.l2.mem_side = system.membus.slave
 
     if options.memchecker:
         system.memchecker = MemChecker()
+
 
     for i in range(options.num_cpus):
         if options.caches:
@@ -219,7 +250,10 @@ def config_cache(options, system):
 
         system.cpu[i].createInterruptController()
         if options.l2cache:
-            system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
+            if not options.sharedl2cache:
+                system.cpu[i].connectAllPorts(system.tol2bus[i], system.membus)
+            else:
+                system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
         elif options.external_memory_system:
             system.cpu[i].connectUncachedPorts(system.membus)
         else:
