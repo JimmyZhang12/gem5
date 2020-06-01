@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2020 Andrew Smith
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including without
+ * limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to
+ * whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
@@ -34,7 +57,7 @@ init_shm(mapped* p)
     sem_init(&p->pv.sem, 1, 1);
     p->pv.new_data = NO_NEW_DATA;
     p->pv.data.v_set = 0;
-    p->pv.data.curr_r_load = 0;
+    p->pv.data.curr_load = 0;
     p->pv.data.prediction = 0;
     p->pv.data.enable = 0;
     p->pv.data.sim_over = 0;
@@ -162,7 +185,7 @@ ack_supply()
 
 
 void
-set_driver_signals(double v_set, double r, uint32_t term)
+set_driver_signals(double v_set, double load, uint32_t term)
 {
     // Wait for the verilog simulation to consume the previous data:
     while (1)
@@ -182,7 +205,7 @@ set_driver_signals(double v_set, double r, uint32_t term)
             }
             //printf("Sending V:%lf R:%lf\n", voltage_setpoint, resistance);
             shm_ptr->pv.data.v_set = v_set;
-            shm_ptr->pv.data.curr_r_load = r;
+            shm_ptr->pv.data.curr_load = load;
             shm_ptr->pv.data.sim_over = term;
             shm_ptr->pv.new_data = NEW_DATA;
             sem_post(&shm_ptr->pv.sem);

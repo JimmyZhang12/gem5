@@ -437,29 +437,32 @@ def dump(root=None, exit=False):
             power = 0
             resistance = 0
             voltage = 0
+            current = 0
             if(not options.ncverilog_disable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v
                     mcpat.m5_to_mcpat(1.2, 380.0)
                     resistance = mcpat.get_last_r(1.2)
+                    current = mcpat.get_last_i(1.2)
                     power = mcpat.get_last_p(1.2)
                     # Run Init and warmup PowerSupply
                     vpi_shm.initialize(options.mcpat_testname, \
                                  options.ncverilog_step)
-                    for i in range(int(2000000/options.ncverilog_step)):
+                    for i in range(int(options.ncverilog_warmup \
+                                  /options.ncverilog_step)):
                         vpi_shm.set_driver_signals(1.2, \
-                                                resistance, 0)
+                                                current, 0)
                         lastVoltage.append(vpi_shm.get_voltage())
                         lastCurrent.append(vpi_shm.get_current())
                         vpi_shm.ack_supply()
                     init_ncsim = False
                 else:
-
                     mcpat.m5_to_mcpat(1.2, 380.0)
                     resistance = mcpat.get_last_r(1.2)
+                    current = mcpat.get_last_i(1.2)
                     power = mcpat.get_last_p(1.2)
                     vpi_shm.set_driver_signals(1.2, \
-                                            resistance, 0)
+                                            current, 0)
                     lastVoltage.append(vpi_shm.get_voltage())
                     lastCurrent.append(vpi_shm.get_current())
                     vpi_shm.ack_supply()
@@ -479,8 +482,9 @@ def dump(root=None, exit=False):
                       " datapoints")
                 # Clean up simulation:
                 if(not options.ncverilog_disable):
+                    current = mcpat.get_last_i(1.2)
                     vpi_shm.set_driver_signals(1.2, \
-                                          resistance, 1)
+                                          current, 1)
                     lastVoltage.append(vpi_shm.get_voltage())
                     lastCurrent.append(vpi_shm.get_current())
                     vpi_shm.ack_supply()
