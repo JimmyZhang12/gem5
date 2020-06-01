@@ -26,20 +26,34 @@
 #
 # Authors: Andrew Smith
 
-import os
-import sys
-import re
-import pickle
-import subprocess
-import math
-from collections import defaultdict
+from xml.etree import ElementTree
+from xml.dom import minidom
 
-class Device(object):
-  def __init__(self, name="", data={}, depth=0):
-    self.name = name
-    self.data = data
-    self.depth = depth
-  def __str__(self):
-    return "  "*self.depth+self.name+" "+str(self.data)
-  def __repr__(self):
-    return "  "*self.depth+self.name+" "+str(self.data)
+from system import System
+from util import *
+
+def generate_xml(stat_file, config_file, out_file, **kwargs):
+  def prettify(elem):
+    """Return a pretty-printed XML string for the
+    Element.  """
+    rough_string = ElementTree.tostring(elem, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="  ")
+
+  # Parse & build the context dictionaries:
+  stat_dict = build_gem5_stat_dict(stat_file)
+  config_dict = build_gem5_config_dict(config_file)
+  sim_dict = build_gem5_sim_dict(**kwargs)
+
+  # Build the system
+  s = System("system", "system", stat_dict, config_dict, sim_dict)
+
+  root = ElementTree.Element('component', id='root', name='root')
+  root.append(s.xml())
+
+  # write the XML
+  with open(out_file, "w") as of:
+    of.write(prettify(root))
+
+  return 0
+
