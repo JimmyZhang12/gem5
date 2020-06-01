@@ -1,5 +1,28 @@
+/*
+ * Copyright (c) 2020 Andrew Smith
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef VPI_SHM_HH
 #define VPI_SHM_HH
+
 #include <fcntl.h>
 #include <semaphore.h>
 #include <stdint.h>
@@ -23,12 +46,15 @@ namespace vpi_shm {
 
 typedef struct {
     double v_set;
-    double curr_r_load;
+    double curr_load;
+    double prediction;
+    uint32_t enable;
     uint32_t sim_over;
 } v_incoming_signals;
 
 typedef struct {
     double curr_v;
+    double curr_i;
     uint32_t sim_done;
 } p_incoming_signals;
 
@@ -55,9 +81,15 @@ int create_shm(int process, char* name);
 
 void destroy_shm();
 
-void set_driver_signals(double v_set, double r, uint32_t term);
+void set_driver_signals(double v_set, double load, uint32_t term);
+
+void set_prediction(double prediction);
 
 double get_voltage();
+
+double get_current();
+
+void ack_supply();
 
 } // namespace vpi_shm
 

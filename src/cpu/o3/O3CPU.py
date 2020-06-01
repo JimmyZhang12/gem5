@@ -48,6 +48,7 @@ from m5.objects.BaseCPU import BaseCPU
 from m5.objects.FUPool import *
 from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
+from m5.objects.PowerPredictor import *
 
 class FetchPolicy(ScopedEnum):
     vals = [ 'SingleThread', 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
@@ -176,6 +177,8 @@ class DerivO3CPU(BaseCPU):
     branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
                                        "Branch Predictor")
+    powerPred = Param.PowerPredictor(TestPowerPredictor(),
+                                       "PowerPredictor")
     needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
                           "Enable TSO Memory model")
 

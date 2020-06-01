@@ -1,4 +1,6 @@
-# Copyright (c) 2020 The University of Illinois
+# -*- mode:python -*-
+
+# Copyright (c) 2020 University of Illinois
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,29 +28,16 @@
 #
 # Authors: Andrew Smith
 
-import os
-import sys
-import re
-import pickle
-import subprocess
-import math
-from collections import defaultdict
+Import('*')
 
-from device import Device
+if env['TARGET_ISA'] == 'null':
+    Return()
 
-class Node(object):
-  def __init__(self, children=[], device=None):
-    self.children = children
-    self.device = device
-  def __str__(self):
-    modules = []
-    modules.append(str(self.device))
-    for child in self.children:
-      modules.append(str(child))
-    return "\n".join(modules)
-  def __repr__(self):
-    modules = []
-    modules.append(str(self.device))
-    for child in self.children:
-      modules.append(str(child))
-    return "\n".join(modules)
+SimObject('PowerPredictor.py')
+
+DebugFlag('PowerPred')
+DebugFlag('TestPowerPred')
+DebugFlag('SimpleHistoryPowerPred')
+Source('ppred_unit.cc')
+Source('test.cc')
+Source('simple_history.cc')

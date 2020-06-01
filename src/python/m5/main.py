@@ -174,6 +174,8 @@ def parse_options():
         help="set the path to ncverilog project, dockerfile, and runscripts")
     option("--ncverilog_step", type="int", default=250,
         help="Synchonization with PSU: num_cycles*clk_period")
+    option("--ncverilog_warmup", type="int", default=1,
+        help="Synchonization with PSU: num_cycles*clk_period")
 
     # statistics options
     group("power profile options")

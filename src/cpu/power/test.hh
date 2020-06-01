@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2020, University of Illinois
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,61 +37,93 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Sascha Bischoff
+ * Authors: Andrew Smith
  */
 
-#ifndef __SIM_STAT_CONTROL_HH__
-#define __SIM_STAT_CONTROL_HH__
+#ifndef __CPU_POWER_TEST_HH__
+#define __CPU_POWER_TEST_HH__
 
+#include <deque>
+#include <string>
+#include <unordered_map>
+
+#include "base/statistics.hh"
 #include "base/types.hh"
-#include "sim/core.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/power/ppred_unit.hh"
+#include "cpu/static_inst.hh"
+#include "params/TestPowerPredictor.hh"
+#include "sim/probe/pmu.hh"
+#include "sim/sim_object.hh"
 
-namespace Stats {
+class Test : public PPredUnit
+{
+  public:
+    typedef TestPowerPredictorParams Params;
 
-double statElapsedTime();
+    /**
+     * @param params The params object, that has the size of the BP and BTB.
+     */
+    Test(const Params *p);
 
-Tick statElapsedTicks();
+    /**
+     * Registers statistics.
+     */
+    void regStats() override;
 
-Tick statFinalTick();
+    /**
+     * Performs a lookup on the power prediction module based on the current
+     * PC.
+     * @param tid The thread ID.
+     * @param inst_PC The PC to look up.
+     * @return Quantized value of the power prediction.
+     */
+    int lookup(void);
 
-void initSimStats();
+    /**
+     * Based on the feedback from the power supply unit, this function updates
+     * the predictor.
+     * @todo Must interface with power supply model to read the accuracy of the
+     * prediction and size + duration of droop, Keep a log of previous lookups
+     * used as a history and then update those too to avoid a signature that
+     * leaves a large droop or overshoot.
+     */
+    void update(void);
 
-extern void pythonBeginProfile();
+    /**
+     * The action taken by the Test predictor is none.
+     * @param lookup_val The value returned by the lookup method
+     */
+    void action(int lookup_val);
 
-extern double pythonGetVoltage();
+    uint64_t last_PC_address;
 
-extern double pythonGetCurrent();
+  protected:
+    uint64_t num_entries;
+    uint8_t num_correlation_bits;
+    uint64_t pc_start;
+    uint64_t quantization_levels;
+    double confidence_level;
+    double limit;
 
-extern bool pythonGetProfiling();
+    // Update:
+    uint64_t last_index;
 
-/**
- * Update the events after resuming from a checkpoint. When resuming from a
- * checkpoint, curTick will be updated, and any already scheduled events can
- * end up scheduled in the past. This function checks if the dumpEvent is
- * scheduled in the past, and reschedules it appropriately.
- */
-void updateEvents();
+    std::vector<uint8_t> lut;
 
-/**
- * Schedule statistics dumping. This allows you to dump and/or reset the
- * built-in statistics. This can either be done once, or it can be done on a
- * regular basis.
- * @param dump Set true to dump the statistics.
- * @param reset Set true to reset the statistics.
- * @param when When the dump and/or reset should occur.
- * @param repeat How often the event should repeat. Set 0 to disable repeating.
- */
-void schedStatEvent(bool dump, bool reset, Tick when = curTick(),
-                    Tick repeat = 0);
+    //std::unordered_map<uint64_t, uint8_t> pred_table;
 
-/**
- * Schedule periodic statistics dumping. This allows you to dump and reset the
- * built-in statistics on a regular basis, thereby allowing the extraction of
- * temporal trends in the data.
- * @param period The period at which the dumping should occur.
- */
-void periodicStatDump(Tick period = 0);
-} // namespace Stats
+  private:
+    std::vector<uint64_t> error_array;
+    int ea_idx;
 
-#endif // __SIM_STAT_CONTROL_HH__
+    double average_error();
+    void add_error(uint e);
+
+    Stats::Scalar action_taken;
+    Stats::Scalar error;
+    Stats::Scalar rolling_error;
+    Stats::Scalar look_up_index;
+};
+
+#endif // __CPU_PRED_TEST_HH__

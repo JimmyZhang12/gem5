@@ -181,6 +181,7 @@ pybind_init_event(py::module &m_native)
     PRIO(DVFS_Update_Pri);
     PRIO(Serialize_Pri);
     PRIO(CPU_Tick_Pri);
+    PRIO(Power_Event_Pri);
     PRIO(Stat_Event_Pri);
     PRIO(Progress_Event_Pri);
     PRIO(Sim_Exit_Pri);

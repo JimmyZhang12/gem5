@@ -168,6 +168,10 @@ class EventBase
     /// everything else, but before exit.
     static const Priority Stat_Event_Pri =              90;
 
+    /// Power Events come after Stat Events, McPAT needs most recent stat dump
+    /// to calculate power.
+    static const Priority Power_Event_Pri =             91;
+
     /// Progress events come at the end.
     static const Priority Progress_Event_Pri =          95;
 

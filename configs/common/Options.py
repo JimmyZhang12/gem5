@@ -123,6 +123,7 @@ def addNoISAOptions(parser):
                       help="use external port for SystemC TLM cosimulation")
     parser.add_option("--caches", action="store_true")
     parser.add_option("--l2cache", action="store_true")
+    parser.add_option("--sharedl2cache", action="store_false")
     parser.add_option("--l3cache", action="store_true")
     parser.add_option("--num-dirs", type="int", default=1)
     parser.add_option("--num-l2caches", type="int", default=1)
@@ -415,6 +416,19 @@ def addSEOptions(parser):
 
     parser.add_option("--power_profile_interval", type="int", default=0,
                       help="Interval for dumping stats in cycles")
+
+    parser.add_option("--power_pred_type", type="str",
+                      default="TestPowerPredictor",
+                      help="Power Predictor Type")
+    parser.add_option("--power_pred_table_size", type="int",
+                      default=1024,
+                      help="Power Predictor Table Size")
+    parser.add_option("--power_pred_pc_start", type="int",
+                      default=6,
+                      help="Power Predictor PC Start Addr")
+    parser.add_option("--power_pred_history_size", type="int",
+                      default=1,
+                      help="Number of PCs to concat")
 
 
 def addFSOptions(parser):
