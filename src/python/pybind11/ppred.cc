@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2020 University of Illinois
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,6 +10,9 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,20 +37,35 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Andreas Sandberg
+ * Authors: Andrew Smith
  */
 
-#ifndef __PYTHON_PYBIND11_PYBIND_HH__
-#define __PYTHON_PYBIND11_PYBIND_HH__
-
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
-void pybind_init_core(pybind11::module &m_native);
-void pybind_init_debug(pybind11::module &m_native);
+#include "base/statistics.hh"
+#include "base/stats/text.hh"
+#include "config/use_hdf5.hh"
 
-void pybind_init_event(pybind11::module &m_native);
-void pybind_init_stats(pybind11::module &m_native);
-void pybind_init_ppred(pybind11::module &m_native);
-void pybind_init_vpi_shm(pybind11::module &m_native);
+#if USE_HDF5
+#include "base/stats/hdf5.hh"
 
 #endif
+#include "cpu/power/ppred_unit.hh"
+
+namespace py = pybind11;
+
+namespace PPred {
+  // TODO: Move the bindings from the stats.cc to here for the power pred unit
+}
+
+void
+pybind_init_ppred(py::module &m_native)
+{
+    py::module m = m_native.def_submodule("ppred");
+
+    m
+        .def("updateEvents", &PPred::updateEvents)
+        ;
+}
+

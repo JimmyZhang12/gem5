@@ -57,6 +57,14 @@
 #include "sim/global_event.hh"
 #include "sim/sim_object.hh"
 
+namespace PPred {
+
+extern std::vector<GlobalEvent*> ppred_events;
+
+void updateEvents();
+
+}; // namespace PPred
+
 class PPredUnit : public ClockedObject
 {
   public:
@@ -120,8 +128,6 @@ class PPredUnit : public ClockedObject
 
     void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
 
-    void updateEvents();
-
   protected:
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
@@ -133,8 +139,8 @@ class PPredUnit : public ClockedObject
     Addr PC;
 
   private:
-    GlobalEvent* powerEvent;
     int period;
+    int id;
 };
 
 /**
@@ -148,7 +154,7 @@ class PowerPredEvent : public GlobalEvent
 
   public:
     PowerPredEvent(Tick _when, Tick _repeat, PPredUnit* _unit = NULL)
-        : GlobalEvent(_when, Power_Event_Pri, 0),
+        : GlobalEvent(_when, Power_Event_Pri, AutoDelete),
           repeat(_repeat),
           unit(_unit)
     {

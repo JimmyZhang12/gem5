@@ -155,7 +155,7 @@ def parse_options():
 
     # statistics options
     group("mcpat options")
-    option("--mcpat_disable", action="store_true", default=False,
+    option("--mcpat_enable", action="store_true", default=False,
         help="If set, then mcpat and power profiling is disabled")
     option("--mcpat_path", type='str', default="",
         help="set the path to mcpat")
@@ -168,7 +168,7 @@ def parse_options():
 
     # statistics options
     group("ncverilog options")
-    option("--ncverilog_disable", action="store_true", default=False,
+    option("--ncverilog_enable", action="store_true", default=False,
         help="If set, ncverilog is disabled")
     option("--ncverilog_path", type='str', default="",
         help="set the path to ncverilog project, dockerfile, and runscripts")

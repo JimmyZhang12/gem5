@@ -45,6 +45,7 @@
 
 #include <cassert>
 #include <functional>
+#include <map>
 #include <string>
 
 #include "mem/tport.hh"
@@ -105,6 +106,8 @@ class IntMasterPort : public QueuedMasterPort
     Tick latency;
 
     typedef std::function<void(PacketPtr)> OnCompletionFunc;
+    // Store the function by the packet ptr
+    std::map<PacketPtr, OnCompletionFunc> CompletionFunc;
     OnCompletionFunc onCompletion = nullptr;
     // If nothing extra needs to happen, just clean up the packet.
     static void defaultOnCompletion(PacketPtr pkt) { delete pkt; }
@@ -122,8 +125,12 @@ class IntMasterPort : public QueuedMasterPort
     recvTimingResp(PacketPtr pkt) override
     {
         assert(pkt->isResponse());
-        onCompletion(pkt);
-        onCompletion = nullptr;
+        assert(CompletionFunc.find(pkt) != CompletionFunc.end());
+        CompletionFunc[pkt](pkt);
+        //assert(onCompletion != nullptr);
+        //onCompletion(pkt);
+        //onCompletion = nullptr;
+        CompletionFunc.erase(pkt);
         return true;
     }
 
@@ -131,8 +138,10 @@ class IntMasterPort : public QueuedMasterPort
     sendMessage(PacketPtr pkt, bool timing,
             OnCompletionFunc func=defaultOnCompletion)
     {
+        assert(func != nullptr);
         if (timing) {
-            onCompletion = func;
+            //onCompletion = func;
+            CompletionFunc[pkt] = func;
             schedTimingReq(pkt, curTick() + latency);
             // The target handles cleaning up the packet in timing mode.
         } else {

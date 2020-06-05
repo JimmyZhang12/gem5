@@ -412,7 +412,7 @@ def dump(root=None, exit=False):
     if not new_dump and root is None:
         return
 
-    if(not options.mcpat_disable):
+    if(options.mcpat_enable):
         if((options.power_profile_start != -1 and
             now >= options.power_profile_start and
             now < options.power_profile_start+
@@ -438,7 +438,7 @@ def dump(root=None, exit=False):
             resistance = 0
             voltage = 0
             current = 0
-            if(not options.ncverilog_disable):
+            if(options.ncverilog_enable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v
                     mcpat.m5_to_mcpat(1.2, 380.0)
@@ -481,7 +481,7 @@ def dump(root=None, exit=False):
                 print("Ending after "+str(numDump)+
                       " datapoints")
                 # Clean up simulation:
-                if(not options.ncverilog_disable):
+                if(options.ncverilog_enable):
                     current = mcpat.get_last_i(1.2)
                     vpi_shm.set_driver_signals(1.2, \
                                           current, 1)

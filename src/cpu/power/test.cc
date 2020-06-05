@@ -195,3 +195,4 @@ TestPowerPredictorParams::create()
 {
     return new Test(this);
 }
+

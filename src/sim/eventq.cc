@@ -236,7 +236,6 @@ EventQueue::serviceOne()
     }
 
     event->release();
-
     return NULL;
 }
 

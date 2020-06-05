@@ -43,7 +43,7 @@ class PowerPredictor(ClockedObject):
     max_current = Param.Unsigned(40, "Maximum Current Supply " \
         "(Amps) of the PSU")
 
-    period = Param.Unsigned(250, "Number of cpu-cycles per epoch")
+    period = Param.Unsigned(1000000, "Number of cpu-cycles per epoch")
     delta = Param.Float(0.75, "Rate at which to train")
 
 class TestPowerPredictor(PowerPredictor):
