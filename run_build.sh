@@ -34,13 +34,14 @@ print_error () {
   echo -e "$red[ $script_name ] Error:$nc $1"
 }
 
-if [[ -z $(docker images -q gem5:build) ]]; then
-  docker build  --build-arg gid=$(id -g $(whoami)) --build-arg uid=$(id -u $(whoami)) --build-arg user=$(whoami) --build-arg wd=$PWD -t gem5:build ./docker/
+IMAGE="gem5:$(whoami)_build"
+if [[ -z $(docker images -q $IMAGE) ]]; then
+  docker build  --build-arg gid=$(id -g $(whoami)) --build-arg uid=$(id -u $(whoami)) --build-arg user=$(whoami) --build-arg wd=$PWD -t $IMAGE ./docker/
   if [ $? -ne 0 ]; then 
-    print_error "Building docker image gem5:build failed."
+    print_error "Building docker image $IMAGE failed."
   fi
 else
-  print_info "Docker image gem5:build exists, continuing..."
+  print_info "Docker image $IMAGE exists, continuing..."
 fi
 print_info "Running build"
-docker run --rm -t --user $(id -u):$(id -g) --name=m5 -v $PWD:$PWD gem5:build ./build.sh
+docker run --rm -t -i --user $(id -u):$(id -g) --name=m5 -v $PWD:$PWD $IMAGE ./build.sh
