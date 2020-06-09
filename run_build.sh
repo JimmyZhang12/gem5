@@ -43,4 +43,4 @@ else
   print_info "Docker image gem5:build exists, continuing..."
 fi
 print_info "Running build"
-docker run --rm -t --user $(id -u):$(id -g) --name=m5 -v $PWD:$PWD gem5:build ./build.sh
+docker run --rm -t -i --user $(id -u):$(id -g) --name=m5 -v $PWD:$PWD gem5:build ./build.sh

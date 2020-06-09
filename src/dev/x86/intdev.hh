@@ -107,7 +107,6 @@ class IntMasterPort : public QueuedMasterPort
 
     typedef std::function<void(PacketPtr)> OnCompletionFunc;
     // Store the function by the packet ptr
-    std::map<PacketPtr, OnCompletionFunc> CompletionFunc;
     OnCompletionFunc onCompletion = nullptr;
     // If nothing extra needs to happen, just clean up the packet.
     static void defaultOnCompletion(PacketPtr pkt) { delete pkt; }
@@ -125,12 +124,8 @@ class IntMasterPort : public QueuedMasterPort
     recvTimingResp(PacketPtr pkt) override
     {
         assert(pkt->isResponse());
-        assert(CompletionFunc.find(pkt) != CompletionFunc.end());
-        CompletionFunc[pkt](pkt);
-        //assert(onCompletion != nullptr);
-        //onCompletion(pkt);
-        //onCompletion = nullptr;
-        CompletionFunc.erase(pkt);
+        onCompletion(pkt);
+        onCompletion = nullptr;
         return true;
     }
 
@@ -140,8 +135,7 @@ class IntMasterPort : public QueuedMasterPort
     {
         assert(func != nullptr);
         if (timing) {
-            //onCompletion = func;
-            CompletionFunc[pkt] = func;
+            onCompletion = func;
             schedTimingReq(pkt, curTick() + latency);
             // The target handles cleaning up the packet in timing mode.
         } else {
