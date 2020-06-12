@@ -49,7 +49,7 @@ iter = 0
 mcpat_trees = []
 stat_trace=[]
 
-def m5_to_mcpat(voltage, temperature):
+def m5_to_mcpat(voltage, freq, temperature):
   from m5 import options
 
   global iter
@@ -70,7 +70,7 @@ def m5_to_mcpat(voltage, temperature):
   o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
   e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
   generate_xml(m5_stats_file, m5_config_file, i_f, voltage=voltage, \
-              temperature=temperature)
+              frequency=freq, temperature=temperature)
   run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees.append(parse_output(o_f))
 
@@ -81,7 +81,11 @@ def get_last_p(voltage):
   global mcpat_trees
   data_line = []
   for key, value in mcpat_trees[-1].find("Processor").data.items():
-    data_line.append(value.split(" ")[0])
+    if "nan" in value.split(" ")[0] or "inf" in value.split(" ")[0]:
+      # McPAT Messed Up?
+      data_line.append("0")
+    else:
+      data_line.append(value.split(" ")[0])
   # Calculate Total Power:
   return calc_total_power(data_line)
 
@@ -89,7 +93,11 @@ def get_last_r(voltage):
   global mcpat_trees
   data_line = []
   for key, value in mcpat_trees[-1].find("Processor").data.items():
-    data_line.append(value.split(" ")[0])
+    if "nan" in value.split(" ")[0] or "inf" in value.split(" ")[0]:
+      # McPAT Messed Up?
+      data_line.append("0")
+    else:
+      data_line.append(value.split(" ")[0])
   # Calculate Total Power:
   power = calc_total_power(data_line)
   return calc_req(power, voltage)
@@ -98,7 +106,11 @@ def get_last_i(voltage):
   global mcpat_trees
   data_line = []
   for key, value in mcpat_trees[-1].find("Processor").data.items():
-    data_line.append(value.split(" ")[0])
+    if "nan" in value.split(" ")[0] or "inf" in value.split(" ")[0]:
+      # McPAT Messed Up?
+      data_line.append("0")
+    else:
+      data_line.append(value.split(" ")[0])
   # Calculate Total Power:
   power = calc_total_power(data_line)
   return power/voltage;

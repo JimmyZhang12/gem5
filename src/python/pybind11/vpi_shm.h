@@ -49,6 +49,7 @@ typedef struct {
     double curr_load;
     double prediction;
     uint32_t enable;
+    uint32_t time_to_next; // Time to next sync event in picoseconds
     uint32_t sim_over;
 } v_incoming_signals;
 
@@ -81,9 +82,13 @@ int create_shm(int process, char* name);
 
 void destroy_shm();
 
-void set_driver_signals(double v_set, double load, uint32_t term);
+void set_driver_signals(double load, uint32_t term);
 
 void set_prediction(double prediction);
+
+void set_freq(double freq, int cycles);
+
+void set_voltage_set(double v_set);
 
 double get_voltage();
 

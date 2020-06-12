@@ -84,17 +84,22 @@ class MemoryController:
     self.name = component_name
     self.id = component_id
 
+    bw_total = 914285714
+    if int(stat_dict["bw_total::total"][1]) > 0:
+      bw_total = int(stat_dict["bw_total::total"][1])
+
     # Init the Memory Controller Parameters and Stats:
     self.parameters["type"][0] = "0"
     self.parameters["mc_clock"][0] = str(int(config_dict["tCK"]) * 2)
     self.parameters["vdd"][0] = str(float(config_dict["VDD"]))
     self.parameters["power_gating_vcc"][0] = "-1"
     self.parameters["peak_transfer_rate"][0]= \
-      str(int(stat_dict["bw_total::total"][1])/1e6)
+      str(bw_total/1.0e6)
     self.parameters["block_size"][0] = "64"
     self.parameters["number_mcs"][0] = "4"
     self.parameters["memory_channels_per_mc"][0] = "2"
-    self.parameters["number_ranks"][0] = "2"
+    self.parameters["number_ranks"][0] = \
+      str(int(config_dict["ranks_per_channel"]))
     self.parameters["withPHY"][0] = "0"
     self.parameters["req_window_size_per_channel"][0] = "32"
     self.parameters["IO_buffer_size_per_channel"][0] = "64"

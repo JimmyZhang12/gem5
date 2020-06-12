@@ -414,8 +414,21 @@ def addSEOptions(parser):
                            "Usage: gem5.opt [...] --redirects /dir1=/path/"
                            "to/host/dir1 --redirects /dir2=/path/to/host/dir2")
 
-    parser.add_option("--power_profile_interval", type="int", default=0,
-                      help="Interval for dumping stats in cycles")
+    parser.add_option("--power_profile_interval", type="int", default=100,
+                      help="Interval for attempting stat dump in sim-cycles " \
+                      "after profiling")
+    parser.add_option("--power_profile_initial_stats_interval", type="int",
+                      default=10000, help="Interval for dumping stats in "
+                      "sim cycles before profiling")
+
+    parser.add_option("--power_pred_cpu_cycles", type="int", default=1,
+                      help="How many cpu cycles to dump after")
+    parser.add_option("--power_pred_cpu_freq", type="float", default=2.5e9,
+                      help="Cpu frequency in Hz")
+    parser.add_option("--power_pred_voltage", type="float", default=1.0,
+                      help="initial supply voltage")
+    parser.add_option("--power_pred_voltage_emergency", type="float",
+                      default=0.95, help="Supply Voltage Emergency")
 
     parser.add_option("--power_pred_type", type="str",
                       default="TestPowerPredictor",

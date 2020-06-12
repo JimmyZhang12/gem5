@@ -127,12 +127,8 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
   from m5 import options
   mcpat_exe = os.path.join(options.mcpat_path, "mcpat")
   mcpat = [mcpat_exe,
-    "-infile",
-    xml,
-    "-print_level",
-    print_level,
-    "-opt_for_clk",
-    opt_for_clk]
+    "-i",
+    xml]
   #print(" ".join(mcpat))
   with open(ofile, "w") as ostd, open(errfile, "w") as oerr:
     p = subprocess.Popen(mcpat, stdout=ostd, stderr=oerr)

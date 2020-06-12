@@ -158,7 +158,7 @@ class System:
       config_dict["system.tech_node"] \
       if "system.tech_node" in config_dict.keys() else "22"
     self.parameters["target_core_clockrate"][0] = \
-      str((1.0e-6/float(config_dict["system.clk_domain.clock"]))*1.0e12)
+      str(float(sim_dict["frequency"]))
     self.parameters["temperature"][0] = str(sim_dict["temperature"])
     self.parameters["number_cache_levels"][0] = \
       str(3) if num_l3 != 0 else str(2)

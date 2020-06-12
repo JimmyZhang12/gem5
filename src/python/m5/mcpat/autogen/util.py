@@ -46,7 +46,7 @@ def build_gem5_stat_dict(file):
       if line.strip() == "":
         continue
       elif "End Simulation Statistics" in line:
-        stats = defaultdict(lambda: 0)
+        stats = defaultdict(lambda: [0] * 64)
       elif "Begin Simulation Statistics" in line:
         return stats
       else:

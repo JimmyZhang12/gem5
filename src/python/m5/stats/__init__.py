@@ -361,6 +361,8 @@ numDump = 0
 init_ncsim = True
 lastVoltage = []
 lastCurrent = []
+avgCurrent = 0
+avgVoltage = 0
 runtime_begin_profile=False
 profiling = False
 
@@ -372,24 +374,26 @@ def get_current():
     if not profiling:
         return 20
     global lastCurrent
+    global avgCurrent
     if len(lastCurrent) == 0:
-        return 0.0
-    avg = sum(lastCurrent)/len(lastCurrent)
+        return avgCurrent
+    avgCurrent = sum(lastCurrent)/len(lastCurrent)
     lastCurrent = []
-    return avg
+    return avgCurrent
 
 def get_voltage():
     if not profiling:
         return 1.2
     global lastVoltage
+    global avgVoltage
     if len(lastVoltage) == 0:
-        return 0.0
-    avg = sum(lastVoltage)/len(lastVoltage)
+        return avgVoltage
+    avgVoltage = sum(lastVoltage)/len(lastVoltage)
     lastVoltage = []
-    return avg
+    return avgVoltage
 
 def get_profiling():
-    return profiling
+    return runtime_begin_profile
 
 def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
@@ -414,9 +418,7 @@ def dump(root=None, exit=False):
 
     if(options.mcpat_enable):
         if((options.power_profile_start != -1 and
-            now >= options.power_profile_start and
-            now < options.power_profile_start+
-                  options.power_profile_duration) or
+            now >= options.power_profile_start) or
             runtime_begin_profile):
             profiling = True
             numDump += 1
@@ -438,53 +440,49 @@ def dump(root=None, exit=False):
             resistance = 0
             voltage = 0
             current = 0
+            mp_v = vpi_shm.mp_get_voltage_set()
+            mp_f = vpi_shm.mp_get_freq()
             if(options.ncverilog_enable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v
-                    mcpat.m5_to_mcpat(1.2, 380.0)
-                    resistance = mcpat.get_last_r(1.2)
-                    current = mcpat.get_last_i(1.2)
-                    power = mcpat.get_last_p(1.2)
+                    mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
+                    resistance = mcpat.get_last_r(mp_v)
+                    current = mcpat.get_last_i(mp_v)
+                    power = mcpat.get_last_p(mp_v)
                     # Run Init and warmup PowerSupply
-                    vpi_shm.initialize(options.mcpat_testname, \
-                                 options.ncverilog_step)
-                    for i in range(int(options.ncverilog_warmup \
-                                  /options.ncverilog_step)):
-                        vpi_shm.set_driver_signals(1.2, \
-                                                current, 0)
+                    vpi_shm.initialize(options.mcpat_testname)
+                    for i in range(int(options.ncverilog_warmup)):
+                        vpi_shm.set_driver_signals(current, 0)
                         lastVoltage.append(vpi_shm.get_voltage())
                         lastCurrent.append(vpi_shm.get_current())
                         vpi_shm.ack_supply()
                     init_ncsim = False
                 else:
-                    mcpat.m5_to_mcpat(1.2, 380.0)
-                    resistance = mcpat.get_last_r(1.2)
-                    current = mcpat.get_last_i(1.2)
-                    power = mcpat.get_last_p(1.2)
-                    vpi_shm.set_driver_signals(1.2, \
-                                            current, 0)
+                    mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
+                    resistance = mcpat.get_last_r(mp_v)
+                    current = mcpat.get_last_i(mp_v)
+                    power = mcpat.get_last_p(mp_v)
+                    vpi_shm.set_driver_signals(current, 0)
                     lastVoltage.append(vpi_shm.get_voltage())
                     lastCurrent.append(vpi_shm.get_current())
                     vpi_shm.ack_supply()
             else:
-                mcpat.m5_to_mcpat(1.2, 380.0)
+                mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
 
-            max = math.floor(options.power_profile_duration/
-                             options.power_profile_interval)
+            max = options.power_profile_duration
             if options.power_profile_duration == -1:
                 max = -1
             #print("NumDump = "+str(numDump)+" Max = \
             # "+str(max)+" Exit = "+str(exit))
-            if(numDump == max - 1 or exit):
+            if(numDump == max or exit):
                 mcpat.dump()
                 runtime_begin_profile = False
                 print("Ending after "+str(numDump)+
                       " datapoints")
                 # Clean up simulation:
                 if(options.ncverilog_enable):
-                    current = mcpat.get_last_i(1.2)
-                    vpi_shm.set_driver_signals(1.2, \
-                                          current, 1)
+                    current = mcpat.get_last_i(mp_v)
+                    vpi_shm.set_driver_signals(current, 1)
                     lastVoltage.append(vpi_shm.get_voltage())
                     lastCurrent.append(vpi_shm.get_current())
                     vpi_shm.ack_supply()

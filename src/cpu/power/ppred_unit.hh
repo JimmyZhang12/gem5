@@ -56,8 +56,23 @@
 #include "sim/clocked_object.hh"
 #include "sim/global_event.hh"
 #include "sim/sim_object.hh"
+#include "sim/stat_control.hh"
 
 namespace PPred {
+
+class PPredIF {
+  public:
+    uint32_t sim_period;
+    uint32_t cycle_period;
+    bool stat_event_fired;
+    PPredIF() {
+      sim_period = 0;
+      cycle_period = 0;
+      stat_event_fired = false;
+    }
+};
+
+extern PPredIF interface;
 
 extern std::vector<GlobalEvent*> ppred_events;
 
@@ -140,6 +155,13 @@ class PPredUnit : public ClockedObject
 
   private:
     int period;
+    int cycle_period;
+    double delta;
+    double emergency;
+    double clk;
+    bool emergency_throttle;
+    double voltage_set;
+
     int id;
 };
 
@@ -167,7 +189,13 @@ class PowerPredEvent : public GlobalEvent
             curTick());
         if (unit != NULL)
         {
-            unit->predict();
+            if (Stats::pythonGetProfiling()) {
+              repeat = PPred::interface.sim_period;
+              if (PPred::interface.stat_event_fired) {
+                PPred::interface.stat_event_fired = false;
+                unit->predict();
+              }
+            }
             unit->schedPowerPredEvent(curTick() + repeat, repeat, unit);
         }
     }

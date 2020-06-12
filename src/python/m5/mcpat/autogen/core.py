@@ -241,7 +241,7 @@ class Core:
 
     # Init the Directory Parameters and Stats:
     self.parameters["clock_rate"][0]= \
-      str((1.0e-6/float(config_dict["clock"]))*1.0e12)
+      str(float(sim_dict["frequency"]))
     self.parameters["vdd"][0] = str(float(sim_dict["voltage"]))
     self.parameters["power_gating_vcc"][0] = "-1"
     self.parameters["opt_local"][0] = "0"

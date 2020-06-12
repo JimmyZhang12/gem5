@@ -247,7 +247,14 @@ for i in range(np):
         if options.power_pred_type == "TestPowerPredictor":
             ncb = math.floor(math.log(options.power_pred_table_size, 2))
             system.cpu[i].powerPred = \
-                powerPredClass(period=options.power_profile_interval,
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    # Specific
                     num_entries=options.power_pred_table_size,
                     num_correlation_bits=ncb,
                     pc_start=options.power_pred_pc_start,
@@ -258,7 +265,14 @@ for i in range(np):
             ncb = math.floor(math.log(options.power_pred_table_size, 2)/
                 (options.power_pred_history_size+1))
             system.cpu[i].powerPred = \
-                powerPredClass(period=options.power_profile_interval,
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    # Specific
                     num_entries=options.power_pred_table_size,
                     nbits_pc=ncb,
                     history_size=options.power_pred_history_size,
@@ -308,7 +322,7 @@ else:
     MemConfig.config_mem(options, system)
     config_filesystem(system, options)
 
-m5.stats.periodicStatDump(options.power_profile_interval)
+m5.stats.periodicStatDump(options.power_profile_initial_stats_interval)
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

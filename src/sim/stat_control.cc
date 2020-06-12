@@ -57,6 +57,7 @@
 #include "base/statistics.hh"
 #include "base/time.hh"
 #include "cpu/base.hh"
+#include "cpu/o3/cpu.hh"
 #include "debug/StatEvent.hh"
 #include "sim/global_event.hh"
 
@@ -211,6 +212,8 @@ initSimStats()
     static Global global;
 }
 
+bool first_time = true;
+
 /**
  * Event to dump and/or reset the statistics.
  */
@@ -231,13 +234,30 @@ class StatEvent : public GlobalEvent
     virtual void
     process()
     {
-        DPRINTF(StatEvent, "StatEvent::process() curTick: %i\n", curTick());
-        if (dump)
-            Stats::dump();
+        if (pythonGetProfiling()) {
+          // Help with fast forwarding to the
+          // ROI as stat event takes lots of time....
+          repeat = PPred::interface.sim_period;
+          if (numCPUClockCyclesStats >= PPred::interface.cycle_period) {
+            DPRINTF(StatEvent, "StatEvent::process() curTick: %i\n, "
+                    "numCPUClockCycles: %i\n", curTick(),
+                    numCPUClockCyclesStats);
+            numCPUClockCyclesStats = 0;
+            if (first_time) {
+              if (reset)
+                  Stats::reset();
+              first_time = false;
+            }
+            else {
+              if (dump)
+                  Stats::dump();
 
-        if (reset)
-            Stats::reset();
-
+              if (reset)
+                  Stats::reset();
+            }
+            PPred::interface.stat_event_fired = true;
+          }
+        }
         if (repeat) {
             Stats::schedStatEvent(dump, reset, curTick() + repeat, repeat);
         }

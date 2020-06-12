@@ -55,7 +55,13 @@ PPredUnit::PPredUnit(const Params *params)
     : ClockedObject(params),
     min_current((double)params->min_current),
     max_current((double)params->max_current),
-    period(params->period)
+    period(params->period),
+    cycle_period(params->cycle_period),
+    delta(params->delta),
+    emergency(params->emergency),
+    clk(params->clk),
+    emergency_throttle(params->emergency_throttle),
+    voltage_set(params->voltage_set)
 {
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
     supply_voltage = 0.0;
@@ -65,6 +71,12 @@ PPredUnit::PPredUnit(const Params *params)
               PPred::ppred_events.size());
     this->id = (int)PPred::ppred_events.size();
     PPred::ppred_events.push_back(NULL);
+
+    vpi_shm::set_voltage_set(voltage_set);
+    vpi_shm::set_freq(clk, cycle_period);
+
+    PPred::interface.sim_period = this->period;
+    PPred::interface.cycle_period = this->cycle_period;
 
     /*
      * If the period is set to 0, then we do not want to dump
@@ -144,6 +156,8 @@ PPredUnit::schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit)
 namespace PPred {
 
 std::vector<GlobalEvent*> ppred_events;
+
+PPredIF interface;
 
 void
 updateEvents()
