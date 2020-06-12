@@ -33,6 +33,7 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class FlashController:
   """ McPAT does not track individual flash controller,
   instead, it takes the total accesses and calculate
@@ -51,7 +52,7 @@ class FlashController:
   stats = \
   {
     "duty_cycle" : ["1.0","achievable max load <= 1.0"],
-    "total_load_perc" : \
+    "total_load_perc" :   \
       ["0.0","Percentage of total achived load to total achivable"
         "bandwidth"]
   }
@@ -75,12 +76,12 @@ class FlashController:
     for key in sorted(self.parameters):
       top.append(ElementTree.Comment( \
         ", ".join(['param', key, self.parameters[key][1]])))
-      top.append(ElementTree.Element(
-        'param', name=key, value=self.parameters[key][0]))
+      top.append(
+          ElementTree.Element( \
+          'param', name=key, value=self.parameters[key][0]))
     for key in sorted(self.stats):
       top.append(ElementTree.Comment( \
         ", ".join(['stat', key, self.stats[key][1]])))
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
-

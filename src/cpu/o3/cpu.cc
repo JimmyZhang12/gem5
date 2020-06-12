@@ -76,6 +76,8 @@
 
 struct BaseCPUParams;
 
+uint64_t numCPUClockCyclesStats = 0;
+
 using namespace TheISA;
 using namespace std;
 
@@ -535,6 +537,7 @@ FullO3CPU<Impl>::tick()
     assert(drainState() != DrainState::Drained);
 
     ++numCycles;
+    ++numCPUClockCyclesStats;
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
 //    activity = false;

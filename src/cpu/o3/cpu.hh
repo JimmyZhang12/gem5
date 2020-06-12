@@ -75,6 +75,8 @@ class ThreadContext;
 template <class>
 class O3ThreadContext;
 
+extern uint64_t numCPUClockCyclesStats;
+
 class Checkpoint;
 class Process;
 

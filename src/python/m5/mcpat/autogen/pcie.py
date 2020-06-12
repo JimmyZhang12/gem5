@@ -33,6 +33,7 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class PCIE:
   """ On chip PCIe controller, including Phy. For a minimum PCIe packet
   size of 84B at 8Gb/s per lane (PCIe 3.0), a new packet arrives every
@@ -55,7 +56,7 @@ class PCIE:
   stats = \
   {
     "duty_cycle" : ["1.0","achievable max load <= 1.0"],
-    "total_load_perc" : \
+    "total_load_perc" :   \
       ["0.0","Percentage of total achived load to total achivable "
         "bandwidth"]
   }
@@ -87,4 +88,3 @@ class PCIE:
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
-

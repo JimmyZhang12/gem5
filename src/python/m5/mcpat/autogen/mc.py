@@ -33,15 +33,14 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class MemoryController:
   """ Memory controllers are for DDR(2,3...) DIMMs
   current version of McPAT uses published values for
   base parameters of memory controller improvements on
   MC will be added in later versions. """
-
   """ Current McPAT version only supports homogeneous
   memory controllers """
-
   """McPAT will add the control bus width to the
   address bus width automatically. McPAT does not track
   individual mc, instead, it takes the total accesses
@@ -50,7 +49,7 @@ class MemoryController:
   Further track down can be easily added in later
   versions."""
   def __init__(self, component_id, component_name, \
-                stat_dict, config_dict, sim_dict):
+                stat_dict, config_dict, sim_dict, ruby):
     self.name = "mc"
     self.id = "mc"
 
@@ -59,7 +58,7 @@ class MemoryController:
       "type" : ["0","1: low power; 0 high performance"],
       "mc_clock" : ["2666","DIMM IO bus clock rate MHz"],
       "vdd" : ["0","0 means using ITRS default vdd"],
-      "power_gating_vcc" : \
+      "power_gating_vcc" :   \
         ["-1","\"-1\" means using default power gating virtual power"
           "supply voltage constrained by technology and computed"
           "automatically"],
@@ -76,7 +75,7 @@ class MemoryController:
     }
     self.stats = \
     {
-      "memory_accesses" : \
+      "memory_accesses" :   \
         ["0","mem_ctrls.writeReqs + mem_ctrls.readReqs"],
       "memory_reads" : ["0","mem_ctrls.readReqs"],
       "memory_writes" : ["0","mem_ctrls.writeReqs"]
@@ -86,21 +85,21 @@ class MemoryController:
     self.id = component_id
 
     # Init the Memory Controller Parameters and Stats:
-    self.parameters["type"][0]="0"
-    self.parameters["mc_clock"][0]=str(int(config_dict["tCK"])*2)
-    self.parameters["vdd"][0]=str(float(config_dict["VDD"]))
-    self.parameters["power_gating_vcc"][0]="-1"
+    self.parameters["type"][0] = "0"
+    self.parameters["mc_clock"][0] = str(int(config_dict["tCK"]) * 2)
+    self.parameters["vdd"][0] = str(float(config_dict["VDD"]))
+    self.parameters["power_gating_vcc"][0] = "-1"
     self.parameters["peak_transfer_rate"][0]= \
       str(int(stat_dict["bw_total::total"][1])/1e6)
-    self.parameters["block_size"][0]="64"
-    self.parameters["number_mcs"][0]="4"
-    self.parameters["memory_channels_per_mc"][0]="2"
-    self.parameters["number_ranks"][0]="2"
-    self.parameters["withPHY"][0]="0"
-    self.parameters["req_window_size_per_channel"][0]="32"
-    self.parameters["IO_buffer_size_per_channel"][0]="64"
-    self.parameters["databus_width"][0]="128"
-    self.parameters["addressbus_width"][0]="52"
+    self.parameters["block_size"][0] = "64"
+    self.parameters["number_mcs"][0] = "4"
+    self.parameters["memory_channels_per_mc"][0] = "2"
+    self.parameters["number_ranks"][0] = "2"
+    self.parameters["withPHY"][0] = "0"
+    self.parameters["req_window_size_per_channel"][0] = "32"
+    self.parameters["IO_buffer_size_per_channel"][0] = "64"
+    self.parameters["databus_width"][0] = "128"
+    self.parameters["addressbus_width"][0] = "52"
     self.stats["memory_accesses"][0]= \
       str(int(stat_dict["readReqs"][1]) \
       +int(stat_dict["writeReqs"][1]))
@@ -124,4 +123,3 @@ class MemoryController:
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
-

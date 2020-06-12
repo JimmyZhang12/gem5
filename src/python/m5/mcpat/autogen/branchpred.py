@@ -33,6 +33,7 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class Predictor:
   def __init__(self, component_id, component_name, \
                 stat_dict, config_dict, sim_dict):
@@ -44,17 +45,17 @@ class Predictor:
 
     self.parameters = \
     {
-      "local_predictor_size" : \
+      "local_predictor_size" :   \
         ["10,3","Local Predictor Size"],
-      "local_predictor_entries" : \
+      "local_predictor_entries" :   \
         ["1024","Number of Entries in Local Predictor"],
-      "global_predictor_entries" : \
+      "global_predictor_entries" :   \
         ["4096","Global Predictor Entries"],
-      "global_predictor_bits" : \
+      "global_predictor_bits" :   \
         ["2","Bits per entry in Global Predictor"],
-      "chooser_predictor_entries" : \
+      "chooser_predictor_entries" :   \
         ["4096","Number of entries in the Chooser"],
-      "chooser_predictor_bits" : \
+      "chooser_predictor_bits" :   \
         ["2","Bits per entry in the chooser"]
     }
     self.stats = \
