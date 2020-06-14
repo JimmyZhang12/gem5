@@ -53,15 +53,17 @@
 
 PPredUnit::PPredUnit(const Params *params)
     : ClockedObject(params),
+    sysClkDomain(params->sys_clk_domain),
     min_current((double)params->min_current),
     max_current((double)params->max_current),
-    period(params->period),
     cycle_period(params->cycle_period),
+    period(params->period),
     delta(params->delta),
     emergency(params->emergency),
-    clk(params->clk),
     emergency_throttle(params->emergency_throttle),
-    voltage_set(params->voltage_set)
+    voltage_set(params->voltage_set),
+    clk(params->clk),
+    clk_half(params->clk/2)
 {
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
     supply_voltage = 0.0;
@@ -74,6 +76,8 @@ PPredUnit::PPredUnit(const Params *params)
 
     vpi_shm::set_voltage_set(voltage_set);
     vpi_shm::set_freq(clk, cycle_period);
+    period_normal = this->clockPeriod();
+    period_half = this->clockPeriod()*2;
 
     PPred::interface.sim_period = this->period;
     PPred::interface.cycle_period = this->cycle_period;
@@ -123,9 +127,11 @@ void
 PPredUnit::predict(void)
 {
     DPRINTF(PowerPred, "PPredUnit::predict()\n");
-    update();
-    action(lookup());
-    ++lookups;
+    if (Stats::pythonGetProfiling()) {
+      update();
+      action(lookup());
+      ++lookups;
+    }
 }
 
 void
@@ -139,6 +145,22 @@ void
 PPredUnit::dump()
 {
     DPRINTF(PowerPred, "PPredUnit::dump()\n");
+}
+
+void
+PPredUnit::clkThrottle()
+{
+    // Set the CPU Clock Object to Half Freq
+    sysClkDomain->clockPeriod(period_half);
+    vpi_shm::set_freq(clk_half, cycle_period);
+}
+
+void
+PPredUnit::clkRestore()
+{
+    // Set the CPU Clock Object to Normal
+    sysClkDomain->clockPeriod(period_normal);
+    vpi_shm::set_freq(clk, cycle_period);
 }
 
 

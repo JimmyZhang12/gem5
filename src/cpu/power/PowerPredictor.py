@@ -43,6 +43,9 @@ class PowerPredictor(ClockedObject):
     max_current = Param.Unsigned(40, "Maximum Current Supply " \
         "(Amps) of the PSU")
 
+    sys_clk_domain = Param.SrcClockDomain(Parent.clk_domain,
+                         "Clk domain in which the handler is instantiated")
+
     period = Param.Unsigned(100, "Number of sim-cycles")
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
     delta = Param.Float(0.75, "Rate at which to train")
@@ -51,10 +54,15 @@ class PowerPredictor(ClockedObject):
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
 
-class TestPowerPredictor(PowerPredictor):
-    type = 'TestPowerPredictor'
+class Test(PowerPredictor):
+    type = 'Test'
     cxx_class = 'Test'
     cxx_header = 'cpu/power/test.hh'
+
+class SimplePowerPredictor(PowerPredictor):
+    type = 'SimplePowerPredictor'
+    cxx_class = 'Simple'
+    cxx_header = 'cpu/power/simple.hh'
 
     num_entries = Param.Unsigned(1024, "Entries in predictor table lookup")
     num_correlation_bits = Param.Unsigned(10, "Number of bits to form " \
@@ -102,10 +110,12 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
 #
 #    table_size = Param.Unsigned(1024, "Size of UArch Event Table")
 
-#class IdealSensor(PowerPredictor):
-#    type = "IdealSensor"
-#    cxx_class = "Sensor"
-#    cxx_headder = "cpu/power/sensor.hh"
-#
-#    threshold = Param.Float(0.97, "The Percentage of Supply Voltage " \
-#        "to trigger an emergency prediction")
+class IdealSensor(PowerPredictor):
+    type = "IdealSensor"
+    cxx_class = "Sensor"
+    cxx_header = "cpu/power/sensor.hh"
+
+    threshold = Param.Float(0.96, "The Percentage of Supply Voltage " \
+        "to trigger an emergency throttle")
+    hysteresis = Param.Float(0.02, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")

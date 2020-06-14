@@ -365,6 +365,7 @@ avgCurrent = 0
 avgVoltage = 0
 runtime_begin_profile=False
 profiling = False
+lv = 0
 
 def beginProfile():
     global runtime_begin_profile
@@ -407,6 +408,7 @@ def dump(root=None, exit=False):
     global lastCurrent
     global runtime_begin_profile
     global profiling
+    global lv
     assert lastDump <= now
     new_dump = lastDump != now
     lastDump = now
@@ -453,17 +455,25 @@ def dump(root=None, exit=False):
                     vpi_shm.initialize(options.mcpat_testname)
                     for i in range(int(options.ncverilog_warmup)):
                         vpi_shm.set_driver_signals(current, 0)
-                        lastVoltage.append(vpi_shm.get_voltage())
+                        lv = vpi_shm.get_voltage()
+                        lastVoltage.append(lv)
                         lastCurrent.append(vpi_shm.get_current())
                         vpi_shm.ack_supply()
                     init_ncsim = False
                 else:
-                    mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
-                    resistance = mcpat.get_last_r(mp_v)
-                    current = mcpat.get_last_i(mp_v)
-                    power = mcpat.get_last_p(mp_v)
+                    if options.ncverilog_feedback:
+                      mcpat.m5_to_mcpat(lv, mp_f, 380.0)
+                      resistance = mcpat.get_last_r(lv)
+                      current = mcpat.get_last_i(lv)
+                      power = mcpat.get_last_p(lv)
+                    else:
+                      mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
+                      resistance = mcpat.get_last_r(mp_v)
+                      current = mcpat.get_last_i(mp_v)
+                      power = mcpat.get_last_p(mp_v)
                     vpi_shm.set_driver_signals(current, 0)
-                    lastVoltage.append(vpi_shm.get_voltage())
+                    lv = vpi_shm.get_voltage()
+                    lastVoltage.append(lv)
                     lastCurrent.append(vpi_shm.get_current())
                     vpi_shm.ack_supply()
             else:

@@ -40,68 +40,80 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
 
-#include <deque>
-#include <string>
-#include <unordered_map>
+#include "cpu/power/sensor.hh"
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/Test.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 
-class Test : public PPredUnit
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/utility.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "debug/SensorPowerPred.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/stat_control.hh"
+
+Sensor::Sensor(const Params *params)
+    : PPredUnit(params),
+    threshold(params->threshold),
+    hysteresis(params->hysteresis)
 {
-  public:
-    typedef TestParams Params;
+    DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
+    cycle_count = 0;
+    throttled = false;
+}
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Test(const Params *p);
+void
+Sensor::regStats()
+{
+    PPredUnit::regStats();
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+    action_taken
+        .name(name() + ".action_taken")
+        .desc("Number of times the action is taken")
+        ;
+    throttle
+        .name(name() + ".throttle")
+        .desc("Is the CPU Actively Throttled")
+        ;
+}
 
-    /**
-     * Performs a lookup on the power prediction module based on the current
-     * PC.
-     * @param tid The thread ID.
-     * @param inst_PC The PC to look up.
-     * @return boolean throttle/no_throttle
-     */
-    int lookup(void);
+int
+Sensor::lookup(void)
+{
+  DPRINTF(SensorPowerPred, "Sensor::lookup()\n");
+  supply_voltage = Stats::pythonGetVoltage();
+  supply_current = Stats::pythonGetCurrent();
+  if (supply_voltage < threshold) {
+    throttled = true;
+    return 1;
+  }
+  else if (throttled && supply_voltage > threshold + hysteresis) {
+    throttled = false;
+    return 0;
+  }
+  return 0;
+}
 
-    /**
-     * Based on the feedback from the power supply unit, this function updates
-     * the predictor.
-     * @todo Does nothing.
-     */
-    void update(void);
+void
+Sensor::update(void)
+{
+  DPRINTF(SensorPowerPred, "Sensor::update()\n");
+}
 
-    /**
-     * The action taken by the Test predictor is none.
-     * @param lookup_val The value returned by the lookup method
-     */
-    void action(int throttle);
+void
+Sensor::action(int throttle)
+{
+  DPRINTF(SensorPowerPred, "Sensor::action(): Clock Freq = %d\n",
+          clockPeriod());
+}
 
-  protected:
-    double threshold;
-
-
-  private:
-    int cycle_count;
-    Stats::Scalar action_taken;
-    Stats::Scalar throttle;
-};
-
-#endif // __CPU_PRED_TEST_HH__
+Sensor*
+IdealSensorParams::create()
+{
+  return new Sensor(this);
+}
 

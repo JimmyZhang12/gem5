@@ -10,8 +10,7 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,27 +140,34 @@ class PPredUnit : public ClockedObject
 
     void dump();
 
+    void clkThrottle();
+
+    void clkRestore();
+
     void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
 
   protected:
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;
 
+    SrcClockDomain* sysClkDomain;
+
     double min_current;
     double max_current;
     double supply_voltage;
     double supply_current;
     Addr PC;
-
+    int cycle_period;
   private:
     int period;
-    int cycle_period;
     double delta;
     double emergency;
-    double clk;
     bool emergency_throttle;
     double voltage_set;
-
+    double clk;
+    double clk_half;
+    Tick period_normal;
+    Tick period_half;
     int id;
 };
 

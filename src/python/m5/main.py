@@ -170,6 +170,8 @@ def parse_options():
     group("ncverilog options")
     option("--ncverilog_enable", action="store_true", default=False,
         help="If set, ncverilog is disabled")
+    option("--ncverilog_feedback", action="store_true", default=False,
+        help="Enable Feedback in McPat Calculation")
     option("--ncverilog_path", type='str', default="",
         help="set the path to ncverilog project, dockerfile, and runscripts")
     option("--ncverilog_step", type="int", default=250,

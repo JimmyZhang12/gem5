@@ -244,7 +244,17 @@ for i in range(np):
     if options.power_pred_type:
         powerPredClass = ObjectList.power_pred_list.get(\
             options.power_pred_type)
-        if options.power_pred_type == "TestPowerPredictor":
+        if options.power_pred_type == "Test":
+            ncb = math.floor(math.log(options.power_pred_table_size, 2))
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency)
+        elif options.power_pred_type == "SimplePowerPredictor":
             ncb = math.floor(math.log(options.power_pred_table_size, 2))
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -280,6 +290,18 @@ for i in range(np):
                     error_array_size=100,
                     confidence_level=0.075,
                     limit=5.0)
+        elif options.power_pred_type == "IdealSensor":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    # Specific
+                    threshold=0.95,
+                    hysteresis=0.02)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain
 
