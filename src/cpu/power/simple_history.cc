@@ -104,6 +104,13 @@ SimpleHistory::regStats()
         ;
 }
 
+void
+SimpleHistory::tick(void) {
+    DPRINTF(SimpleHistoryPowerPred, "SimpleHistory::tick()\n");
+    update();
+    action(lookup());
+}
+
 int
 SimpleHistory::lookup(void)
 {

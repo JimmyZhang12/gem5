@@ -72,36 +72,32 @@ class Sensor : public PPredUnit
     void regStats() override;
 
     /**
-     * Performs a lookup on the power prediction module based on the current
-     * PC.
+     * Update the Sensor State Machine.
      * @param tid The thread ID.
      * @param inst_PC The PC to look up.
      * @return boolean throttle/no_throttle
      */
-    int lookup(void);
-
-    /**
-     * Based on the feedback from the power supply unit, this function updates
-     * the predictor.
-     * @todo Does nothing.
-     */
-    void update(void);
-
-    /**
-     * The action taken by the Sensor predictor is none.
-     * @param lookup_val The value returned by the lookup method
-     */
-    void action(int throttle);
+    void tick(void);
 
   protected:
     double threshold;
     double hysteresis;
+    unsigned int latency;
 
   private:
-    int cycle_count;
-    bool throttled;
-    Stats::Scalar action_taken;
-    Stats::Scalar throttle;
+    enum state_t {
+      NORMAL,
+      DELAY,
+      THROTTLE
+    };
+
+    state_t state;
+    state_t next_state;
+
+    // Counter for # Cycles to delay
+    int delay_count;
+    Stats::Scalar s;
+    Stats::Scalar ns;
 };
 
 #endif // __CPU_PRED_SENSOR_HH__

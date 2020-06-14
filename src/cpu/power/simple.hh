@@ -71,6 +71,8 @@ class Simple : public PPredUnit
      */
     void regStats() override;
 
+    void tick(void);
+
     /**
      * Performs a lookup on the power prediction module based on the current
      * PC.

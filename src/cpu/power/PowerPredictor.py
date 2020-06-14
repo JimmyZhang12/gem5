@@ -115,7 +115,9 @@ class IdealSensor(PowerPredictor):
     cxx_class = "Sensor"
     cxx_header = "cpu/power/sensor.hh"
 
-    threshold = Param.Float(0.96, "The Percentage of Supply Voltage " \
+    threshold = Param.Float(0.970, "The Percentage of Supply Voltage " \
         "to trigger an emergency throttle")
-    hysteresis = Param.Float(0.02, "The Percentage of Supply Voltage " \
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
+    latency = Param.Unsigned(0, "Latency before the throttling action " \
+        "is taken")

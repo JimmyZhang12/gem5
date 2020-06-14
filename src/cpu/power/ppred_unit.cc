@@ -117,21 +117,22 @@ PPredUnit::regStats()
 {
     SimObject::regStats();
 
-    lookups
-        .name(name() + ".lookups")
-        .desc("Number of PP lookups")
+    freq
+        .name(name() + ".frequency")
+        .desc("Frequency set by Power Predictor")
+        ;
+    ticks
+        .name(name() + ".ticks")
+        .desc("Num Ticks")
         ;
 }
 
 void
-PPredUnit::predict(void)
+PPredUnit::process(void)
 {
-    DPRINTF(PowerPred, "PPredUnit::predict()\n");
-    if (Stats::pythonGetProfiling()) {
-      update();
-      action(lookup());
-      ++lookups;
-    }
+    DPRINTF(PowerPred, "PPredUnit::process()\n");
+    ++ticks;
+    tick();
 }
 
 void
@@ -153,6 +154,7 @@ PPredUnit::clkThrottle()
     // Set the CPU Clock Object to Half Freq
     sysClkDomain->clockPeriod(period_half);
     vpi_shm::set_freq(clk_half, cycle_period);
+    freq = clk_half;
 }
 
 void
@@ -161,6 +163,7 @@ PPredUnit::clkRestore()
     // Set the CPU Clock Object to Normal
     sysClkDomain->clockPeriod(period_normal);
     vpi_shm::set_freq(clk, cycle_period);
+    freq = clk_half;
 }
 
 

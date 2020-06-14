@@ -60,43 +60,21 @@ Test::Test(const Params *params)
     : PPredUnit(params)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
-    cycle_count = 0;
 }
 
 void
 Test::regStats()
 {
     PPredUnit::regStats();
-
-    action_taken
-        .name(name() + ".action_taken")
-        .desc("Number of times the action is taken")
-        ;
-    throttle
-        .name(name() + ".throttle")
-        .desc("Is the CPU Actively Throttled")
-        ;
 }
 
-int
-Test::lookup(void)
+void
+Test::tick(void)
 {
   DPRINTF(TestPowerPred, "Test::lookup()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  return 0;
-}
-
-void
-Test::update(void)
-{
-  DPRINTF(TestPowerPred, "Test::update()\n");
-}
-
-void
-Test::action(int throttle)
-{
-  DPRINTF(TestPowerPred, "Test::action(): Clock Freq = %d\n", clockPeriod());
+  Stats::pythonGetVoltage();
+  Stats::pythonGetCurrent();
+  return;
 }
 
 Test*

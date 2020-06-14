@@ -59,11 +59,13 @@
 Sensor::Sensor(const Params *params)
     : PPredUnit(params),
     threshold(params->threshold),
-    hysteresis(params->hysteresis)
+    hysteresis(params->hysteresis),
+    latency(params->latency)
 {
     DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
-    cycle_count = 0;
-    throttled = false;
+    delay_count = 0;
+    state = NORMAL;
+    next_state = NORMAL;
 }
 
 void
@@ -71,44 +73,84 @@ Sensor::regStats()
 {
     PPredUnit::regStats();
 
-    action_taken
-        .name(name() + ".action_taken")
-        .desc("Number of times the action is taken")
+    s
+        .name(name() + ".state")
+        .desc("Current State of the Predictor")
         ;
-    throttle
-        .name(name() + ".throttle")
-        .desc("Is the CPU Actively Throttled")
+    ns
+        .name(name() + ".next_state")
+        .desc("Next State of the Predictor")
         ;
 }
 
-int
-Sensor::lookup(void)
+void
+Sensor::tick(void)
 {
-  DPRINTF(SensorPowerPred, "Sensor::lookup()\n");
+  DPRINTF(SensorPowerPred, "Sensor::tick()\n");
   supply_voltage = Stats::pythonGetVoltage();
   supply_current = Stats::pythonGetCurrent();
-  if (supply_voltage < threshold) {
-    throttled = true;
-    return 1;
-  }
-  else if (throttled && supply_voltage > threshold + hysteresis) {
-    throttled = false;
-    return 0;
-  }
-  return 0;
-}
 
-void
-Sensor::update(void)
-{
-  DPRINTF(SensorPowerPred, "Sensor::update()\n");
-}
+  // Transition Logic
+  switch(state) {
+    case NORMAL : {
+      next_state = NORMAL;
+      if (supply_voltage < threshold) {
+        if (latency == 0) {
+          next_state = THROTTLE;
+        }
+        next_state = DELAY;
+      }
+      break;
+    }
+    case DELAY : {
+      next_state = DELAY;
+      if (delay_count >= latency) {
+        next_state = THROTTLE;
+      }
+      break;
+    }
+    case THROTTLE : {
+      next_state = THROTTLE;
+      if (supply_voltage >= threshold + hysteresis) {
+        next_state = NORMAL;
+      }
+      break;
+    }
+    default : {
+      // Nothing
+      next_state = NORMAL;
+      break;
+    }
+  }
 
-void
-Sensor::action(int throttle)
-{
-  DPRINTF(SensorPowerPred, "Sensor::action(): Clock Freq = %d\n",
-          clockPeriod());
+  // Output Logic
+  switch(state) {
+    case NORMAL : {
+      // Restore Frequency
+      delay_count = 0;
+      clkRestore();
+      break;
+    }
+    case DELAY : {
+      delay_count++;
+      break;
+    }
+    case THROTTLE : {
+      delay_count = 0;
+      clkThrottle();
+      break;
+    }
+    default : {
+      // Nothing
+      break;
+    }
+  }
+  // Update Stats:
+  s = state;
+  ns = next_state;
+  // Update Next State Transition:
+  state = next_state;
+  return;
 }
 
 Sensor*

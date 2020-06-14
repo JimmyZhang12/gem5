@@ -96,6 +96,13 @@ Simple::regStats()
         ;
 }
 
+void
+Simple::tick(void) {
+    DPRINTF(SimplePowerPred, "Simple::tick()\n");
+    update();
+    action(lookup());
+}
+
 int
 Simple::lookup(void)
 {

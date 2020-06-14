@@ -373,7 +373,7 @@ def beginProfile():
 
 def get_current():
     if not profiling:
-        return 20
+        return 0
     global lastCurrent
     global avgCurrent
     if len(lastCurrent) == 0:
@@ -384,7 +384,7 @@ def get_current():
 
 def get_voltage():
     if not profiling:
-        return 1.2
+        return 1
     global lastVoltage
     global avgVoltage
     if len(lastVoltage) == 0:

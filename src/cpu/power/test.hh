@@ -71,36 +71,11 @@ class Test : public PPredUnit
      */
     void regStats() override;
 
-    /**
-     * Performs a lookup on the power prediction module based on the current
-     * PC.
-     * @param tid The thread ID.
-     * @param inst_PC The PC to look up.
-     * @return boolean throttle/no_throttle
-     */
-    int lookup(void);
-
-    /**
-     * Based on the feedback from the power supply unit, this function updates
-     * the predictor.
-     * @todo Does nothing.
-     */
-    void update(void);
-
-    /**
-     * The action taken by the Test predictor is none.
-     * @param lookup_val The value returned by the lookup method
-     */
-    void action(int throttle);
+    void tick(void);
 
   protected:
-    double threshold;
-
 
   private:
-    int cycle_count;
-    Stats::Scalar action_taken;
-    Stats::Scalar throttle;
 };
 
 #endif // __CPU_PRED_TEST_HH__

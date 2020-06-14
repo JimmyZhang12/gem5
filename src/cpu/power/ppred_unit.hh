@@ -94,40 +94,21 @@ class PPredUnit : public ClockedObject
     virtual void regStats() override;
 
     /**
-     * Makes a prediction on what the power will be in the next epoch.
-     * @param pc The pc to lookup in the predictor
+     * Called by the simulation event queue after a stat event and ticks
+     * the predictor
      * @param tid The thread ID
      * @todo Must interface with power supply model to issue appropriate
      * commands.
      */
-    void predict(void);
+    void process(void);
 
     /**
-     * Performs a lookup on the power prediction module based on the current
-     * PC.
+     * Tick: Invoke the Derived Predictor
      * @param tid The thread ID.
      * @param inst_PC The PC to look up.
      * @return Quantized value of the power prediction.
      */
-    virtual int lookup(void) = 0;
-
-    /**
-     * Based on the feedback from the power supply unit, this function updates
-     * the predictor.
-     * @todo Must interface with power supply model to read the accuracy of the
-     * prediction and size + duration of droop, Keep a log of previous lookups
-     * used as a history and then update those too to avoid a signature that
-     * leaves a large droop or overshoot.
-     */
-    virtual void update(void) = 0;
-
-    /**
-     * Based on the result of the lookup, perform an action. This
-     * action is specific to the type of predictor and the
-     * granularity of the control loop.
-     * @param lookup_val The value returned by the lookup method
-     */
-    virtual void action(int lookup_val) = 0;
+    virtual void tick(void) = 0;
 
     /**
      * Send the PC to the branch pred unit.
@@ -147,8 +128,8 @@ class PPredUnit : public ClockedObject
     void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
 
   protected:
-    /** Stat for number of BP lookups. */
-    Stats::Scalar lookups;
+    Stats::Scalar freq;
+    Stats::Scalar ticks;
 
     SrcClockDomain* sysClkDomain;
 
@@ -199,7 +180,7 @@ class PowerPredEvent : public GlobalEvent
               repeat = PPred::interface.sim_period;
               if (PPred::interface.stat_event_fired) {
                 PPred::interface.stat_event_fired = false;
-                unit->predict();
+                unit->process();
               }
             }
             unit->schedPowerPredEvent(curTick() + repeat, repeat, unit);
