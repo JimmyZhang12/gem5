@@ -100,15 +100,15 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
 #
 #    signature_length = Param.Unsigned(4,"Length of History Snapshot " \
 #        "(Figure 2)")
-#
-#class UArchEventPredictor(PowerPredictor):
-#    type = "UArchEventPredictor"
-#    cxx_class = "UArchEvent"
-#    cxx_headder = "cpu/power/uarch_event.hh"
-#    """ Stores the address of the last microarch event and the
-#    instruction responsible for it """
-#
-#    table_size = Param.Unsigned(1024, "Size of UArch Event Table")
+
+class uArchEventPredictor(PowerPredictor):
+    type = "uArchEventPredictor"
+    cxx_class = "uArchEventPredictor"
+    cxx_header = "cpu/power/uarch_event.hh"
+    """ Stores the address of the last microarch event and the
+    instruction responsible for it """
+
+    table_size = Param.Unsigned(128, "Size of UArch Event Table")
 
 class IdealSensor(PowerPredictor):
     type = "IdealSensor"

@@ -40,65 +40,22 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_SENSOR_HH__
-#define __CPU_POWER_SENSOR_HH__
+#ifndef __CPU_POWER_PREDICTION_TABLE_EVENT_HH__
+#define __CPU_POWER_PREDICTION_TABLE_EVENT_HH__
 
-#include <deque>
-#include <string>
-#include <unordered_map>
+namespace PPred {
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/IdealSensor.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
-
-class Sensor : public PPredUnit
-{
-  public:
-    typedef IdealSensorParams Params;
-
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Sensor(const Params *p);
-
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
-
-    /**
-     * Update the Sensor State Machine.
-     * @param tid The thread ID.
-     * @param inst_PC The PC to look up.
-     * @return boolean throttle/no_throttle
-     */
-    void tick(void);
-
-  protected:
-    double threshold;
-    double hysteresis;
-    unsigned int latency;
-
-  private:
-    enum state_t {
-      NORMAL=1,
-      DELAY,
-      THROTTLE
-    };
-
-    state_t state;
-    state_t next_state;
-
-    // Counter for # Cycles to delay
-    int delay_count;
-    Stats::Scalar s;
-    Stats::Scalar ns;
+enum event_t {
+  BRANCH_T=1,
+  BRANCH_NT,
+  COMMIT,
+  IQ,
+  L2,
+  FLUSH,
+  DL1,
+  DTLB
 };
 
-#endif // __CPU_PRED_SENSOR_HH__
+} // namespace PPred
 
+#endif

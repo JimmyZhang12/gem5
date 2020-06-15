@@ -40,65 +40,101 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_SENSOR_HH__
-#define __CPU_POWER_SENSOR_HH__
 
-#include <deque>
-#include <string>
-#include <unordered_map>
+#include "cpu/power/uarch_event.hh"
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/IdealSensor.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 
-class Sensor : public PPredUnit
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/utility.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "debug/uArchEventPowerPred.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/stat_control.hh"
+
+uArchEventPredictor::uArchEventPredictor(const Params *params)
+    : PPredUnit(params)
 {
-  public:
-    typedef IdealSensorParams Params;
+    DPRINTF(uArchEventPowerPred,
+            "uArchEventPredictor::uArchEventPredictor()\n");
+    state = NORMAL;
+    next_state = NORMAL;
+    table.resize(params->table_size, 1);
+}
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Sensor(const Params *p);
+void
+uArchEventPredictor::regStats()
+{
+    PPredUnit::regStats();
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+    s
+        .name(name() + ".state")
+        .desc("Current State of the Predictor")
+        ;
+    ns
+        .name(name() + ".next_state")
+        .desc("Next State of the Predictor")
+        ;
+}
 
-    /**
-     * Update the Sensor State Machine.
-     * @param tid The thread ID.
-     * @param inst_PC The PC to look up.
-     * @return boolean throttle/no_throttle
-     */
-    void tick(void);
+void
+uArchEventPredictor::tick(void)
+{
+  DPRINTF(uArchEventPowerPred, "uArchEventPredictor::tick()\n");
+  supply_voltage = Stats::pythonGetVoltage();
+  supply_current = Stats::pythonGetCurrent();
 
-  protected:
-    double threshold;
-    double hysteresis;
-    unsigned int latency;
+  // Transition Logic
+  switch(state) {
+    case NORMAL : {
+      break;
+    }
+    case EMERGENCY : {
+      break;
+    }
+    case THROTTLE : {
+      break;
+    }
+    default : {
+      break;
+    }
+  }
 
-  private:
-    enum state_t {
-      NORMAL=1,
-      DELAY,
-      THROTTLE
-    };
+  // Output Logic
+  switch(state) {
+    case NORMAL : {
+      // Restore Frequency
+      clkRestore();
+      break;
+    }
+    case EMERGENCY : {
+      break;
+    }
+    case THROTTLE : {
+      clkThrottle();
+      break;
+    }
+    default : {
+      // Nothing
+      break;
+    }
+  }
+  // Update Stats:
+  s = state;
+  ns = next_state;
+  // Update Next State Transition:
+  state = next_state;
+  return;
+}
 
-    state_t state;
-    state_t next_state;
+uArchEventPredictor*
+uArchEventPredictorParams::create()
+{
+  return new uArchEventPredictor(this);
+}
 
-    // Counter for # Cycles to delay
-    int delay_count;
-    Stats::Scalar s;
-    Stats::Scalar ns;
-};
-
-#endif // __CPU_PRED_SENSOR_HH__
 
