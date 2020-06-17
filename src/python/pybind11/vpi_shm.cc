@@ -51,6 +51,10 @@ char name_buff[256] = "";
 double ppred;
 bool new_prediction;
 
+double freq = 3.5e9; // Hz
+uint32_t ttn = (uint32_t)((1.0/freq)*1.0e12); // ps
+double v_set = 1.0;
+
 void
 init_shm(mapped* p)
 {
@@ -60,6 +64,7 @@ init_shm(mapped* p)
     p->pv.data.curr_load = 0;
     p->pv.data.prediction = 0;
     p->pv.data.enable = 0;
+    p->pv.data.time_to_next = 1000;
     p->pv.data.sim_over = 0;
 
     sem_init(&p->vp.sem, 1, 1);
@@ -185,7 +190,7 @@ ack_supply()
 
 
 void
-set_driver_signals(double v_set, double load, uint32_t term)
+set_driver_signals(double load, uint32_t term)
 {
     // Wait for the verilog simulation to consume the previous data:
     while (1)
@@ -207,6 +212,7 @@ set_driver_signals(double v_set, double load, uint32_t term)
             shm_ptr->pv.data.v_set = v_set;
             shm_ptr->pv.data.curr_load = load;
             shm_ptr->pv.data.sim_over = term;
+            shm_ptr->pv.data.time_to_next = ttn;
             shm_ptr->pv.new_data = NEW_DATA;
             sem_post(&shm_ptr->pv.sem);
             return;
@@ -220,6 +226,41 @@ set_prediction(double prediction)
 {
     ppred = prediction;
     new_prediction = true;
+}
+
+void
+set_freq(double frequency, int cycles)
+{
+    freq = frequency;
+    ttn = (uint32_t)(cycles/(frequency)*1.0e12); // Convert to
+                                                 // ps/clk
+}
+
+void
+set_voltage_set(double voltage_set)
+{
+    v_set = voltage_set;
+}
+
+double
+mp_get_voltage_set() {
+    // McPAT will use this for Power Calc
+    return v_set;
+}
+
+double
+mp_get_freq() {
+    // McPAT will use this for Power Calc
+    // Return MHz
+    return freq/1.0e6;
+}
+
+/**
+ * Used by the VPI python code to launch the ncverilog sim
+ */
+int
+get_time_to_next() {
+  return ttn;
 }
 
 } // namespace vpi_shm
@@ -240,4 +281,9 @@ pybind_init_vpi_shm(py::module &m_native)
           "Get the instantaneous current value from the sim");
     m.def("ack_supply", &vpi_shm::ack_supply,
           "Ack the sim");
+    m.def("mp_get_freq", &vpi_shm::mp_get_freq, "Get Current CLK");
+    m.def("mp_get_voltage_set", &vpi_shm::mp_get_voltage_set,
+          "Get Voltage Set");
+    m.def("get_time_to_next", &vpi_shm::get_time_to_next,
+          "Get Voltage Set");
 }

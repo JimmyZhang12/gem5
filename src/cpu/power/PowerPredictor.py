@@ -43,13 +43,26 @@ class PowerPredictor(ClockedObject):
     max_current = Param.Unsigned(40, "Maximum Current Supply " \
         "(Amps) of the PSU")
 
-    period = Param.Unsigned(250, "Number of cpu-cycles per epoch")
-    delta = Param.Float(0.75, "Rate at which to train")
+    sys_clk_domain = Param.SrcClockDomain(Parent.clk_domain,
+                         "Clk domain in which the handler is instantiated")
 
-class TestPowerPredictor(PowerPredictor):
-    type = 'TestPowerPredictor'
+    period = Param.Unsigned(100, "Number of sim-cycles")
+    cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
+    delta = Param.Float(0.75, "Rate at which to train")
+    emergency = Param.Unsigned(0.95, "% Voltage considered a supply emergency")
+    clk = Param.Float(3.5e9, "Default Clock Freq")
+    emergency_throttle = Param.Bool(True, "Throttle on emergency")
+    voltage_set = Param.Float(True, "Voltage Set")
+
+class Test(PowerPredictor):
+    type = 'Test'
     cxx_class = 'Test'
     cxx_header = 'cpu/power/test.hh'
+
+class SimplePowerPredictor(PowerPredictor):
+    type = 'SimplePowerPredictor'
+    cxx_class = 'Simple'
+    cxx_header = 'cpu/power/simple.hh'
 
     num_entries = Param.Unsigned(1024, "Entries in predictor table lookup")
     num_correlation_bits = Param.Unsigned(10, "Number of bits to form " \
@@ -80,4 +93,32 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
         "the auxiliary circuit.")
     limit = Param.Float(10, "Limit on the istep")
 
+#class HarvardPowerPredictor(PowerPredictor):
+#    type = "HarvardPowerPredictor"
+#    cxx_class = "Harvard"
+#    cxx_headder = "cpu/power/harvard.hh"
+#
+#    signature_length = Param.Unsigned(4,"Length of History Snapshot " \
+#        "(Figure 2)")
 
+class uArchEventPredictor(PowerPredictor):
+    type = "uArchEventPredictor"
+    cxx_class = "uArchEventPredictor"
+    cxx_header = "cpu/power/uarch_event.hh"
+    """ Stores the address of the last microarch event and the
+    instruction responsible for it """
+
+    table_size = Param.Unsigned(128, "Size of UArch Event Table")
+
+class IdealSensor(PowerPredictor):
+    type = "IdealSensor"
+    cxx_class = "Sensor"
+    cxx_header = "cpu/power/sensor.hh"
+
+    threshold = Param.Float(0.975, "The Percentage of Supply Voltage " \
+        "to trigger an emergency throttle")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    duration = Param.Unsigned(20, "The number of cycles to throttle for")
+    latency = Param.Unsigned(0, "Latency before the throttling action " \
+        "is taken")

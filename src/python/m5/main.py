@@ -155,7 +155,7 @@ def parse_options():
 
     # statistics options
     group("mcpat options")
-    option("--mcpat_disable", action="store_true", default=False,
+    option("--mcpat_enable", action="store_true", default=False,
         help="If set, then mcpat and power profiling is disabled")
     option("--mcpat_path", type='str', default="",
         help="set the path to mcpat")
@@ -166,10 +166,12 @@ def parse_options():
     option("--mcpat_testname", type='str', default="",
         help="name for the output")
 
-    # statistics options
+    # NCVerilog options:
     group("ncverilog options")
-    option("--ncverilog_disable", action="store_true", default=False,
+    option("--ncverilog_enable", action="store_true", default=False,
         help="If set, ncverilog is disabled")
+    option("--ncverilog_feedback", action="store_true", default=False,
+        help="Enable Feedback in McPat Calculation")
     option("--ncverilog_path", type='str', default="",
         help="set the path to ncverilog project, dockerfile, and runscripts")
     option("--ncverilog_step", type="int", default=250,
@@ -177,16 +179,19 @@ def parse_options():
     option("--ncverilog_warmup", type="int", default=1,
         help="Synchonization with PSU: num_cycles*clk_period")
 
-    # statistics options
+    # Profiling options:
     group("power profile options")
     option("--power_profile_start", type='int', default=100000000,
         help="Begin profiling at cycle")
-    option("--power_profile_duration", type='int', default=100000,
-        help="End profiling after X cycles or terminating")
-    option("--power_profile_interval", type="int", default=1000,
-        help="Interval for dumping stats in cycles")
-    option("--system_period", type="int", default=0.5,
-        help="Clock period in ns, default 0.5")
+    option("--power_profile_duration", type='int', default=1000,
+        help="End profiling after X cpu cycles")
+    option("--power_profile_interval", type="int", default=100,
+        help="Interval for StatEvent")
+
+    # Power Supply Options:
+    group("Power Supply Options")
+    option("--power-supply-type", type='str', default="HARVARD",
+        help="Power Supply Type")
 
     # Help options
     group("Help Options")

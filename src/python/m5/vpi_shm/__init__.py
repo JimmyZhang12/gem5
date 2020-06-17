@@ -39,8 +39,19 @@ import _m5.vpi_shm as vpi
 
 thread = None
 
-def initialize(name, step):
+valid_pdn_types = ["HARVARD", "ARM"]
+
+def initialize(name):
   from m5 import options
+  pdn_type = options.power_supply_type
+  if pdn_type not in valid_pdn_types:
+    pdn_types = ",".join(valid_pdn_types)
+    print("Error, Invalid PDN Type: \""+
+          pdn_type+"\", must be of type: "+pdn_types)
+    sys.exit(1)
+
+  time_to_next = str(vpi.get_time_to_next())+"p"
+
   global thread
   """ This function will launch the docker container for the verilog
   simulation. """
@@ -55,15 +66,16 @@ def initialize(name, step):
     rc = process.poll()
     return rc
 
-  def verilog_thread(name, step):
+  def verilog_thread(name, pdn_type, ttn):
     """ This is the thread function for executing the verilog sim """
     run_command([os.path.join(options.ncverilog_path,"run_cadence.sh"), \
-                name, str(step)])
+                name, pdn_type, ttn])
 
   if os.path.exists(os.path.join("/dev/shm", name)):
     os.remove(os.path.join("/dev/shm", name))
 
-  thread = Thread(target=verilog_thread, args=[name, step])
+  thread = Thread(target=verilog_thread, args=[name, pdn_type, \
+              time_to_next])
   thread.setDaemon(True)
   thread.start()
 
@@ -73,8 +85,8 @@ def initialize(name, step):
   vpi.create_shm(0, name)
   return
 
-def set_driver_signals(voltage_setpoint, load, term_sim):
-  vpi.set_driver_signals(voltage_setpoint, load, term_sim)
+def set_driver_signals(load, term_sim):
+  vpi.set_driver_signals(load, term_sim)
 
 def get_voltage():
   return vpi.get_voltage()
@@ -84,6 +96,12 @@ def get_current():
 
 def ack_supply():
   return vpi.ack_supply()
+
+def mp_get_freq():
+  return vpi.mp_get_freq()
+
+def mp_get_voltage_set():
+  return vpi.mp_get_voltage_set()
 
 def stop():
   subprocess.Popen(['reset']).wait()

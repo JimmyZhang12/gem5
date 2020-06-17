@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __CPU_POWER_SENSOR_HH__
+#define __CPU_POWER_SENSOR_HH__
 
 #include <deque>
 #include <string>
@@ -52,31 +52,57 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
-#include "params/Test.hh"
+#include "params/IdealSensor.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class Test : public PPredUnit
+class Sensor : public PPredUnit
 {
   public:
-    typedef TestParams Params;
+    typedef IdealSensorParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    Test(const Params *p);
+    Sensor(const Params *p);
 
     /**
      * Registers statistics.
      */
     void regStats() override;
 
+    /**
+     * Update the Sensor State Machine.
+     * @param tid The thread ID.
+     * @param inst_PC The PC to look up.
+     * @return boolean throttle/no_throttle
+     */
     void tick(void);
 
   protected:
+    double threshold;
+    double hysteresis;
+    unsigned int latency;
+    unsigned int throttle_duration;
 
   private:
+    enum state_t {
+      NORMAL=1,
+      DELAY,
+      THROTTLE
+    };
+
+    state_t state;
+    state_t next_state;
+
+    // Counter for # Cycles to delay
+    int delay_count;
+    int td_count;
+    Stats::Scalar s;
+    Stats::Scalar ns;
+    Stats::Scalar sv;
+    Stats::Scalar sc;
 };
 
-#endif // __CPU_PRED_TEST_HH__
+#endif // __CPU_PRED_SENSOR_HH__
 

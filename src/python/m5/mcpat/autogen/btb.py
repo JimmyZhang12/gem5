@@ -33,6 +33,7 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class BTB:
   def __init__(self, component_id, component_name, \
                 stat_dict, config_dict, sim_dict):
@@ -41,7 +42,7 @@ class BTB:
 
     self.parameters = \
     {
-      "BTB_config" : \
+      "BTB_config" :   \
         ["5120,4,2,1,1,3","Should be 4096 + 1024 all the buffer related" \
           " are optional the parameters are capacity,block_width," \
           "associativity,bank, throughput w.r.t. core clock, latency" \
@@ -49,9 +50,9 @@ class BTB:
     }
     self.stats = \
     {
-      "read_accesses" : \
+      "read_accesses" :   \
         ["0","Lookups into BTB; branchPred.BTBLookups"],
-      "write_accesses" : \
+      "write_accesses" :   \
         ["0","Number of Updates to the CAM; commit.branches"],
     }
 
@@ -82,5 +83,3 @@ class BTB:
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
-
-

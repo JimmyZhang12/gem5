@@ -33,80 +33,111 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class Cache:
   def __init__(self, component_id, component_name, \
-                stat_dict, config_dict, sim_dict):
+                stat_dict, config_dict, sim_dict, ruby=False):
     self.name = "cache"
     self.id = "cache"
 
     self.parameters = \
     {
-      "config" : \
+      "config" :   \
         ["0,1,2,3,4,5,6,7","Cache Capacity, Block Width, Associativity,"\
           " Bank, Throughput w.r.t. core clock, Latency w.r.t. core clock," \
           " Output Width, Cache Policy: 0 no write or write-though with" \
           " non-write allocate; 1 write-back with write-allocate"],
-      "buffer_sizes" : \
+      "buffer_sizes" :   \
         ["0,1,2,3","Cache controller buffer sizes: miss_buffer_size" \
           "(MSHR), fill_buffer_size, prefetch_buffer_size, wb_buffer_size"],
-      "clockrate" : \
+      "clockrate" :   \
         ["1000","Clock rate in MHz"],
-      "vdd" : \
+      "vdd" :   \
         ["1.2","Voltage"],
-      "power_gating_vcc" : \
+      "power_gating_vcc" :   \
         ["-1","-1 means default power gating"],
-      "ports" : \
+      "ports" :   \
         ["1,1,1","Number of R, W, RW ports"],
-      "device_type" : \
+      "device_type" :   \
         ["0","0: HP, 1: LP"]
     }
     self.stats = \
     {
-      "duty_cycle" : \
+      "duty_cycle" :   \
         ["1.0",""],
-      "read_accesses" : \
+      "read_accesses" :   \
         ["0", "Cache Read Accesses Total"],
-      "read_misses" : \
+      "read_misses" :   \
         ["0", "Cache Read Req Misses Total"],
-      "write_accesses" : \
+      "write_accesses" :   \
         ["0", "Cache Write Accesses Total"],
-      "write_misses" : \
+      "write_misses" :   \
         ["0", "Cache Write Req Misses Total"],
-      "conflicts" : \
+      "conflicts" :   \
         ["0", "Cache Replacements"]
     }
     self.name = component_name
     self.id = component_id
 
     # Init the Cache Parameters and Stats:
-    self.parameters["config"][0]= \
-      ",".join([config_dict["size"],config_dict["tags.block_size"], \
-      config_dict["assoc"],"1","1",config_dict["response_latency"], \
-      config_dict["tags.block_size"],"0"])
-    self.parameters["buffer_sizes"][0]= \
-      ",".join([config_dict["mshrs"],config_dict["mshrs"], \
-      config_dict["mshrs"],config_dict["mshrs"]])
-    self.parameters["clockrate"][0]= \
-      str((1.0e-6/float(config_dict["clock"]))*1.0e12)
-    self.parameters["vdd"][0]= \
-      str(float(sim_dict["voltage"]))
-    self.stats["read_accesses"][0]= \
-      str(int(stat_dict["ReadExReq_accesses::total"][1]) \
-      +int(stat_dict["ReadCleanReq_accesses::total"][1]) \
-      +int(stat_dict["ReadSharedReq_accesses::total"][1]))
-    self.stats["read_misses"][0]= \
-      str(int(stat_dict["ReadCleanReq_misses::total"][1]) \
-      +int(stat_dict["ReadExReq_misses::total"][1]))
-    self.stats["write_accesses"][0]= \
-      str(int(stat_dict["WritebackDirty_accesses::total"][1]) \
-      +int(stat_dict["WritebackClean_accesses::total"][1]))
-    self.stats["write_misses"][0]= \
-      str(int(stat_dict["WritebackClean_accesses::total"][1]) \
-      +int(stat_dict["WritebackClean_accesses::total"][1]) \
-      -int(stat_dict["WritebackDirty_hits::total"][1]) \
-      -int(stat_dict["WritebackDirty_hits::total"][1]))
-    self.stats["conflicts"][0]= \
-      str(int(stat_dict["replacements"][1]))
+    if ruby:
+      self.parameters["config"][0]= \
+        ",".join([config_dict["size"],config_dict["tags.block_size"], \
+        config_dict["assoc"],"1","1",config_dict["response_latency"], \
+        config_dict["tags.block_size"],"0"])
+      self.parameters["buffer_sizes"][0]= \
+        ",".join([config_dict["mshrs"],config_dict["mshrs"], \
+        config_dict["mshrs"],config_dict["mshrs"]])
+      self.parameters["clockrate"][0]= \
+        str((1.0e-6/float(config_dict["clock"]))*1.0e12)
+      self.parameters["vdd"][0]= \
+        str(float(sim_dict["voltage"]))
+      self.stats["read_accesses"][0]= \
+        str(int(stat_dict["ReadExReq_accesses::total"][1]) \
+        +int(stat_dict["ReadCleanReq_accesses::total"][1]) \
+        +int(stat_dict["ReadSharedReq_accesses::total"][1]))
+      self.stats["read_misses"][0]= \
+        str(int(stat_dict["ReadCleanReq_misses::total"][1]) \
+        +int(stat_dict["ReadExReq_misses::total"][1]))
+      self.stats["write_accesses"][0]= \
+        str(int(stat_dict["WritebackDirty_accesses::total"][1]) \
+        +int(stat_dict["WritebackClean_accesses::total"][1]))
+      self.stats["write_misses"][0]= \
+        str(int(stat_dict["WritebackClean_accesses::total"][1]) \
+        +int(stat_dict["WritebackClean_accesses::total"][1]) \
+        -int(stat_dict["WritebackDirty_hits::total"][1]) \
+        -int(stat_dict["WritebackDirty_hits::total"][1]))
+      self.stats["conflicts"][0]= \
+        str(int(stat_dict["replacements"][1]))
+    else:
+      self.parameters["config"][0]= \
+        ",".join([config_dict["size"],config_dict["tags.block_size"], \
+        config_dict["assoc"],"1","1",config_dict["response_latency"], \
+        config_dict["tags.block_size"],"0"])
+      self.parameters["buffer_sizes"][0]= \
+        ",".join([config_dict["mshrs"],config_dict["mshrs"], \
+        config_dict["mshrs"],config_dict["mshrs"]])
+      self.parameters["clockrate"][0]= \
+        str((1.0e-6/float(config_dict["clock"]))*1.0e12)
+      self.parameters["vdd"][0]= \
+        str(float(sim_dict["voltage"]))
+      self.stats["read_accesses"][0]= \
+        str(int(stat_dict["ReadExReq_accesses::total"][1]) \
+        +int(stat_dict["ReadCleanReq_accesses::total"][1]) \
+        +int(stat_dict["ReadSharedReq_accesses::total"][1]))
+      self.stats["read_misses"][0]= \
+        str(int(stat_dict["ReadCleanReq_misses::total"][1]) \
+        +int(stat_dict["ReadExReq_misses::total"][1]))
+      self.stats["write_accesses"][0]= \
+        str(int(stat_dict["WritebackDirty_accesses::total"][1]) \
+        +int(stat_dict["WritebackClean_accesses::total"][1]))
+      self.stats["write_misses"][0]= \
+        str(int(stat_dict["WritebackClean_accesses::total"][1]) \
+        +int(stat_dict["WritebackClean_accesses::total"][1]) \
+        -int(stat_dict["WritebackDirty_hits::total"][1]) \
+        -int(stat_dict["WritebackDirty_hits::total"][1]))
+      self.stats["conflicts"][0]= \
+        str(int(stat_dict["replacements"][1]))
 
   def xml(self):
     """ Build an XML Tree from the parameters, stats, and subcomponents """
@@ -123,6 +154,7 @@ class Cache:
         'stat', name=key, value=self.stats[key][0]))
     return top
 
+
 class ICache:
   def __init__(self, component_id, component_name, \
                 stat_dict, config_dict, sim_dict):
@@ -131,13 +163,13 @@ class ICache:
 
     self.parameters = \
     {
-      "icache_config" :  \
+      "icache_config" :    \
         ["0,1,2,3,4,5,6,7","Cache Capacity, Block Width,"
           "Associativity, Bank, Throughput w.r.t. core clock, Latency"
           "w.r.t. core clock, Output Width, Cache Policy: 0 no write or"
           "write-though with non-write allocate; 1 write-back with"
           "write-allocate"],
-      "buffer_sizes" :  \
+      "buffer_sizes" :    \
         ["0,1,2,3","Cache controller buffer sizes:"
           "miss_buffer_size(MSHR), fill_buffer_size,"
           "prefetch_buffer_size, wb_buffer_size"]
@@ -164,7 +196,7 @@ class ICache:
       str(int(stat_dict["ReadReq_accesses::total"][1]))
     self.stats["read_misses"][0]= \
       str(int(stat_dict["ReadReq_misses::total"][1]))
-    self.stats["conflicts"][0]=str(int(stat_dict["replacements"][1]))
+    self.stats["conflicts"][0] = str(int(stat_dict["replacements"][1]))
 
   def xml(self):
     """ Build an XML Tree from the parameters, stats, and
@@ -181,6 +213,7 @@ class ICache:
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
+
 
 class DCache:
   def __init__(self, component_id, component_name, \

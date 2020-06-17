@@ -32,6 +32,7 @@
 
 from xml.etree import ElementTree
 from xml.dom import minidom
+import math
 
 from core import Core
 from cache import Cache
@@ -44,92 +45,95 @@ from directory import Directory
 
 from util import *
 
+
 class System:
-  name = "system"
-  id = "system"
-
-  cores = None
-  l2cache = None
-  l1directory = None
-  l2directory = None
-  l3 = None
-  noc = None
-  mem = None
-  niu = None
-  pcie = None
-  flash = None
-
-  # Parameters are a dictionary with the key as the parameter name,
-  # and then a value comment pair
-  parameters = \
-  {
-    "number_of_cores" : ["1","The number of cores"],
-    "number_of_L1Directories" : ["0","The number of L1 Directories"],
-    "number_of_L2Directories" : ["0","The number of L2 Directories"],
-    "number_of_L2s" : ["1","The number of L2s in each Cluster"],
-    "Private_L2" : ["1","1: Private; 0: shared/coherent"],
-    "number_of_L3s" : ["1","Number of L3 Caches"],
-    "number_of_NoCs" : ["1","Number of NoCs"],
-    "homogeneous_cores" : \
-      ["1","1: Homogeneous cores; 0: Heterogeneous core statistics"],
-    "homogeneous_L2s" : \
-      ["1","1: Homogeneous L2; Heterogeneous L2 statistics"],
-    "homogeneous_L1Directories" : \
-      ["1","1: Homogeneous L1 Directory; Heterogeneous L1 Directory "
-        "statistics"],
-    "homogeneous_L2Directories" : \
-      ["1","1: Homogeneous L2 Directory; Heterogeneous L2 Directory "
-        "statistics"],
-    "homogeneous_L3s" : \
-      ["1","1: Homogeneous L3; Heterogeneous L3 statistics"],
-    "homogeneous_ccs" : \
-      ["1","1: Homogeneous Cache Controller; Heterogeneous Cache "
-        "Controller statistics"],
-    "homogeneous_NoCs" : \
-      ["1","1: Homogeneous Network on Chip; Heterogeneous Network on "
-        "Chip statistics"],
-    "core_tech_node" : ["22","Tech Process Node"],
-    "target_core_clockrate" : ["1000","Core Clock Rate in MHz"],
-    "temperature" : ["300","System Temperature in Kelvin"],
-    "number_cache_levels" : ["3",""],
-    "interconnect_projection_type" : \
-      ["0","0: Aggressive Wire Technology; 1: Conservative Wire "
-        "Technology"],
-    "device_type" : \
-      ["0","0: High Performance Type; 1: Low Standby Power; 2: Low "
-        "Operating Power"],
-    "longer_channel_device" : \
-      ["1","0: No use; 1: Use when possible"],
-    "power_gating" : ["1","0: not enabled; 1: enabled"],
-    "machine_bits" : ["64","n-Bit machine"],
-    "virtual_address_width" : ["64","n-Bit virtual address"],
-    "physical_address_width" : ["52","m-Bit physical address"],
-    "virtual_memory_page_size" : ["4096","Virtual memory page size"]
-  }
-
-  # Stats are a dictionary with the key as the parameter name, and
-  # then a value comment pair
-  stats = \
-  {
-    "total_cycles" : ["1", "Total CPU Cycles"],
-    "idle_cycles" : ["1", "Total Idle Cycles"],
-    "busy_cycles" : ["0", "Total Busy Cycles (Total - Idle)"]
-  }
-
   def __init__(self, component_id, component_name, \
-                stat_dict, config_dict, sim_dict):
+                stat_dict, config_dict, sim_dict, ruby):
     """ In the constructor, the parameters are populated from the
     config and the stats are populated from the stats. The
     subcomponents are also constructed and populated hierarchically
     """
+    self.name = "system"
+    self.id = "system"
+
+    self.cores = None
+    self.l2cache = None
+    self.l1directory = None
+    self.l2directory = None
+    self.l3 = None
+    self.noc = None
+    self.mem = None
+    self.niu = None
+    self.pcie = None
+    self.flash = None
+
+    # Parameters are a dictionary with the key as the parameter name,
+    # and then a value comment pair
+    self.parameters = \
+    {
+      "number_of_cores" : ["1","The number of cores"],
+      "number_of_L1Directories" : ["0","The number of L1 Directories"],
+      "number_of_L2Directories" : ["0","The number of L2 Directories"],
+      "number_of_L2s" : ["1","The number of L2s in each Cluster"],
+      "Private_L2" : ["1","1: Private; 0: shared/coherent"],
+      "number_of_L3s" : ["1","Number of L3 Caches"],
+      "number_of_NoCs" : ["1","Number of NoCs"],
+      "homogeneous_cores" :   \
+        ["1","1: Homogeneous cores; 0: Heterogeneous core statistics"],
+      "homogeneous_L2s" :   \
+        ["1","1: Homogeneous L2; Heterogeneous L2 statistics"],
+      "homogeneous_L1Directories" :   \
+        ["1","1: Homogeneous L1 Directory; Heterogeneous L1 Directory "
+          "statistics"],
+      "homogeneous_L2Directories" :   \
+        ["1","1: Homogeneous L2 Directory; Heterogeneous L2 Directory "
+          "statistics"],
+      "homogeneous_L3s" :   \
+        ["1","1: Homogeneous L3; Heterogeneous L3 statistics"],
+      "homogeneous_ccs" :   \
+        ["1","1: Homogeneous Cache Controller; Heterogeneous Cache "
+          "Controller statistics"],
+      "homogeneous_NoCs" :   \
+        ["1","1: Homogeneous Network on Chip; Heterogeneous Network on "
+          "Chip statistics"],
+      "core_tech_node" : ["22","Tech Process Node"],
+      "target_core_clockrate" : ["1000","Core Clock Rate in MHz"],
+      "temperature" : ["300","System Temperature in Kelvin"],
+      "number_cache_levels" : ["3",""],
+      "interconnect_projection_type" :   \
+        ["0","0: Aggressive Wire Technology; 1: Conservative Wire "
+          "Technology"],
+      "device_type" :   \
+        ["0","0: High Performance Type; 1: Low Standby Power; 2: Low "
+          "Operating Power"],
+      "longer_channel_device" :   \
+        ["1","0: No use; 1: Use when possible"],
+      "power_gating" : ["1","0: not enabled; 1: enabled"],
+      "machine_bits" : ["64","n-Bit machine"],
+      "virtual_address_width" : ["64","n-Bit virtual address"],
+      "physical_address_width" : ["52","m-Bit physical address"],
+      "virtual_memory_page_size" : ["4096","Virtual memory page size"]
+    }
+
+    # Stats are a dictionary with the key as the parameter name, and
+    # then a value comment pair
+    self.stats = \
+    {
+      "total_cycles" : ["1", "Total CPU Cycles"],
+      "idle_cycles" : ["1", "Total Idle Cycles"],
+      "busy_cycles" : ["0", "Total Busy Cycles (Total - Idle)"]
+    }
 
     num_cpu = 0
     num_l3 = 0
     for i in config_dict["system.children"].split(" "):
       if "cpu" in i and "_" not in i:
-        num_cpu+=1
+        num_cpu += 1
       if "l3" in i and i != "tol3bus":
-        num_l3+=1
+        num_l3 += 1
+
+    if ruby:
+      num_l3 = 1
 
     # Intialize the Parameters based on the config
     self.parameters["number_of_cores"][0] = str(num_cpu)
@@ -152,9 +156,9 @@ class System:
     self.parameters["homogeneous_NoCs"][0] = str(1)
     self.parameters["core_tech_node"][0] = \
       config_dict["system.tech_node"] \
-      if "system.tech_node" in config_dict.keys() else "90"
+      if "system.tech_node" in config_dict.keys() else "22"
     self.parameters["target_core_clockrate"][0] = \
-      str((1.0e-6/float(config_dict["system.clk_domain.clock"]))*1.0e12)
+      str(float(sim_dict["frequency"]))
     self.parameters["temperature"][0] = str(sim_dict["temperature"])
     self.parameters["number_cache_levels"][0] = \
       str(3) if num_l3 != 0 else str(2)
@@ -167,19 +171,25 @@ class System:
     self.parameters["virtual_memory_page_size"][0] = str(4096)
 
     # Intialize the Parameters based on the stats
+    num_zeros = int(math.floor(math.log10(num_cpu)) + 1)
+
     self.stats["total_cycles"][0] = \
       str(int(stat_dict["system.cpu.numCycles"][1])) if(num_cpu==1) \
-      else str(int(stat_dict["system.cpu0.numCycles"][1]))
+      else str(int(stat_dict[ \
+        "system.cpu{a}.numCycles".format(a=str(0).zfill(num_zeros))][1]))
     self.stats["idle_cycles"][0] = \
       str(int(stat_dict["system.cpu.idleCycles"][1])) if(num_cpu==1) \
-      else str(int(stat_dict["system.cpu0.idleCycles"][1]))
+      else str(int(stat_dict[ \
+        "system.cpu{a}.idleCycles".format(a=str(0).zfill(num_zeros))][1]))
     self.stats["busy_cycles"][0] = \
       str(int(stat_dict["system.cpu.numCycles"][1]) \
       -int(stat_dict["system.cpu.idleCycles"][1])) \
-      if(num_cpu==1) else str(int(stat_dict["system.cpu0.numCycles"][1]) \
-      -int(stat_dict["system.cpu0.idleCycles"][1]))
+      if(num_cpu==1) else str(int(stat_dict[ \
+        "system.cpu{a}.numCycles".format(a=str(0).zfill(num_zeros))][1]) \
+      -int(stat_dict[ \
+        "system.cpu{a}.idleCycles".format(a=str(0).zfill(num_zeros))][1]))
 
-    assert(self.stats["total_cycles"] > 0)
+    assert (self.stats["total_cycles"] > 0)
 
     # Intialize all the devices
     self.core = \
@@ -188,28 +198,52 @@ class System:
       ( \
         self.id+".core"+str(i), \
         "core"+str(i), \
-        prune_dict("system.cpu." if num_cpu==1 else "system.cpu"+str(i) \
-          +".", stat_dict), \
-        prune_dict("system.cpu." if num_cpu==1 else "system.cpu"+str(i) \
-          +".", config_dict), \
-        sim_dict \
+        prune_dict("system.cpu." if num_cpu==1 else \
+          "system.cpu"+str(i).zfill(num_zeros) \
+          +"."+","+"system.cpu"+str(i)+"." \
+          +",system.ruby.L0", stat_dict), \
+        prune_dict("system.cpu." if num_cpu==1 else \
+          "system.cpu"+str(i).zfill(num_zeros) \
+          +"."+","+"system.cpu"+str(i)+"." \
+          +",system.ruby.L0", config_dict, "0"), \
+        sim_dict, \
+        ruby
       ) \
       for i in range(int(self.parameters["number_of_cores"][0])) \
     ]
-    self.l2cache = \
-    [ \
-      Cache \
-      ( \
-        self.id+".L2"+str(i), \
-        "L2"+str(i), \
-        prune_dict("system.l2." if num_cpu==1 else "system.l2"+str(i) \
-          +".", stat_dict), \
-        prune_dict("system.l2." if num_cpu==1 else "system.l2"+str(i) \
-          +".", config_dict), \
-        sim_dict \
-      ) \
-      for i in range(int(self.parameters["number_of_cores"][0])) \
-    ]
+    if ruby:
+      # Note: L2 Cache is called L1 in the MESI_Three_Level Ruby Model
+      self.l2cache = \
+      [ \
+        Cache \
+        ( \
+          self.id+".L2"+str(i), \
+          "L2"+str(i), \
+          prune_dict("system.ruby.L1", stat_dict), \
+          prune_dict("system.ruby.L1", config_dict, "0"), \
+          sim_dict, \
+          ruby \
+        ) \
+        for i in range(int(self.parameters["number_of_cores"][0])) \
+      ]
+    else:
+      self.l2cache = \
+      [ \
+        Cache \
+        ( \
+          self.id+".L2"+str(i), \
+          "L2"+str(i), \
+          prune_dict("system.l2." if num_cpu==1 else \
+            "system.l2"+str(i).zfill(num_zeros) \
+            +"."+","+"system.l2"+str(i)+".", stat_dict), \
+          prune_dict("system.l2." if num_cpu==1 else \
+            "system.l2"+str(i).zfill(num_zeros) \
+            +"."+","+"system.l2"+str(i)+".", config_dict, "0"), \
+          sim_dict, \
+          ruby \
+        ) \
+        for i in range(int(self.parameters["number_of_cores"][0])) \
+      ]
     self.l1directory = \
     [ \
       Directory \
@@ -218,7 +252,8 @@ class System:
         "L1Directory"+str(i), \
         stat_dict, \
         config_dict, \
-        sim_dict \
+        sim_dict, \
+        ruby \
       ) \
       for i in range(int(self.parameters["number_of_cores"][0])) \
     ]
@@ -230,24 +265,42 @@ class System:
         "L2Directory"+str(i), \
         stat_dict, \
         config_dict, \
-        sim_dict \
+        sim_dict, \
+        ruby \
       ) \
       for i in range(int(self.parameters["number_of_cores"][0])) \
     ]
-    self.l3 = \
-    [ \
-      Cache \
-      ( \
-        self.id+".L3"+str(i), \
-        "L3"+str(i), \
-        prune_dict("system.l3." if num_l3==1 else "system.l3"+str(i) \
-          +".", stat_dict), \
-        prune_dict("system.l3." if num_l3==1 else "system.l3"+str(i) \
-          +".", config_dict), \
-        sim_dict \
-      ) \
-      for i in range(int(self.parameters["number_of_L3s"][0])) \
-    ]
+    if ruby:
+      # Note: L3 Cache is called L2 in the MESI_Three_Level Ruby Model
+      self.l2cache = \
+      [ \
+        Cache \
+        ( \
+          self.id+".L2"+str(i), \
+          "L2"+str(i), \
+          prune_dict("system.ruby.L2", stat_dict), \
+          prune_dict("system.ruby.L2", config_dict, "0"), \
+          sim_dict, \
+          ruby \
+        ) \
+        for i in range(int(self.parameters["number_of_cores"][0])) \
+      ]
+    else:
+      self.l3 = \
+      [ \
+        Cache \
+        ( \
+          self.id+".L3"+str(i), \
+          "L3"+str(i), \
+          prune_dict("system.l3." if num_l3==1 else "system.l3"+str(i) \
+            +".", stat_dict), \
+          prune_dict("system.l3." if num_l3==1 else "system.l3"+str(i) \
+            +".", config_dict, "0"), \
+          sim_dict, \
+          ruby \
+        ) \
+        for i in range(int(self.parameters["number_of_L3s"][0])) \
+      ]
     self.noc = \
     [ \
       NoC \
@@ -257,6 +310,7 @@ class System:
         stat_dict, \
         config_dict, \
         sim_dict, \
+        ruby, \
         num_cores=num_cpu \
       ) \
       for i in range(int(self.parameters["number_of_NoCs"][0])) \
@@ -266,8 +320,9 @@ class System:
       self.id+".mc", \
       "mc", \
       prune_dict("system.mem_ctrls.",stat_dict), \
-      prune_dict("system.mem_ctrls.",config_dict), \
-      sim_dict \
+      prune_dict("system.mem_ctrls.",config_dict, "0"), \
+      sim_dict, \
+      ruby \
     )
     self.niu = NIU \
     ( \
@@ -323,4 +378,3 @@ class System:
     top.append(self.pcie.xml())
     top.append(self.flash.xml())
     return top
-

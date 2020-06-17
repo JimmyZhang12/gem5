@@ -40,43 +40,40 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __BLOOMFILTER_H__
+#define __BLOOMFILTER_H__
 
-#include <deque>
+#include <algorithm>
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/Test.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
+template<class T>
+class Bloomfilter {
+  unsigned int n;           // Number of Hash Functions
+  unsigned int size;        // Size of the underlying table
+  unsigned int seed;        // Seed to create offsets from
+  std::vector<int> offset;
+  std::vector<bool> table;
 
-class Test : public PPredUnit
-{
-  public:
-    typedef TestParams Params;
+  size_t h(const int offset, const T& val) const;
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Test(const Params *p);
+protected:
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+public:
+  Bloomfilter(unsigned int n = 3,
+              unsigned int size = 2048,
+              unsigned int seed = 0);
 
-    void tick(void);
+  bool find(const T obj) const;
+  void insert(const T obj);
 
-  protected:
-
-  private:
+  void clear();
 };
 
-#endif // __CPU_PRED_TEST_HH__
+#include "cpu/power/bloomfilter.tcc"
 
+#endif // __BLOOMFILTER_H__

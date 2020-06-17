@@ -41,7 +41,7 @@
  */
 
 
-#include "cpu/power/test.hh"
+#include "cpu/power/sensor.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -52,34 +52,129 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "debug/TestPowerPred.hh"
+#include "cpu/power/bloomfilter.h"
+#include "debug/SensorPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Test::Test(const Params *params)
-    : PPredUnit(params)
+Sensor::Sensor(const Params *params)
+    : PPredUnit(params),
+    threshold(params->threshold),
+    hysteresis(params->hysteresis),
+    latency(params->latency),
+    throttle_duration(params->duration)
 {
-    DPRINTF(TestPowerPred, "Test::Test()\n");
+    DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
+    delay_count = 0;
+    td_count = 0;
+    state = NORMAL;
+    next_state = NORMAL;
 }
 
 void
-Test::regStats()
+Sensor::regStats()
 {
     PPredUnit::regStats();
+
+    s
+        .name(name() + ".state")
+        .desc("Current State of the Predictor")
+        ;
+    ns
+        .name(name() + ".next_state")
+        .desc("Next State of the Predictor")
+        ;
+    sv
+        .name(name() + ".supply_voltage")
+        .desc("Supply Voltage")
+        .precision(6)
+        ;
+    sc
+        .name(name() + ".supply_current")
+        .desc("Supply Current")
+        .precision(6)
+        ;
 }
 
 void
-Test::tick(void)
+Sensor::tick(void)
 {
-  DPRINTF(TestPowerPred, "Test::lookup()\n");
-  Stats::pythonGetVoltage();
-  Stats::pythonGetCurrent();
+  DPRINTF(SensorPowerPred, "Sensor::tick()\n");
+  supply_voltage = Stats::pythonGetVoltage();
+  supply_current = Stats::pythonGetCurrent();
+  sv = supply_voltage;
+  sc = supply_current;
+
+  // Transition Logic
+  switch(state) {
+    case NORMAL : {
+      next_state = NORMAL;
+      if (supply_voltage < threshold) {
+        if (latency == 0) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = DELAY;
+        }
+      }
+      break;
+    }
+    case DELAY : {
+      next_state = DELAY;
+      if (delay_count >= latency) {
+        next_state = THROTTLE;
+      }
+      break;
+    }
+    case THROTTLE : {
+      next_state = THROTTLE;
+      if (supply_voltage >= threshold + hysteresis &&
+          td_count >= throttle_duration) {
+        next_state = NORMAL;
+      }
+      break;
+    }
+    default : {
+      // Nothing
+      next_state = NORMAL;
+      break;
+    }
+  }
+
+  // Output Logic
+  switch(state) {
+    case NORMAL : {
+      // Restore Frequency
+      delay_count = 0;
+      td_count = 0;
+      clkRestore();
+      break;
+    }
+    case DELAY : {
+      delay_count+=cycle_period;
+      break;
+    }
+    case THROTTLE : {
+      td_count+=cycle_period;
+      clkThrottle();
+      break;
+    }
+    default : {
+      // Nothing
+      break;
+    }
+  }
+  // Update Stats:
+  s = state;
+  ns = next_state;
+  // Update Next State Transition:
+  state = next_state;
   return;
 }
 
-Test*
-TestParams::create()
+Sensor*
+IdealSensorParams::create()
 {
-  return new Test(this);
+  return new Sensor(this);
 }
 

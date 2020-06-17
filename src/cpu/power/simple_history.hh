@@ -66,6 +66,8 @@ class SimpleHistory : public PPredUnit
      */
     SimpleHistory(const Params *p);
 
+    void tick(void);
+
     /**
      * Registers statistics.
      */

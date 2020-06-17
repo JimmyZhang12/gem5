@@ -40,43 +40,22 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __CPU_POWER_PREDICTION_TABLE_EVENT_HH__
+#define __CPU_POWER_PREDICTION_TABLE_EVENT_HH__
 
-#include <deque>
-#include <string>
-#include <unordered_map>
+namespace PPred {
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/Test.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
-
-class Test : public PPredUnit
-{
-  public:
-    typedef TestParams Params;
-
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Test(const Params *p);
-
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
-
-    void tick(void);
-
-  protected:
-
-  private:
+enum event_t {
+  BRANCH_T=1,
+  BRANCH_NT,
+  COMMIT,
+  IQ,
+  L2,
+  FLUSH,
+  DL1,
+  DTLB
 };
 
-#endif // __CPU_PRED_TEST_HH__
+} // namespace PPred
 
+#endif

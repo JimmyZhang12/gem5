@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __CPU_POWER_SIMPLE_HH__
+#define __CPU_POWER_SIMPLE_HH__
 
 #include <deque>
 #include <string>
@@ -52,19 +52,19 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
-#include "params/Test.hh"
+#include "params/SimplePowerPredictor.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class Test : public PPredUnit
+class Simple : public PPredUnit
 {
   public:
-    typedef TestParams Params;
+    typedef SimplePowerPredictorParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    Test(const Params *p);
+    Simple(const Params *p);
 
     /**
      * Registers statistics.
@@ -73,10 +73,59 @@ class Test : public PPredUnit
 
     void tick(void);
 
+    /**
+     * Performs a lookup on the power prediction module based on the current
+     * PC.
+     * @param tid The thread ID.
+     * @param inst_PC The PC to look up.
+     * @return Quantized value of the power prediction.
+     */
+    int lookup(void);
+
+    /**
+     * Based on the feedback from the power supply unit, this function updates
+     * the predictor.
+     * @todo Must interface with power supply model to read the accuracy of the
+     * prediction and size + duration of droop, Keep a log of previous lookups
+     * used as a history and then update those too to avoid a signature that
+     * leaves a large droop or overshoot.
+     */
+    void update(void);
+
+    /**
+     * The action taken by the Simple predictor is none.
+     * @param lookup_val The value returned by the lookup method
+     */
+    void action(int lookup_val);
+
+    uint64_t last_PC_address;
+
   protected:
+    uint64_t num_entries;
+    uint8_t num_correlation_bits;
+    uint64_t pc_start;
+    uint64_t quantization_levels;
+    double confidence_level;
+    double limit;
+
+    // Update:
+    uint64_t last_index;
+
+    std::vector<uint8_t> lut;
+
+    //std::unordered_map<uint64_t, uint8_t> pred_table;
 
   private:
+    std::vector<uint64_t> error_array;
+    int ea_idx;
+
+    double average_error();
+    void add_error(uint e);
+
+    Stats::Scalar action_taken;
+    Stats::Scalar error;
+    Stats::Scalar rolling_error;
+    Stats::Scalar look_up_index;
 };
 
-#endif // __CPU_PRED_TEST_HH__
-
+#endif // __CPU_PRED_SIMPLE_HH__

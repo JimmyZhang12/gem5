@@ -53,14 +53,34 @@
 
 PPredUnit::PPredUnit(const Params *params)
     : ClockedObject(params),
+    sysClkDomain(params->sys_clk_domain),
     min_current((double)params->min_current),
     max_current((double)params->max_current),
-    powerEvent(NULL),
-    period(params->period)
+    cycle_period(params->cycle_period),
+    emergency(params->emergency),
+    period(params->period),
+    delta(params->delta),
+    emergency_throttle(params->emergency_throttle),
+    voltage_set(params->voltage_set),
+    clk(params->clk),
+    clk_half(params->clk/2)
 {
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
     supply_voltage = 0.0;
     supply_current = 0.0;
+
+    DPRINTF(PowerPred, "ppred_events.size(): %d\n",
+              PPred::ppred_events.size());
+    this->id = (int)PPred::ppred_events.size();
+    PPred::ppred_events.push_back(NULL);
+
+    vpi_shm::set_voltage_set(voltage_set);
+    vpi_shm::set_freq(clk, cycle_period);
+    period_normal = this->clockPeriod();
+    period_half = this->clockPeriod()*2;
+
+    PPred::interface.sim_period = this->period;
+    PPred::interface.cycle_period = this->cycle_period;
 
     /*
      * If the period is set to 0, then we do not want to dump
@@ -70,9 +90,10 @@ PPredUnit::PPredUnit(const Params *params)
      * one, as the old event will no longer be moved forward in the
      * event that we resume from a checkpoint.
      */
-    if (powerEvent != NULL && (period == 0 || powerEvent->scheduled())) {
+    if (PPred::ppred_events[this->id] != NULL && \
+          (period == 0 || PPred::ppred_events[this->id]->scheduled())) {
         // Event should AutoDelete, so we do not need to free it.
-        powerEvent->deschedule();
+        PPred::ppred_events[this->id]->deschedule();
     }
 
     /*
@@ -96,19 +117,26 @@ PPredUnit::regStats()
 {
     SimObject::regStats();
 
-    lookups
-        .name(name() + ".lookups")
-        .desc("Number of PP lookups")
+    freq
+        .name(name() + ".frequency")
+        .desc("Frequency set by Power Predictor")
+        ;
+    ticks
+        .name(name() + ".ticks")
+        .desc("Num Ticks")
+        ;
+    ttn
+        .name(name() + ".ttn")
+        .desc("Time to next tick in (ps)")
         ;
 }
 
 void
-PPredUnit::predict(void)
+PPredUnit::process(void)
 {
-    DPRINTF(PowerPred, "PPredUnit::predict()\n");
-    update();
-    action(lookup());
-    ++lookups;
+    DPRINTF(PowerPred, "PPredUnit::process()\n");
+    ++ticks;
+    tick();
 }
 
 void
@@ -124,6 +152,26 @@ PPredUnit::dump()
     DPRINTF(PowerPred, "PPredUnit::dump()\n");
 }
 
+void
+PPredUnit::clkThrottle()
+{
+    // Set the CPU Clock Object to Half Freq
+    sysClkDomain->clockPeriod(period_half);
+    vpi_shm::set_freq(clk_half, cycle_period);
+    ttn = vpi_shm::get_time_to_next();
+    freq = clk_half;
+}
+
+void
+PPredUnit::clkRestore()
+{
+    // Set the CPU Clock Object to Normal
+    sysClkDomain->clockPeriod(period_normal);
+    vpi_shm::set_freq(clk, cycle_period);
+    ttn = vpi_shm::get_time_to_next();
+    freq = clk;
+}
+
 
 void
 PPredUnit::schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit)
@@ -132,21 +180,33 @@ PPredUnit::schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit)
     // dumped so as to ensure that this event happens only after the next
     // sync amongst the event queues.  Asingle event queue simulation
     // should remain unaffected.
-    powerEvent = new PowerPredEvent(when + simQuantum, repeat, unit);
+    PPred::ppred_events[this->id] = new PowerPredEvent(when + simQuantum, \
+                                                        repeat, unit);
 }
 
+namespace PPred {
+
+std::vector<GlobalEvent*> ppred_events;
+
+PPredIF interface;
+
 void
-PPredUnit::updateEvents()
+updateEvents()
 {
     /*
-     * If the powerEvent has been scheduled, but is scheduled in the past, then
+     * If the event has been scheduled, but is scheduled in the past, then
      * we need to shift the event to be at a valid point in time. Therefore, we
      * shift the event by curTick.
      */
-    if (powerEvent != NULL &&
-        (powerEvent->scheduled() && powerEvent->when() < curTick())) {
-        // shift by curTick() and reschedule
-        Tick _when = powerEvent->when();
-        powerEvent->reschedule(_when + curTick());
+    for (size_t i = 0; i < ppred_events.size(); i++) {
+        if (ppred_events[i] != NULL &&
+            (ppred_events[i]->scheduled() \
+              && ppred_events[i]->when() < curTick())) {
+            // shift by curTick() and reschedule
+            Tick _when = ppred_events[i]->when();
+            ppred_events[i]->reschedule(_when + curTick());
+        }
     }
 }
+
+}; // namespace PPred

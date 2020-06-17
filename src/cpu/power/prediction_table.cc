@@ -40,43 +40,92 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#include "cpu/power/prediction_table.hh"
 
-#include <deque>
-#include <string>
-#include <unordered_map>
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/utility.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "debug/PredictionTable.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/stat_control.hh"
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/Test.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
+PPred::Entry::Entry(int size) {
+  anchor_pc = 0;
+  history.resize(size, BRANCH_T);
+  last_updated = 0;
+  access_count = 0;
+}
 
-class Test : public PPredUnit
-{
-  public:
-    typedef TestParams Params;
+bool
+PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
+  if (this->anchor_pc == pc && this->history == history) {
+    return true;
+  }
+  return false;
+}
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Test(const Params *p);
+void
+PPred::Entry::update(uint64_t pc, std::vector<PPred::event_t> history) {
+  this->anchor_pc = pc;
+  this->history = history;
+  last_updated = 0;
+  access_count = 0;
+}
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+PPred::Table::Table(uint64_t table_size, uint64_t history_length) {
+  this->resize(table_size, history_length);
+}
 
-    void tick(void);
+void
+PPred::Table::resize(uint64_t table_size, uint64_t history_length) {
+  // Prediction Table
+  prediction_table.resize(table_size, Entry(history_length));
 
-  protected:
+  // Stats
+  insertions = 0;
+  matches = 0;
+  misses = 0;
+}
 
-  private:
-};
+bool
+PPred::Table::find(uint64_t pc, std::vector<event_t> history) {
+  for (auto it = this->prediction_table.begin();
+      it != this->prediction_table.end(); it++) {
+    if (it->match(pc, history)) {
+      it->access();
+      matches++;
+      DPRINTF(PredictionTable, "[ PredictionTable ] Find: %lu found\n", pc);
+      return true;
+    }
+  }
+  DPRINTF(PredictionTable, "[ PredictionTable ] Find: %lu not found\n", pc);
+  misses++;
+  return false;
+}
 
-#endif // __CPU_PRED_TEST_HH__
+bool
+PPred::Table::insert(uint64_t pc, std::vector<event_t> history) {
+  insertions++;
+  uint64_t max_time = 0;
+  size_t idx = 0;
+  for (size_t i = 0; i < prediction_table.size(); i++) {
+    if (max_time < prediction_table[i].get_lru()) {
+      max_time = prediction_table[i].get_lru();
+      idx = i;
+    }
+  }
+  DPRINTF(PredictionTable, "[ PredictionTable ] Update: Entry %lu " \
+          "replaced\n", idx);
+  prediction_table[idx].update(pc, history);
+  return true;
+}
 
+void
+PPred::Table::tick(void) {
+  for (auto it = this->prediction_table.begin();
+    it != this->prediction_table.end(); it++) {
+    it->tick();
+  }
+}

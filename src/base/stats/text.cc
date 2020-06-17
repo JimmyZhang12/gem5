@@ -197,8 +197,8 @@ Text::noOutput(const Info &info)
     if (!info.flags.isSet(display))
         return true;
 
-    //if (info.prereq && info.prereq->zero())
-    //    return true;
+    if (info.prereq && info.prereq->zero())
+        return true;
 
     return false;
 }
@@ -252,11 +252,11 @@ ScalarPrint::update(Result val, Result total)
 void
 ScalarPrint::operator()(ostream &stream, bool oneLine) const
 {
-    //if ((flags.isSet(nozero) && (!oneLine) && value == 0.0) ||
-    //    (flags.isSet(nonan) && std::isnan(value)))
-    //    return;
-    if (flags.isSet(nonan) && std::isnan(value))
+    if ((flags.isSet(nozero) && (!oneLine) && value == 0.0) ||
+        (flags.isSet(nonan) && std::isnan(value)))
         return;
+    //if (flags.isSet(nonan) && std::isnan(value))
+    //    return;
 
     stringstream pdfstr, cdfstr;
 

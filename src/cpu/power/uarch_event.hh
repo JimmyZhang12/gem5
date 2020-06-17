@@ -40,43 +40,71 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __CPU_POWER_UARCH_EVENT_HH__
+#define __CPU_POWER_UARCH_EVENT_HH__
 
 #include <deque>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/power/ppred_unit.hh"
+#include "cpu/power/prediction_table.hh"
 #include "cpu/static_inst.hh"
-#include "params/Test.hh"
+#include "params/uArchEventPredictor.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class Test : public PPredUnit
+class uArchEventPredictor : public PPredUnit
 {
   public:
-    typedef TestParams Params;
+    typedef uArchEventPredictorParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    Test(const Params *p);
+    uArchEventPredictor(const Params *p);
 
     /**
      * Registers statistics.
      */
     void regStats() override;
 
+    /**
+     * Update the uArchEventPredictor State Machine.
+     * @param tid The thread ID.
+     * @param inst_PC The PC to look up.
+     * @return boolean throttle/no_throttle
+     */
     void tick(void);
 
   protected:
+    double threshold;
+    double hysteresis;
+    unsigned int latency;
 
   private:
+    enum state_t {
+      NORMAL=1,
+      THROTTLE,
+      EMERGENCY
+    };
+
+    PPred::Table table;
+
+
+    state_t state;
+    state_t next_state;
+
+    // Counter for # Cycles to delay
+    unsigned int emergency_clk;
+    unsigned int throttle_clk;
+    Stats::Scalar s;
+    Stats::Scalar ns;
+    Stats::Scalar sv;
+    Stats::Scalar sc;
 };
 
-#endif // __CPU_PRED_TEST_HH__
-
+#endif // __CPU_PRED_UARCH_EVENT_HH__

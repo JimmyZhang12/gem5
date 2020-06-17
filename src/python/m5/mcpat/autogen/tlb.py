@@ -33,6 +33,7 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class TLB:
   def __init__(self, component_id, component_name, \
                 stat_dict, config_dict, sim_dict):
@@ -45,9 +46,9 @@ class TLB:
     }
     self.stats = \
     {
-      "total_accesses" : \
+      "total_accesses" :   \
         ["","Total Acceses; dtb_walker_cache.tags.data_accesses"],
-      "total_misses" : \
+      "total_misses" :   \
         ["","Total Misses; dtb_walker_cache.tags.data_accesses"],
       "conflicts" : ["0","Conflicts to entries in the TLB"],
     }
@@ -56,12 +57,12 @@ class TLB:
     self.id = component_id
 
     # Init the TLB Parameters and Stats:
-    self.parameters["number_entries"][0]=str(int(config_dict["size"]))
+    self.parameters["number_entries"][0] = str(int(config_dict["size"]))
     self.stats["total_accesses"][0]= \
       str(int(stat_dict["tags.tag_accesses"][1]))
     self.stats["total_misses"][0]= \
       str(int(stat_dict["replacements"][1]))
-    self.stats["conflicts"][0]=str(int(stat_dict["replacements"][1]))
+    self.stats["conflicts"][0] = str(int(stat_dict["replacements"][1]))
 
   def xml(self):
     """ Build an XML Tree from the parameters, stats, and subcomponents """
@@ -77,4 +78,3 @@ class TLB:
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
-

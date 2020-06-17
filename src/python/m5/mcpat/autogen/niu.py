@@ -33,6 +33,7 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+
 class NIU:
   """ On chip 10Gb Ethernet NIC, including XAUI Phy and
   MAC controller. For a minimum IP packet size of 84B
@@ -50,14 +51,14 @@ class NIU:
   {
     "type" : ["0","1: low power; 0 high performance"],
     "clockrate" : ["350","Clock Rate in MHz"],
-    "number_units" : \
+    "number_units" :   \
       ["0","unlike PCIe and memory controllers, each Ethernet"
         "controller only have one port"]
   }
   stats = \
   {
     "duty_cycle" : ["1.0","achievable max load lteq 1.0"],
-    "total_load_perc" : \
+    "total_load_perc" :   \
       ["0.0","ratio of total achived load to total achivable bandwidth"]
   }
 
@@ -87,4 +88,3 @@ class NIU:
       top.append(ElementTree.Element( \
         'stat', name=key, value=self.stats[key][0]))
     return top
-

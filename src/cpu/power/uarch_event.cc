@@ -40,43 +40,117 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
 
-#include <deque>
-#include <string>
-#include <unordered_map>
+#include "cpu/power/uarch_event.hh"
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/static_inst.hh"
-#include "params/Test.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 
-class Test : public PPredUnit
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/utility.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "debug/uArchEventPowerPred.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/stat_control.hh"
+
+uArchEventPredictor::uArchEventPredictor(const Params *params)
+    : PPredUnit(params)
 {
-  public:
-    typedef TestParams Params;
+    DPRINTF(uArchEventPowerPred,
+            "uArchEventPredictor::uArchEventPredictor()\n");
+    state = NORMAL;
+    next_state = NORMAL;
+    table.resize(params->table_size, 1);
+}
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Test(const Params *p);
+void
+uArchEventPredictor::regStats()
+{
+    PPredUnit::regStats();
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+    s
+        .name(name() + ".state")
+        .desc("Current State of the Predictor")
+        ;
+    ns
+        .name(name() + ".next_state")
+        .desc("Next State of the Predictor")
+        ;
+    sv
+        .name(name() + ".supply_voltage")
+        .desc("Supply Voltage")
+        .precision(6)
+        ;
+    sc
+        .name(name() + ".supply_current")
+        .desc("Supply Current")
+        .precision(6)
+        ;
+}
 
-    void tick(void);
+void
+uArchEventPredictor::tick(void)
+{
+  DPRINTF(uArchEventPowerPred, "uArchEventPredictor::tick()\n");
+  supply_voltage = Stats::pythonGetVoltage();
+  supply_current = Stats::pythonGetCurrent();
+  sv = supply_voltage;
+  sc = supply_current;
 
-  protected:
+  // Transition Logic
+  switch(state) {
+    case NORMAL : {
+      next_state = NORMAL;
+      if (supply_voltage < emergency) {
+        next_state = EMERGENCY;
+      }
+      break;
+    }
+    case EMERGENCY : {
+      break;
+    }
+    case THROTTLE : {
+      break;
+    }
+    default : {
+      break;
+    }
+  }
 
-  private:
-};
+  // Output Logic
+  switch(state) {
+    case NORMAL : {
+      // Restore Frequency
+      clkRestore();
+      break;
+    }
+    case EMERGENCY : {
+      break;
+    }
+    case THROTTLE : {
+      clkThrottle();
+      break;
+    }
+    default : {
+      // Nothing
+      break;
+    }
+  }
+  // Update Stats:
+  s = state;
+  ns = next_state;
+  // Update Next State Transition:
+  state = next_state;
+  return;
+}
 
-#endif // __CPU_PRED_TEST_HH__
+uArchEventPredictor*
+uArchEventPredictorParams::create()
+{
+  return new uArchEventPredictor(this);
+}
+
 
