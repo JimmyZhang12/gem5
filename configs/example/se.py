@@ -300,8 +300,9 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     # Specific
-                    threshold=0.95,
-                    hysteresis=0.02)
+                    threshold=0.98,
+                    hysteresis=0.005,
+                    duration=50)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain
 

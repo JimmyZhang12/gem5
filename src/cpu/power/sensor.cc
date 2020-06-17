@@ -151,11 +151,11 @@ Sensor::tick(void)
       break;
     }
     case DELAY : {
-      delay_count++;
+      delay_count+=cycle_period;
       break;
     }
     case THROTTLE : {
-      td_count++;
+      td_count+=cycle_period;
       clkThrottle();
       break;
     }
