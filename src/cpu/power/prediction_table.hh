@@ -74,6 +74,7 @@ public:
    * @return None
    */
   Entry(int size = 1);
+  Entry(uint64_t anchor_pc, std::vector<event_t> history);
 
   /**
    * Checks if the entry matches an event/anchor_pc pair
@@ -81,7 +82,8 @@ public:
    * @param event A vector of microarch events from the history register
    * @return boolean Match
    */
-  bool match(uint64_t pc, std::vector<PPred::event_t> event);
+  bool match(uint64_t pc, std::vector<event_t> event);
+  bool operator==(const Entry& obj);
 
   /**
    * Sets a new event/anchor_pc pair to this entry
@@ -89,7 +91,7 @@ public:
    * @param event A vector of microarch events from the history register
    * @return None
    */
-  void update(uint64_t pc, std::vector<PPred::event_t> event);
+  void update(uint64_t pc, std::vector<event_t> event);
 
   /**
    * Updates the stat counters for accessing an entry
@@ -144,7 +146,7 @@ public:
    * @param history_length The number of events per history
    * @return None
    */
-  Table(uint64_t table_size = 1, uint64_t history_length = 1);
+  Table(uint64_t table_size = 0, uint64_t history_length = 0);
 
   /**
    * Resize Table
@@ -161,6 +163,7 @@ public:
    * @return boolean return true if the event is in the table
    */
   bool find(uint64_t pc, std::vector<event_t> history);
+  bool find(const Entry& obj);
 
   /**
    * Insert an Entry based on LRU Replacement Policy
@@ -169,6 +172,7 @@ public:
    * @return boolean insert success
    */
   bool insert(uint64_t pc, std::vector<event_t> history);
+  bool insert(const Entry& obj);
 
   /**
    * Ticks the event history table for the LRU Policy

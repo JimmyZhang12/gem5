@@ -58,12 +58,21 @@ PPred::Entry::Entry(int size) {
   access_count = 0;
 }
 
+PPred::Entry::Entry(uint64_t anchor_pc, std::vector<PPred::event_t> history) {
+  this->anchor_pc = anchor_pc;
+  this->history = history;
+  last_updated = 0;
+  access_count = 0;
+}
+
+bool
+PPred::Entry::operator==(const PPred::Entry& obj) {
+  return this->anchor_pc == obj.anchor_pc && this->history == obj.history;
+}
+
 bool
 PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
-  if (this->anchor_pc == pc && this->history == history) {
-    return true;
-  }
-  return false;
+  return this->anchor_pc == pc && this->history == history;
 }
 
 void
@@ -90,7 +99,7 @@ PPred::Table::resize(uint64_t table_size, uint64_t history_length) {
 }
 
 bool
-PPred::Table::find(uint64_t pc, std::vector<event_t> history) {
+PPred::Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
   for (auto it = this->prediction_table.begin();
       it != this->prediction_table.end(); it++) {
     if (it->match(pc, history)) {
@@ -106,7 +115,23 @@ PPred::Table::find(uint64_t pc, std::vector<event_t> history) {
 }
 
 bool
-PPred::Table::insert(uint64_t pc, std::vector<event_t> history) {
+PPred::Table::find(const PPred::Entry& obj) {
+  for (auto it = this->prediction_table.begin();
+      it != this->prediction_table.end(); it++) {
+    if (*it == obj) {
+      it->access();
+      matches++;
+      DPRINTF(PredictionTable, "[ PredictionTable ] Find: found\n");
+      return true;
+    }
+  }
+  DPRINTF(PredictionTable, "[ PredictionTable ] Find: not found\n");
+  misses++;
+  return false;
+}
+
+bool
+PPred::Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {
   insertions++;
   uint64_t max_time = 0;
   size_t idx = 0;
@@ -119,6 +144,23 @@ PPred::Table::insert(uint64_t pc, std::vector<event_t> history) {
   DPRINTF(PredictionTable, "[ PredictionTable ] Update: Entry %lu " \
           "replaced\n", idx);
   prediction_table[idx].update(pc, history);
+  return true;
+}
+
+bool
+PPred::Table::insert(const Entry& obj) {
+  insertions++;
+  uint64_t max_time = 0;
+  size_t idx = 0;
+  for (size_t i = 0; i < prediction_table.size(); i++) {
+    if (max_time < prediction_table[i].get_lru()) {
+      max_time = prediction_table[i].get_lru();
+      idx = i;
+    }
+  }
+  DPRINTF(PredictionTable, "[ PredictionTable ] Update: Entry %lu " \
+          "replaced\n", idx);
+  prediction_table[idx] = obj;
   return true;
 }
 

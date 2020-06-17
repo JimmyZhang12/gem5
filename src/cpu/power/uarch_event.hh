@@ -50,6 +50,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/power/history_register.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/power/prediction_table.hh"
 #include "cpu/static_inst.hh"
@@ -93,7 +94,7 @@ class uArchEventPredictor : public PPredUnit
     };
 
     PPred::Table table;
-
+    PPred::HistoryRegister hr;
 
     state_t state;
     state_t next_state;
