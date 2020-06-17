@@ -83,6 +83,7 @@ class Sensor : public PPredUnit
     double threshold;
     double hysteresis;
     unsigned int latency;
+    unsigned int throttle_duration;
 
   private:
     enum state_t {
@@ -96,8 +97,11 @@ class Sensor : public PPredUnit
 
     // Counter for # Cycles to delay
     int delay_count;
+    int td_count;
     Stats::Scalar s;
     Stats::Scalar ns;
+    Stats::Scalar sv;
+    Stats::Scalar sc;
 };
 
 #endif // __CPU_PRED_SENSOR_HH__

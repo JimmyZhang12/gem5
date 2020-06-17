@@ -57,9 +57,9 @@ PPredUnit::PPredUnit(const Params *params)
     min_current((double)params->min_current),
     max_current((double)params->max_current),
     cycle_period(params->cycle_period),
+    emergency(params->emergency),
     period(params->period),
     delta(params->delta),
-    emergency(params->emergency),
     emergency_throttle(params->emergency_throttle),
     voltage_set(params->voltage_set),
     clk(params->clk),
@@ -125,6 +125,10 @@ PPredUnit::regStats()
         .name(name() + ".ticks")
         .desc("Num Ticks")
         ;
+    ttn
+        .name(name() + ".ttn")
+        .desc("Time to next tick in (ps)")
+        ;
 }
 
 void
@@ -154,6 +158,7 @@ PPredUnit::clkThrottle()
     // Set the CPU Clock Object to Half Freq
     sysClkDomain->clockPeriod(period_half);
     vpi_shm::set_freq(clk_half, cycle_period);
+    ttn = vpi_shm::get_time_to_next();
     freq = clk_half;
 }
 
@@ -163,7 +168,8 @@ PPredUnit::clkRestore()
     // Set the CPU Clock Object to Normal
     sysClkDomain->clockPeriod(period_normal);
     vpi_shm::set_freq(clk, cycle_period);
-    freq = clk_half;
+    ttn = vpi_shm::get_time_to_next();
+    freq = clk;
 }
 
 

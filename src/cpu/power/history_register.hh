@@ -40,117 +40,25 @@
  * Authors: Andrew Smith
  */
 
+#ifndef __CPU_POWER_HISTORY_REGISTER_HH__
+#define __CPU_POWER_HISTORY_REGISTER_HH__
 
-#include "cpu/power/uarch_event.hh"
-
-#include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <vector>
 
-#include "arch/isa_traits.hh"
-#include "arch/types.hh"
-#include "arch/utility.hh"
-#include "base/trace.hh"
-#include "config/the_isa.hh"
-#include "debug/uArchEventPowerPred.hh"
-#include "python/pybind11/vpi_shm.h"
-#include "sim/stat_control.hh"
+#include "base/statistics.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/power/event_type.hh"
+#include "cpu/power/ppred_unit.hh"
+#include "cpu/power/prediction_table.hh"
+#include "cpu/static_inst.hh"
+#include "sim/sim_object.hh"
 
-uArchEventPredictor::uArchEventPredictor(const Params *params)
-    : PPredUnit(params)
-{
-    DPRINTF(uArchEventPowerPred,
-            "uArchEventPredictor::uArchEventPredictor()\n");
-    state = NORMAL;
-    next_state = NORMAL;
-    table.resize(params->table_size, 1);
-}
-
-void
-uArchEventPredictor::regStats()
-{
-    PPredUnit::regStats();
-
-    s
-        .name(name() + ".state")
-        .desc("Current State of the Predictor")
-        ;
-    ns
-        .name(name() + ".next_state")
-        .desc("Next State of the Predictor")
-        ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
-        ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
-        .precision(6)
-        ;
-}
-
-void
-uArchEventPredictor::tick(void)
-{
-  DPRINTF(uArchEventPowerPred, "uArchEventPredictor::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
-
-  // Transition Logic
-  switch(state) {
-    case NORMAL : {
-      next_state = NORMAL;
-      if (supply_voltage < emergency) {
-        next_state = EMERGENCY;
-      }
-      break;
-    }
-    case EMERGENCY : {
-      break;
-    }
-    case THROTTLE : {
-      break;
-    }
-    default : {
-      break;
-    }
-  }
-
-  // Output Logic
-  switch(state) {
-    case NORMAL : {
-      // Restore Frequency
-      clkRestore();
-      break;
-    }
-    case EMERGENCY : {
-      break;
-    }
-    case THROTTLE : {
-      clkThrottle();
-      break;
-    }
-    default : {
-      // Nothing
-      break;
-    }
-  }
-  // Update Stats:
-  s = state;
-  ns = next_state;
-  // Update Next State Transition:
-  state = next_state;
-  return;
-}
-
-uArchEventPredictor*
-uArchEventPredictorParams::create()
-{
-  return new uArchEventPredictor(this);
-}
+namespace PPred {
 
 
+} // namespace PPred
+
+#endif // __CPU_POWER_HISTORY_REGISTER_HH__

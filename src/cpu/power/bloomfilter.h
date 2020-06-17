@@ -40,117 +40,40 @@
  * Authors: Andrew Smith
  */
 
-
-#include "cpu/power/uarch_event.hh"
+#ifndef __BLOOMFILTER_H__
+#define __BLOOMFILTER_H__
 
 #include <algorithm>
 #include <cassert>
-#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-#include "arch/isa_traits.hh"
-#include "arch/types.hh"
-#include "arch/utility.hh"
-#include "base/trace.hh"
-#include "config/the_isa.hh"
-#include "debug/uArchEventPowerPred.hh"
-#include "python/pybind11/vpi_shm.h"
-#include "sim/stat_control.hh"
+template<class T>
+class Bloomfilter {
+  unsigned int n;           // Number of Hash Functions
+  unsigned int size;        // Size of the underlying table
+  unsigned int seed;        // Seed to create offsets from
+  std::vector<int> offset;
+  std::vector<bool> table;
 
-uArchEventPredictor::uArchEventPredictor(const Params *params)
-    : PPredUnit(params)
-{
-    DPRINTF(uArchEventPowerPred,
-            "uArchEventPredictor::uArchEventPredictor()\n");
-    state = NORMAL;
-    next_state = NORMAL;
-    table.resize(params->table_size, 1);
-}
+  size_t h(const int offset, const T& val) const;
 
-void
-uArchEventPredictor::regStats()
-{
-    PPredUnit::regStats();
+protected:
 
-    s
-        .name(name() + ".state")
-        .desc("Current State of the Predictor")
-        ;
-    ns
-        .name(name() + ".next_state")
-        .desc("Next State of the Predictor")
-        ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
-        ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
-        .precision(6)
-        ;
-}
+public:
+  Bloomfilter(unsigned int n = 3,
+              unsigned int size = 2048,
+              unsigned int seed = 0);
 
-void
-uArchEventPredictor::tick(void)
-{
-  DPRINTF(uArchEventPowerPred, "uArchEventPredictor::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
+  bool find(const T obj) const;
+  void insert(const T obj);
 
-  // Transition Logic
-  switch(state) {
-    case NORMAL : {
-      next_state = NORMAL;
-      if (supply_voltage < emergency) {
-        next_state = EMERGENCY;
-      }
-      break;
-    }
-    case EMERGENCY : {
-      break;
-    }
-    case THROTTLE : {
-      break;
-    }
-    default : {
-      break;
-    }
-  }
+  void clear();
+};
 
-  // Output Logic
-  switch(state) {
-    case NORMAL : {
-      // Restore Frequency
-      clkRestore();
-      break;
-    }
-    case EMERGENCY : {
-      break;
-    }
-    case THROTTLE : {
-      clkThrottle();
-      break;
-    }
-    default : {
-      // Nothing
-      break;
-    }
-  }
-  // Update Stats:
-  s = state;
-  ns = next_state;
-  // Update Next State Transition:
-  state = next_state;
-  return;
-}
+#include "cpu/power/bloomfilter.tcc"
 
-uArchEventPredictor*
-uArchEventPredictorParams::create()
-{
-  return new uArchEventPredictor(this);
-}
-
-
+#endif // __BLOOMFILTER_H__

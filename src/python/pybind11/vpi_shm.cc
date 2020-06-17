@@ -255,6 +255,14 @@ mp_get_freq() {
     return freq/1.0e6;
 }
 
+/**
+ * Used by the VPI python code to launch the ncverilog sim
+ */
+int
+get_time_to_next() {
+  return ttn;
+}
+
 } // namespace vpi_shm
 
 void
@@ -276,5 +284,6 @@ pybind_init_vpi_shm(py::module &m_native)
     m.def("mp_get_freq", &vpi_shm::mp_get_freq, "Get Current CLK");
     m.def("mp_get_voltage_set", &vpi_shm::mp_get_voltage_set,
           "Get Voltage Set");
-
+    m.def("get_time_to_next", &vpi_shm::get_time_to_next,
+          "Get Voltage Set");
 }

@@ -96,6 +96,8 @@ double get_current();
 
 void ack_supply();
 
+int get_time_to_next();
+
 } // namespace vpi_shm
 
 #endif

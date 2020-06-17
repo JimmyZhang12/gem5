@@ -130,6 +130,7 @@ class PPredUnit : public ClockedObject
   protected:
     Stats::Scalar freq;
     Stats::Scalar ticks;
+    Stats::Scalar ttn;
 
     SrcClockDomain* sysClkDomain;
 
@@ -139,10 +140,10 @@ class PPredUnit : public ClockedObject
     double supply_current;
     Addr PC;
     int cycle_period;
+    double emergency;
   private:
     int period;
     double delta;
-    double emergency;
     bool emergency_throttle;
     double voltage_set;
     double clk;

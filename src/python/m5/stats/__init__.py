@@ -359,10 +359,8 @@ def _dump_to_visitor(visitor, root=None):
 lastDump = 0
 numDump = 0
 init_ncsim = True
-lastVoltage = []
-lastCurrent = []
-avgCurrent = 0
-avgVoltage = 0
+lastVoltage = 0
+lastCurrent = 0
 runtime_begin_profile=False
 profiling = False
 lv = 0
@@ -375,23 +373,13 @@ def get_current():
     if not profiling:
         return 0
     global lastCurrent
-    global avgCurrent
-    if len(lastCurrent) == 0:
-        return avgCurrent
-    avgCurrent = sum(lastCurrent)/len(lastCurrent)
-    lastCurrent = []
-    return avgCurrent
+    return lastCurrent
 
 def get_voltage():
     if not profiling:
         return 1
     global lastVoltage
-    global avgVoltage
-    if len(lastVoltage) == 0:
-        return avgVoltage
-    avgVoltage = sum(lastVoltage)/len(lastVoltage)
-    lastVoltage = []
-    return avgVoltage
+    return lastVoltage
 
 def get_profiling():
     return runtime_begin_profile
@@ -456,8 +444,8 @@ def dump(root=None, exit=False):
                     for i in range(int(options.ncverilog_warmup)):
                         vpi_shm.set_driver_signals(current, 0)
                         lv = vpi_shm.get_voltage()
-                        lastVoltage.append(lv)
-                        lastCurrent.append(vpi_shm.get_current())
+                        lastVoltage=lv
+                        lastCurrent=vpi_shm.get_current()
                         vpi_shm.ack_supply()
                     init_ncsim = False
                 else:
@@ -473,8 +461,8 @@ def dump(root=None, exit=False):
                       power = mcpat.get_last_p(mp_v)
                     vpi_shm.set_driver_signals(current, 0)
                     lv = vpi_shm.get_voltage()
-                    lastVoltage.append(lv)
-                    lastCurrent.append(vpi_shm.get_current())
+                    lastVoltage=lv
+                    lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
             else:
                 mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
@@ -493,8 +481,8 @@ def dump(root=None, exit=False):
                 if(options.ncverilog_enable):
                     current = mcpat.get_last_i(mp_v)
                     vpi_shm.set_driver_signals(current, 1)
-                    lastVoltage.append(vpi_shm.get_voltage())
-                    lastCurrent.append(vpi_shm.get_current())
+                    lastVoltage=vpi_shm.get_voltage()
+                    lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
                 sys.exit()
     else:

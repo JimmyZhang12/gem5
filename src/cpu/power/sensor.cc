@@ -52,6 +52,7 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "cpu/power/bloomfilter.h"
 #include "debug/SensorPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
@@ -60,10 +61,12 @@ Sensor::Sensor(const Params *params)
     : PPredUnit(params),
     threshold(params->threshold),
     hysteresis(params->hysteresis),
-    latency(params->latency)
+    latency(params->latency),
+    throttle_duration(params->duration)
 {
     DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
     delay_count = 0;
+    td_count = 0;
     state = NORMAL;
     next_state = NORMAL;
 }
@@ -81,6 +84,16 @@ Sensor::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
+    sv
+        .name(name() + ".supply_voltage")
+        .desc("Supply Voltage")
+        .precision(6)
+        ;
+    sc
+        .name(name() + ".supply_current")
+        .desc("Supply Current")
+        .precision(6)
+        ;
 }
 
 void
@@ -89,6 +102,8 @@ Sensor::tick(void)
   DPRINTF(SensorPowerPred, "Sensor::tick()\n");
   supply_voltage = Stats::pythonGetVoltage();
   supply_current = Stats::pythonGetCurrent();
+  sv = supply_voltage;
+  sc = supply_current;
 
   // Transition Logic
   switch(state) {
@@ -98,7 +113,9 @@ Sensor::tick(void)
         if (latency == 0) {
           next_state = THROTTLE;
         }
-        next_state = DELAY;
+        else {
+          next_state = DELAY;
+        }
       }
       break;
     }
@@ -111,7 +128,8 @@ Sensor::tick(void)
     }
     case THROTTLE : {
       next_state = THROTTLE;
-      if (supply_voltage >= threshold + hysteresis) {
+      if (supply_voltage >= threshold + hysteresis &&
+          td_count >= throttle_duration) {
         next_state = NORMAL;
       }
       break;
@@ -128,6 +146,7 @@ Sensor::tick(void)
     case NORMAL : {
       // Restore Frequency
       delay_count = 0;
+      td_count = 0;
       clkRestore();
       break;
     }
@@ -136,7 +155,7 @@ Sensor::tick(void)
       break;
     }
     case THROTTLE : {
-      delay_count = 0;
+      td_count++;
       clkThrottle();
       break;
     }

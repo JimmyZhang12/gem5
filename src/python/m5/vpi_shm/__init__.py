@@ -50,6 +50,8 @@ def initialize(name):
           pdn_type+"\", must be of type: "+pdn_types)
     sys.exit(1)
 
+  time_to_next = str(vpi.get_time_to_next())+"p"
+
   global thread
   """ This function will launch the docker container for the verilog
   simulation. """
@@ -64,15 +66,16 @@ def initialize(name):
     rc = process.poll()
     return rc
 
-  def verilog_thread(name, pdn_type):
+  def verilog_thread(name, pdn_type, ttn):
     """ This is the thread function for executing the verilog sim """
     run_command([os.path.join(options.ncverilog_path,"run_cadence.sh"), \
-                name, pdn_type])
+                name, pdn_type, ttn])
 
   if os.path.exists(os.path.join("/dev/shm", name)):
     os.remove(os.path.join("/dev/shm", name))
 
-  thread = Thread(target=verilog_thread, args=[name, pdn_type])
+  thread = Thread(target=verilog_thread, args=[name, pdn_type, \
+              time_to_next])
   thread.setDaemon(True)
   thread.start()
 

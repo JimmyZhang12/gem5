@@ -94,12 +94,17 @@ class uArchEventPredictor : public PPredUnit
 
     PPred::Table table;
 
+
     state_t state;
     state_t next_state;
 
     // Counter for # Cycles to delay
+    unsigned int emergency_clk;
+    unsigned int throttle_clk;
     Stats::Scalar s;
     Stats::Scalar ns;
+    Stats::Scalar sv;
+    Stats::Scalar sc;
 };
 
 #endif // __CPU_PRED_UARCH_EVENT_HH__

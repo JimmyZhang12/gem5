@@ -107,8 +107,26 @@ public:
   /**
    * Returns the last updated counter
    */
-   uint64_t get_lru(void) { return last_updated; }
+  uint64_t get_lru(void) { return last_updated; }
+
 };
+
+/**
+ * Need to extend on the hash function to hash an arbitrary class
+ */
+//namespace std {
+//  template <>
+//  struct hash<Entry> {
+//    size_t operator()(const Entry& k) const {
+//      hash<uint64_t> h1;
+//      hash<vector<event_t>> h2;
+//      size_t seed = 0;
+//      seed ^= h1(k.pc) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+//      seed ^= h2(k.history) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+//      return seed;
+//    }
+//  };
+//}
 
 class Table {
   // Prediction Table, Table of Entries
