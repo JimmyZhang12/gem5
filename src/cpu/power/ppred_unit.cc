@@ -58,6 +58,7 @@ PPredUnit::PPredUnit(const Params *params)
     max_current((double)params->max_current),
     cycle_period(params->cycle_period),
     emergency(params->emergency),
+    emergency_duration(params->emergency_duration),
     period(params->period),
     delta(params->delta),
     emergency_throttle(params->emergency_throttle),
@@ -81,6 +82,9 @@ PPredUnit::PPredUnit(const Params *params)
 
     PPred::interface.sim_period = this->period;
     PPred::interface.cycle_period = this->cycle_period;
+
+    // Globally Exposed PPred Register for collecting uArch Events
+    PPred::ppred_history_registers.push_back(PPred::HistoryRegister(1));
 
     /*
      * If the period is set to 0, then we do not want to dump
@@ -129,6 +133,10 @@ PPredUnit::regStats()
         .name(name() + ".ttn")
         .desc("Time to next tick in (ps)")
         ;
+    stall
+        .name(name() + ".stall")
+        .desc("PPred Issue a stall?")
+        ;
 }
 
 void
@@ -172,6 +180,19 @@ PPredUnit::clkRestore()
     freq = clk;
 }
 
+void
+PPredUnit::setStall()
+{
+    PPred::interface.if_stall = true;
+    stall = true;
+}
+
+void
+PPredUnit::unsetStall()
+{
+    PPred::interface.if_stall = false;
+    stall = false;
+}
 
 void
 PPredUnit::schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit)
@@ -187,6 +208,8 @@ PPredUnit::schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit)
 namespace PPred {
 
 std::vector<GlobalEvent*> ppred_events;
+
+std::vector<HistoryRegister> ppred_history_registers;
 
 PPredIF interface;
 

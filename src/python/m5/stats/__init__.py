@@ -364,6 +364,7 @@ lastCurrent = 0
 runtime_begin_profile=False
 profiling = False
 lv = 0
+committedInstrs = 0
 
 def beginProfile():
     global runtime_begin_profile
@@ -384,6 +385,10 @@ def get_voltage():
 def get_profiling():
     return runtime_begin_profile
 
+def setCommittedInstr(num):
+    global committedInstrs
+    committedInstrs = num
+
 def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
     from m5 import options
@@ -395,6 +400,7 @@ def dump(root=None, exit=False):
     global lastVoltage
     global lastCurrent
     global runtime_begin_profile
+    global committedInstrs
     global profiling
     global lv
     assert lastDump <= now
@@ -467,12 +473,9 @@ def dump(root=None, exit=False):
             else:
                 mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
 
-            max = options.power_profile_duration
-            if options.power_profile_duration == -1:
-                max = -1
-            #print("NumDump = "+str(numDump)+" Max = \
-            # "+str(max)+" Exit = "+str(exit))
-            if(numDump == max or exit):
+            max_dump = options.power_profile_duration
+            max_instr = options.power_profile_instrs
+            if(numDump == max_dump or exit or committedInstrs >= max_instr):
                 mcpat.dump()
                 runtime_begin_profile = False
                 print("Ending after "+str(numDump)+

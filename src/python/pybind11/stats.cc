@@ -101,6 +101,12 @@ pythonGetProfiling()
     return m.attr("get_profiling")().cast<bool>();
 }
 
+void
+pythonSetCommittedInstr(uint64_t num) {
+    py::module m = py::module::import("m5.stats");
+    m.attr("setCommittedInstr")(num);
+}
+
 }
 
 void

@@ -185,6 +185,8 @@ def parse_options():
         help="Begin profiling at cycle")
     option("--power_profile_duration", type='int', default=1000,
         help="End profiling after X cpu cycles")
+    option("--power_profile_instrs", type='int', default=1000,
+        help="End profiling after X cpu instructions")
     option("--power_profile_interval", type="int", default=100,
         help="Interval for StatEvent")
 

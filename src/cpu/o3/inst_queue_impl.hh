@@ -51,6 +51,8 @@
 #include "base/logging.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"
+#include "cpu/power/event_type.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "debug/IQ.hh"
 #include "enums/OpClass.hh"
 #include "params/DerivO3CPU.hh"
@@ -1259,6 +1261,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
 
             DPRINTF(IQ, "[tid:%i] Instruction [sn:%llu] PC %s squashed.\n",
                     tid, squashed_inst->seqNum, squashed_inst->pcState());
+
 
             bool is_acq_rel = squashed_inst->isMemBarrier() &&
                          (squashed_inst->isLoad() ||

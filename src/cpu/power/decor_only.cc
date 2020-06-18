@@ -41,7 +41,7 @@
  */
 
 
-#include "cpu/power/sensor.hh"
+#include "cpu/power/decor_only.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -53,27 +53,22 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/power/bloomfilter.h"
-#include "debug/SensorPowerPred.hh"
+#include "debug/DecorOnlyPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Sensor::Sensor(const Params *params)
-    : PPredUnit(params),
-    threshold(params->threshold),
-    hysteresis(params->hysteresis),
-    latency(params->latency),
-    throttle_duration(params->duration)
+DecorOnly::DecorOnly(const Params *params)
+    : PPredUnit(params)
 {
-    DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
-    d_count = 0;
-    t_count = 0;
+    DPRINTF(DecorOnlyPowerPred, "DecorOnly::DecorOnly()\n");
     e_count = 0;
+    t_count = 0;
     state = NORMAL;
     next_state = NORMAL;
 }
 
 void
-Sensor::regStats()
+DecorOnly::regStats()
 {
     PPredUnit::regStats();
 
@@ -98,9 +93,9 @@ Sensor::regStats()
 }
 
 void
-Sensor::tick(void)
+DecorOnly::tick(void)
 {
-  DPRINTF(SensorPowerPred, "Sensor::tick()\n");
+  DPRINTF(DecorOnlyPowerPred, "DecorOnly::tick()\n");
   supply_voltage = Stats::pythonGetVoltage();
   supply_current = Stats::pythonGetCurrent();
   sv = supply_voltage;
@@ -110,16 +105,8 @@ Sensor::tick(void)
   switch(state) {
     case NORMAL : {
       next_state = NORMAL;
-      if (supply_voltage < emergency){
+      if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-      }
-      else if (supply_voltage < threshold) {
-        if (latency == 0) {
-          next_state = THROTTLE;
-        }
-        else {
-          next_state = DELAY;
-        }
       }
       break;
     }
@@ -127,25 +114,7 @@ Sensor::tick(void)
       // DECOR Rollback
       next_state = EMERGENCY;
       if (e_count > emergency_duration &&
-         supply_voltage > emergency + hysteresis) {
-        next_state = NORMAL;
-      }
-      break;
-    }
-    case DELAY : {
-      next_state = DELAY;
-      if (d_count >= latency) {
-        next_state = THROTTLE;
-      }
-      else if (supply_voltage < emergency) {
-        next_state = EMERGENCY;
-      }
-      break;
-    }
-    case THROTTLE : {
-      next_state = THROTTLE;
-      if (supply_voltage >= threshold + hysteresis &&
-          t_count >= throttle_duration) {
+         supply_voltage > emergency) {
         next_state = NORMAL;
       }
       break;
@@ -161,27 +130,16 @@ Sensor::tick(void)
   switch(state) {
     case NORMAL : {
       // Restore Frequency
-      d_count = 0;
       t_count = 0;
       e_count = 0;
       clkRestore();
       unsetStall();
       break;
     }
-    case DELAY : {
-      d_count+=cycle_period;
-      clkRestore();
-      break;
-    }
     case EMERGENCY : {
       e_count+=cycle_period;
       clkThrottle();
       setStall();
-    }
-    case THROTTLE : {
-      t_count+=cycle_period;
-      clkThrottle();
-      break;
     }
     default : {
       // Nothing
@@ -196,9 +154,9 @@ Sensor::tick(void)
   return;
 }
 
-Sensor*
-IdealSensorParams::create()
+DecorOnly*
+DecorOnlyParams::create()
 {
-  return new Sensor(this);
+  return new DecorOnly(this);
 }
 

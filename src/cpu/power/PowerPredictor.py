@@ -50,6 +50,8 @@ class PowerPredictor(ClockedObject):
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
     delta = Param.Float(0.75, "Rate at which to train")
     emergency = Param.Unsigned(0.95, "% Voltage considered a supply emergency")
+    emergency_duration = Param.Unsigned(250, "Number of cycles to do a "
+        "DECOR Rollback")
     clk = Param.Float(3.5e9, "Default Clock Freq")
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
@@ -109,6 +111,9 @@ class uArchEventPredictor(PowerPredictor):
     instruction responsible for it """
 
     table_size = Param.Unsigned(128, "Size of UArch Event Table")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    duration = Param.Unsigned(50, "The number of cycles to throttle for")
 
 class IdealSensor(PowerPredictor):
     type = "IdealSensor"
@@ -122,3 +127,8 @@ class IdealSensor(PowerPredictor):
     duration = Param.Unsigned(20, "The number of cycles to throttle for")
     latency = Param.Unsigned(0, "Latency before the throttling action " \
         "is taken")
+
+class DecorOnly(PowerPredictor):
+    type = "DecorOnly"
+    cxx_class = "DecorOnly"
+    cxx_header = "cpu/power/decor_only.hh"

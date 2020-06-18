@@ -81,4 +81,11 @@ void PPred::HistoryRegister::add_event(uint64_t PC, PPred::event_t event) {
     this->signature[i+1] = this->signature[i];
   }
   this->signature[0] = event;
+  // Print Vector & PC
+  DPRINTF(HistoryRegister, "[ HistoryRegister ] add_event(): PC %d; " \
+  "Signature", this->anchor_pc);
+  for (auto i : this->signature) {
+    DPRINTF(HistoryRegister, "%s,", PPred::event_t_name[i]);
+  }
+  DPRINTF(HistoryRegister, "\n");
 }

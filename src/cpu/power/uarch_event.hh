@@ -85,6 +85,7 @@ class uArchEventPredictor : public PPredUnit
     double threshold;
     double hysteresis;
     unsigned int latency;
+    unsigned int throttle_duration;
 
   private:
     enum state_t {
@@ -100,8 +101,8 @@ class uArchEventPredictor : public PPredUnit
     state_t next_state;
 
     // Counter for # Cycles to delay
-    unsigned int emergency_clk;
-    unsigned int throttle_clk;
+    unsigned int e_count;
+    unsigned int t_count;
     Stats::Scalar s;
     Stats::Scalar ns;
     Stats::Scalar sv;

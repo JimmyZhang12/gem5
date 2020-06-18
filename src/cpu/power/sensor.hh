@@ -89,6 +89,7 @@ class Sensor : public PPredUnit
     enum state_t {
       NORMAL=1,
       DELAY,
+      EMERGENCY,
       THROTTLE
     };
 
@@ -96,8 +97,9 @@ class Sensor : public PPredUnit
     state_t next_state;
 
     // Counter for # Cycles to delay
-    int delay_count;
-    int td_count;
+    int d_count;
+    int t_count;
+    int e_count;
     Stats::Scalar s;
     Stats::Scalar ns;
     Stats::Scalar sv;
