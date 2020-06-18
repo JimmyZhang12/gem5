@@ -134,17 +134,20 @@ Sensor::tick(void)
     }
     case DELAY : {
       next_state = DELAY;
-      if (d_count >= latency) {
-        next_state = THROTTLE;
-      }
-      else if (supply_voltage < emergency) {
+      if (supply_voltage < emergency){
         next_state = EMERGENCY;
+      }
+      else if (d_count >= latency) {
+        next_state = THROTTLE;
       }
       break;
     }
     case THROTTLE : {
       next_state = THROTTLE;
-      if (supply_voltage >= threshold + hysteresis &&
+      if (supply_voltage < emergency){
+        next_state = EMERGENCY;
+      }
+      else if (supply_voltage >= threshold + hysteresis &&
           t_count >= throttle_duration) {
         next_state = NORMAL;
       }

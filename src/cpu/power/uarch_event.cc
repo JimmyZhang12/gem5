@@ -128,8 +128,12 @@ uArchEventPredictor::tick(void)
     case THROTTLE : {
       // Pre-emptive Throttle
       next_state = THROTTLE;
-      if (t_count > throttle_duration &&
-         supply_voltage > emergency + hysteresis) {
+      if (supply_voltage < emergency) {
+        next_state = EMERGENCY;
+        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+      }
+      else if (t_count > throttle_duration &&
+               supply_voltage > emergency + hysteresis) {
         next_state = NORMAL;
       }
       break;
@@ -151,6 +155,7 @@ uArchEventPredictor::tick(void)
     }
     case EMERGENCY : {
       e_count += cycle_period;
+      clkThrottle();
       setStall();
       break;
     }

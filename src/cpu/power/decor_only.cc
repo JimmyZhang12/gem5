@@ -121,7 +121,7 @@ DecorOnly::tick(void)
     }
     default : {
       // Nothing
-      next_state = NORMAL;
+      //next_state = NORMAL;
       break;
     }
   }

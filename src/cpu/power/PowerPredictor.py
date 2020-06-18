@@ -49,7 +49,7 @@ class PowerPredictor(ClockedObject):
     period = Param.Unsigned(100, "Number of sim-cycles")
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
     delta = Param.Float(0.75, "Rate at which to train")
-    emergency = Param.Unsigned(0.95, "% Voltage considered a supply emergency")
+    emergency = Param.Float(0.95, "% Voltage considered a supply emergency")
     emergency_duration = Param.Unsigned(250, "Number of cycles to do a "
         "DECOR Rollback")
     clk = Param.Float(3.5e9, "Default Clock Freq")
