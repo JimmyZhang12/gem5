@@ -95,13 +95,18 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
         "the auxiliary circuit.")
     limit = Param.Float(10, "Limit on the istep")
 
-#class HarvardPowerPredictor(PowerPredictor):
-#    type = "HarvardPowerPredictor"
-#    cxx_class = "Harvard"
-#    cxx_headder = "cpu/power/harvard.hh"
-#
-#    signature_length = Param.Unsigned(4,"Length of History Snapshot " \
-#        "(Figure 2)")
+class HarvardPowerPredictor(PowerPredictor):
+    type = "HarvardPowerPredictor"
+    cxx_class = "Harvard"
+    cxx_header = "cpu/power/harvard.hh"
+
+    signature_length = Param.Unsigned(4,"Length of History Snapshot " \
+        "(Figure 2)")
+    table_size = Param.Unsigned(128, "Size of UArch Event Table")
+    bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    duration = Param.Unsigned(50, "The number of cycles to throttle for")
 
 class uArchEventPredictor(PowerPredictor):
     type = "uArchEventPredictor"

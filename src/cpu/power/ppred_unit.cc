@@ -83,8 +83,6 @@ PPredUnit::PPredUnit(const Params *params)
     PPred::interface.sim_period = this->period;
     PPred::interface.cycle_period = this->cycle_period;
 
-    // Globally Exposed PPred Register for collecting uArch Events
-    PPred::ppred_history_registers.push_back(PPred::HistoryRegister(1));
 
     /*
      * If the period is set to 0, then we do not want to dump
