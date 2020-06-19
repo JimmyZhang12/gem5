@@ -246,9 +246,13 @@ class StatEvent : public GlobalEvent
             if (first_time) {
               if (reset)
                   Stats::reset();
+                  PPred::interface.instr_count0 = numCommittedInsts;
               first_time = false;
             }
             else {
+              PPred::interface.instr_count = numCommittedInsts;
+              pythonSetCommittedInstr(PPred::interface.instr_count
+                  - PPred::interface.instr_count0);
               if (dump)
                   Stats::dump();
 

@@ -54,6 +54,7 @@
 #include "cpu/checker/thread_context.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/thread_context.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
@@ -77,6 +78,7 @@
 struct BaseCPUParams;
 
 uint64_t numCPUClockCyclesStats = 0;
+uint64_t numCommittedInsts = 0;
 
 using namespace TheISA;
 using namespace std;
@@ -538,9 +540,16 @@ FullO3CPU<Impl>::tick()
 
     ++numCycles;
     ++numCPUClockCyclesStats;
+
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
-//    activity = false;
+    // Check the PPred Unit if there is a throttle
+    if (PPred::interface.if_stall) {
+      fetch.setPowerPredStall();
+    }
+    else {
+      fetch.unsetPowerPredStall();
+    }
 
     //Tick each of the stages
     fetch.tick();
@@ -1515,6 +1524,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->numInsts++;
         committedInsts[tid]++;
         system->totalNumInsts++;
+        numCommittedInsts++;
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);

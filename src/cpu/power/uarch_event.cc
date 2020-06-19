@@ -64,6 +64,8 @@ uArchEventPredictor::uArchEventPredictor(const Params *params)
     state = NORMAL;
     next_state = NORMAL;
     table.resize(params->table_size, 1);
+    t_count = 0;
+    e_count = 0;
 }
 
 void
@@ -106,13 +108,34 @@ uArchEventPredictor::tick(void)
       next_state = NORMAL;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
+        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+      }
+      else if (table.find(
+               PPred::ppred_history_registers[this->id].get_entry())) {
+        next_state = THROTTLE;
       }
       break;
     }
     case EMERGENCY : {
+      // DECOR Rollback
+      next_state = EMERGENCY;
+      if (e_count > emergency_duration &&
+         supply_voltage > emergency + hysteresis) {
+        next_state = NORMAL;
+      }
       break;
     }
     case THROTTLE : {
+      // Pre-emptive Throttle
+      next_state = THROTTLE;
+      if (supply_voltage < emergency) {
+        next_state = EMERGENCY;
+        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+      }
+      else if (t_count > throttle_duration &&
+               supply_voltage > emergency + hysteresis) {
+        next_state = NORMAL;
+      }
       break;
     }
     default : {
@@ -123,14 +146,21 @@ uArchEventPredictor::tick(void)
   // Output Logic
   switch(state) {
     case NORMAL : {
+      t_count = 0;
+      e_count = 0;
       // Restore Frequency
       clkRestore();
+      unsetStall();
       break;
     }
     case EMERGENCY : {
+      e_count += cycle_period;
+      clkThrottle();
+      setStall();
       break;
     }
     case THROTTLE : {
+      t_count += cycle_period;
       clkThrottle();
       break;
     }

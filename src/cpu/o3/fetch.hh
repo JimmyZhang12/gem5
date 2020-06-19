@@ -281,6 +281,13 @@ class DefaultFetch
 
     /** For priority-based fetch policies, need to keep update priorityList */
     void deactivateThread(ThreadID tid);
+
+    /** Set Power Pred Stall */
+    void setPowerPredStall();
+
+    /** Unset Power Pred Stall */
+    void unsetPowerPredStall();
+
   private:
     /** Reset this pipeline stage */
     void resetStage();
@@ -463,6 +470,7 @@ class DefaultFetch
     struct Stalls {
         bool decode;
         bool drain;
+        bool power_pred;
     };
 
     /** Tracks which stages are telling fetch to stall. */
@@ -578,6 +586,8 @@ class DefaultFetch
     Stats::Scalar fetchMiscStallCycles;
     /** Total number of cycles spent in waiting for drains. */
     Stats::Scalar fetchPendingDrainCycles;
+    /** Total number of cycles spent in waiting for power predictor. */
+    Stats::Scalar fetchPowerPredictorStall;
     /** Total number of stall cycles caused by no active threads to run. */
     Stats::Scalar fetchNoActiveThreadStallCycles;
     /** Total number of stall cycles caused by pending traps. */

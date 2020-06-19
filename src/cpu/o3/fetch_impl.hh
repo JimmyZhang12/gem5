@@ -59,10 +59,14 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
+
 //#include "cpu/checker/cpu.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/fetch.hh"
-#include "cpu/exetrace.hh"
+#include "cpu/o3/isa_specific.hh"
+#include "cpu/power/event_type.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
@@ -75,7 +79,6 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
-#include "cpu/o3/isa_specific.hh"
 
 using namespace std;
 
@@ -132,7 +135,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
         macroop[i] = nullptr;
         delayedCommit[i] = false;
         memReq[i] = nullptr;
-        stalls[i] = {false, false};
+        stalls[i] = {false, false, false};
         fetchBuffer[i] = NULL;
         fetchBufferPC[i] = 0;
         fetchBufferValid[i] = false;
@@ -233,6 +236,11 @@ DefaultFetch<Impl>::regStats()
         .name(name() + ".PendingDrainCycles")
         .desc("Number of cycles fetch has spent waiting on pipes to drain")
         .prereq(fetchPendingDrainCycles);
+
+    fetchPowerPredictorStall
+        .name(name() + ".PowerPredictorStallCycles")
+        .desc("Number of cycles fetch has spent waiting for power pred")
+        .prereq(fetchPowerPredictorStall);
 
     fetchNoActiveThreadStallCycles
         .name(name() + ".NoActiveThreadStallCycles")
@@ -343,6 +351,7 @@ DefaultFetch<Impl>::clearStates(ThreadID tid)
     memReq[tid] = NULL;
     stalls[tid].decode = false;
     stalls[tid].drain = false;
+    stalls[tid].power_pred = false;
     fetchBufferPC[tid] = 0;
     fetchBufferValid[tid] = false;
     fetchQueue[tid].clear();
@@ -373,6 +382,7 @@ DefaultFetch<Impl>::resetStage()
 
         stalls[tid].decode = false;
         stalls[tid].drain = false;
+        stalls[tid].power_pred = false;
 
         fetchBufferPC[tid] = 0;
         fetchBufferValid[tid] = false;
@@ -437,6 +447,7 @@ DefaultFetch<Impl>::drainResume()
     for (ThreadID i = 0; i < numThreads; ++i) {
         stalls[i].decode = false;
         stalls[i].drain = false;
+        stalls[i].power_pred = false;
     }
 }
 
@@ -582,10 +593,17 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be taken to %s\n",
                 tid, inst->seqNum, inst->pcState().instAddr(), nextPC);
+        // TODO: Fix This so its all done through Pointer instead of
+        // Globals, And PPred Unit is ticked through CPU class and not
+        // Global Queue Class...
+        PPred::ppred_history_registers[0].add_event(inst->pcState().instAddr(),
+          PPred::BRANCH_T);
     } else {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be not taken\n",
                 tid, inst->seqNum, inst->pcState().instAddr());
+        PPred::ppred_history_registers[0].add_event(inst->pcState().instAddr(),
+          PPred::BRANCH_NT);
     }
 
     DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
@@ -616,7 +634,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     if (cacheBlocked) {
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
                 tid);
+        PPred::ppred_history_registers[0].add_event(pc, PPred::ICACHE_BLOCK);
         return false;
+
     } else if (checkInterrupt(pc) && !delayedCommit[tid]) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
@@ -624,11 +644,14 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         // fetch is switched out.
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, interrupt pending\n",
                 tid);
+        PPred::ppred_history_registers[0].add_event(pc, PPred::ICACHE_BLOCK);
         return false;
     }
 
     // Align the fetch address to the start of a fetch buffer segment.
     Addr fetchBufferBlockPC = fetchBufferAlignPC(vaddr);
+
+    PPred::ppred_history_registers[0].add_event(pc, PPred::FETCH);
 
     DPRINTF(Fetch, "[tid:%i] Fetching cache line %#x for addr %#x\n",
             tid, fetchBufferBlockPC, vaddr);
@@ -896,6 +919,32 @@ DefaultFetch<Impl>::squash(const TheISA::PCState &newPC,
     cpu->removeInstsNotInROB(tid);
 }
 
+/**
+ * Set Power Pred Stall; Called from the CPU Tick based on the interface
+ * struct. It sets the stall from the Power Predictor.
+ */
+template <class Impl>
+void
+DefaultFetch<Impl>::setPowerPredStall() {
+    DPRINTF(Fetch, "[ setPowerPredStall ] Stall set by Power Pred Unit\n");
+    for (auto tid : *activeThreads) {
+        stalls[tid].power_pred = true;
+    }
+}
+
+/**
+ * Unset Power Pred Stall; Called from the CPU Tick based on the interface
+ * struct. It unsets the stall.
+ */
+template <class Impl>
+void
+DefaultFetch<Impl>::unsetPowerPredStall() {
+    DPRINTF(Fetch, "[ unsetPowerPredStall ] Stall unset by Power Pred Unit\n");
+    for (auto tid : *activeThreads) {
+        stalls[tid].power_pred = false;
+    }
+}
+
 template <class Impl>
 void
 DefaultFetch<Impl>::tick()
@@ -958,7 +1007,8 @@ DefaultFetch<Impl>::tick()
     unsigned available_insts = 0;
 
     for (auto tid : *activeThreads) {
-        if (!stalls[tid].decode) {
+        if (!stalls[tid].decode &&
+            !stalls[tid].power_pred) {
             available_insts += fetchQueue[tid].size();
         }
     }
@@ -969,7 +1019,9 @@ DefaultFetch<Impl>::tick()
 
     while (available_insts != 0 && insts_to_decode < decodeWidth) {
         ThreadID tid = *tid_itr;
-        if (!stalls[tid].decode && !fetchQueue[tid].empty()) {
+        if (!stalls[tid].power_pred &&
+            !stalls[tid].decode &&
+            !fetchQueue[tid].empty()) {
             const auto& inst = fetchQueue[tid].front();
             toDecode->insts[toDecode->size++] = inst;
             DPRINTF(Fetch, "[tid:%i] [sn:%llu] Sending instruction to decode "
@@ -1637,6 +1689,9 @@ DefaultFetch<Impl>::profileStall(ThreadID tid) {
     if (stalls[tid].drain) {
         ++fetchPendingDrainCycles;
         DPRINTF(Fetch, "Fetch is waiting for a drain!\n");
+    } else if (stalls[tid].power_pred) {
+        ++fetchPowerPredictorStall;
+        DPRINTF(Fetch, "Fetch is stalled by power predictor!\n");
     } else if (activeThreads->empty()) {
         ++fetchNoActiveThreadStallCycles;
         DPRINTF(Fetch, "Fetch has no active thread!\n");

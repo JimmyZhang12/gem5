@@ -53,11 +53,13 @@
 #include "base/loader/symtab.hh"
 #include "base/logging.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
-#include "cpu/base.hh"
-#include "cpu/exetrace.hh"
+#include "cpu/power/event_type.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Commit.hh"
@@ -716,6 +718,8 @@ DefaultCommit<Impl>::tick()
             DPRINTF(Commit,"[tid:%i] Can't commit, Instruction [sn:%llu] PC "
                     "%s is head of ROB and not ready\n",
                     tid, inst->seqNum, inst->pcState());
+            PPred::ppred_history_registers[0].add_event(
+                inst->pcState().instAddr(), PPred::COMMIT_BLOCK);
         }
 
         DPRINTF(Commit, "[tid:%i] ROB has %d insts & %d free entries.\n",

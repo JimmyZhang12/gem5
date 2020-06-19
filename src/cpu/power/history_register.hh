@@ -51,13 +51,45 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/power/event_type.hh"
-#include "cpu/power/ppred_unit.hh"
 #include "cpu/power/prediction_table.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
 
 namespace PPred {
 
+class HistoryRegister {
+  /**
+   * Event History of Execution
+   */
+  std::vector<event_t> signature;
+
+  /**
+   * PC of last event
+   */
+  uint64_t anchor_pc;
+
+public:
+  /**
+   * Default Constructor
+   */
+  HistoryRegister(size_t len = 4);
+
+  /**
+   * Convert the History Register to an Event type
+   * @return Entry type that can be hashed or looked up in a CAM
+   */
+  Entry get_entry();
+
+  /**
+   * Add Event
+   * Adds Event to the HistoryRegister; requires an event_t enum and ad the PC
+   * of the uArch event
+   * @param PC Current Program Counter
+   * @param event uArch Event Type from the event_t enum
+   * @return None
+   */
+  void add_event(uint64_t PC, event_t event);
+};
 
 } // namespace PPred
 

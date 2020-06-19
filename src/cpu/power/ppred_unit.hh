@@ -48,6 +48,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/power/history_register.hh"
 #include "cpu/static_inst.hh"
 #include "debug/PowerPred.hh"
 #include "params/PowerPredictor.hh"
@@ -64,14 +65,23 @@ class PPredIF {
     uint32_t sim_period;
     uint32_t cycle_period;
     bool stat_event_fired;
+    uint64_t instr_count;
+    uint64_t instr_count0;
+    bool if_stall;
     PPredIF() {
       sim_period = 0;
       cycle_period = 0;
+      instr_count = 0;
+      instr_count0 = 0;
       stat_event_fired = false;
+      if_stall = false;
     }
 };
 
 extern PPredIF interface;
+
+// History Based Predictors:
+extern std::vector<HistoryRegister> ppred_history_registers;
 
 extern std::vector<GlobalEvent*> ppred_events;
 
@@ -125,12 +135,17 @@ class PPredUnit : public ClockedObject
 
     void clkRestore();
 
+    void setStall();
+
+    void unsetStall();
+
     void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
 
   protected:
     Stats::Scalar freq;
     Stats::Scalar ticks;
     Stats::Scalar ttn;
+    Stats::Scalar stall;
 
     SrcClockDomain* sysClkDomain;
 
@@ -141,6 +156,8 @@ class PPredUnit : public ClockedObject
     Addr PC;
     int cycle_period;
     double emergency;
+    double emergency_duration;
+    int id;
   private:
     int period;
     double delta;
@@ -150,7 +167,6 @@ class PPredUnit : public ClockedObject
     double clk_half;
     Tick period_normal;
     Tick period_half;
-    int id;
 };
 
 /**

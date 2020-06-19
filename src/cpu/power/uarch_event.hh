@@ -50,6 +50,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/power/history_register.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/power/prediction_table.hh"
 #include "cpu/static_inst.hh"
@@ -84,6 +85,7 @@ class uArchEventPredictor : public PPredUnit
     double threshold;
     double hysteresis;
     unsigned int latency;
+    unsigned int throttle_duration;
 
   private:
     enum state_t {
@@ -93,14 +95,14 @@ class uArchEventPredictor : public PPredUnit
     };
 
     PPred::Table table;
-
+    PPred::HistoryRegister hr;
 
     state_t state;
     state_t next_state;
 
     // Counter for # Cycles to delay
-    unsigned int emergency_clk;
-    unsigned int throttle_clk;
+    unsigned int e_count;
+    unsigned int t_count;
     Stats::Scalar s;
     Stats::Scalar ns;
     Stats::Scalar sv;
