@@ -374,6 +374,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     for (ThreadID tid = 0; tid < this->numThreads; tid++)
         this->thread[tid]->setFuncExeInst(0);
 
+    powerPred = params->powerPred;
     ppred_first_time = true;
     ppred_instr_count_0 = 0;
     ppred_instr_count = 0;
@@ -547,7 +548,7 @@ FullO3CPU<Impl>::tick()
     ++ppred_numCPUClockCyclesStats;
 
     if (powerPred) {
-        if (ppred_numCPUClockCyclesStats >= powerPred->timing_tick() \
+        if (ppred_numCPUClockCyclesStats >= powerPred->get_cycle_period() \
               && Stats::pythonGetProfiling()) {
             ppred_numCPUClockCyclesStats = 0;
             if (ppred_first_time) {
@@ -564,7 +565,7 @@ FullO3CPU<Impl>::tick()
                 powerPred->tick();
             }
         }
-        if (powerPred->get_if_stall()) {
+        if (powerPred->get_stall()) {
             fetch.setPowerPredStall();
         }
         else {

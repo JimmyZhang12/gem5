@@ -587,8 +587,6 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
                                         nextPC, tid);
 
-    powerPred->sendPC(inst->staticInst, inst->seqNum, nextPC, tid);
-
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be taken to %s\n",
@@ -640,8 +638,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
                 tid);
         if (powerPred) {
-            powerPred->historyInsert(
-                inst->pcState().instAddr(), PPred::ICACHE_BLOCK);
+            powerPred->historyInsert(pc, PPred::ICACHE_BLOCK);
         }
         return false;
 
@@ -653,8 +650,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, interrupt pending\n",
                 tid);
         if (powerPred) {
-            powerPred->historyInsert(
-                inst->pcState().instAddr(), PPred::ICACHE_BLOCK);
+            powerPred->historyInsert(pc, PPred::ICACHE_BLOCK);
         }
         return false;
     }
@@ -663,8 +659,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     Addr fetchBufferBlockPC = fetchBufferAlignPC(vaddr);
 
     if (powerPred) {
-        powerPred->historyInsert(
-            inst->pcState().instAddr(), PPred::FETCH);
+        powerPred->historyInsert(pc, PPred::FETCH);
     }
 
     DPRINTF(Fetch, "[tid:%i] Fetching cache line %#x for addr %#x\n",

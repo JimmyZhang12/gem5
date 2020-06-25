@@ -92,7 +92,6 @@ class Harvard : public PPredUnit
     };
 
     PPred::TableBloom table;
-    PPred::HistoryRegister hr;
 
     state_t state;
     state_t next_state;

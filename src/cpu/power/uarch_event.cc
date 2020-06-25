@@ -64,8 +64,7 @@ uArchEventPredictor::uArchEventPredictor(const Params *params)
     state = NORMAL;
     next_state = NORMAL;
     table.resize(params->table_size, 1);
-    // Globally Exposed PPred Register for collecting uArch Events
-    PPred::ppred_history_registers.push_back(PPred::HistoryRegister(1));
+    this->history.resize(1);
     t_count = 0;
     e_count = 0;
 }
@@ -112,10 +111,9 @@ uArchEventPredictor::tick(void)
       next_state = NORMAL;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+        table.insert(this->history.get_entry());
       }
-      else if (table.find(
-               PPred::ppred_history_registers[this->id].get_entry())) {
+      else if (table.find(this->history.get_entry())) {
         next_state = THROTTLE;
       }
       break;
@@ -134,7 +132,7 @@ uArchEventPredictor::tick(void)
       next_state = THROTTLE;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+        table.insert(this->history.get_entry());
       }
       else if (t_count > throttle_duration &&
                supply_voltage > emergency + hysteresis) {

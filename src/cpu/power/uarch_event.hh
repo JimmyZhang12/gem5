@@ -95,7 +95,6 @@ class uArchEventPredictor : public PPredUnit
     };
 
     PPred::Table table;
-    PPred::HistoryRegister hr;
 
     state_t state;
     state_t next_state;

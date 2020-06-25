@@ -58,14 +58,3 @@ namespace py = pybind11;
 namespace PPred {
   // TODO: Move the bindings from the stats.cc to here for the power pred unit
 }
-
-void
-pybind_init_ppred(py::module &m_native)
-{
-    py::module m = m_native.def_submodule("ppred");
-
-    m
-        .def("updateEvents", &PPred::updateEvents)
-        ;
-}
-

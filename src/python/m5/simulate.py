@@ -50,7 +50,6 @@ import sys
 import _m5.drain
 import _m5.core
 from _m5.stats import updateEvents as updateStatEvents
-from _m5.ppred import updateEvents as updatePPredEvents
 
 from . import stats
 from . import SimObject
@@ -155,11 +154,6 @@ def instantiate(ckpt_dir=None):
     # Check to see if any of the stat events are in the past after resuming from
     # a checkpoint, If so, this call will shift them to be at a valid time.
     updateStatEvents()
-
-    # Check to see if any of the power_pred events are in the past after
-    # resuming from a checkpoint, If so, this call will shift them to be at a
-    # valid time.
-    updatePPredEvents()
 
 need_startup = True
 def simulate(*args, **kwargs):

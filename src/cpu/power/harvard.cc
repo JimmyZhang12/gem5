@@ -65,8 +65,7 @@ Harvard::Harvard(const Params *params)
     next_state = NORMAL;
     table.resize(params->table_size, params->signature_length, 3,
                   params->bloom_filter_size);
-    PPred::ppred_history_registers.push_back(
-                  PPred::HistoryRegister(params->signature_length));
+    history.resize(params->signature_length);
     t_count = 0;
     e_count = 0;
 }
@@ -113,10 +112,9 @@ Harvard::tick(void)
       next_state = NORMAL;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+        table.insert(this->history.get_entry());
       }
-      else if (table.find(
-               PPred::ppred_history_registers[this->id].get_entry())) {
+      else if (table.find(this->history.get_entry())) {
         next_state = THROTTLE;
       }
       break;
@@ -135,7 +133,7 @@ Harvard::tick(void)
       next_state = THROTTLE;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        table.insert(PPred::ppred_history_registers[this->id].get_entry());
+        table.insert(this->history.get_entry());
       }
       else if (t_count > throttle_duration &&
                supply_voltage > emergency + hysteresis) {

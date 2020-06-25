@@ -64,8 +64,6 @@ PerceptronPredictor::PerceptronPredictor(const Params *params)
             "PerceptronPredictor::PerceptronPredictor()\n");
     state = NORMAL;
     next_state = NORMAL;
-    PPred::ppred_history_registers.push_back(
-                  PPred::HistoryRegister(params->signature_length));
     t_count = 0;
     e_count = 0;
     output_fname = params->training_output;
@@ -112,7 +110,7 @@ PerceptronPredictor::tick(void)
   std::ofstream ofs;
   ofs.open(output_fname, std::ios_base::app);
   ofs << supply_voltage << "," << supply_current << "," <<
-      PPred::ppred_history_registers[this->id] << "\n";
+      this->history << "\n";
   ofs.close();
 
   // Transition Logic

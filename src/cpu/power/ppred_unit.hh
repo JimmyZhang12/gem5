@@ -58,35 +58,6 @@
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
 
-namespace PPred {
-
-class PPredIF {
-  public:
-    uint32_t sim_period;
-    uint32_t cycle_period;
-    bool stat_event_fired;
-    uint64_t instr_count;
-    uint64_t instr_count0;
-    bool if_stall;
-    PPredIF() {
-      sim_period = 0;
-      cycle_period = 0;
-      stat_event_fired = false;
-      if_stall = false;
-    }
-};
-
-extern PPredIF interface;
-
-// History Based Predictors:
-extern std::vector<HistoryRegister> ppred_history_registers;
-
-extern std::vector<GlobalEvent*> ppred_events;
-
-void updateEvents();
-
-}; // namespace PPred
-
 class PPredUnit : public ClockedObject
 {
   public:
@@ -102,32 +73,12 @@ class PPredUnit : public ClockedObject
     virtual void regStats() override;
 
     /**
-     * Called by the simulation event queue after a stat event and ticks
-     * the predictor
-     * @param tid The thread ID
-     * @todo Must interface with power supply model to issue appropriate
-     * commands.
-     */
-    void process(void);
-
-    /**
      * Tick: Invoke the Derived Predictor
      * @param tid The thread ID.
      * @param inst_PC The PC to look up.
      * @return Quantized value of the power prediction.
      */
     virtual void tick(void) = 0;
-
-    /**
-     * Send the PC to the branch pred unit.
-     * @param inst The branch instruction.
-     * @param PC The predicted PC is passed back through this parameter.
-     * @param tid The thread id.
-     */
-    void sendPC(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                 TheISA::PCState pc, ThreadID tid);
-
-    void dump();
 
     void clkThrottle();
 
@@ -137,13 +88,21 @@ class PPredUnit : public ClockedObject
 
     void unsetStall();
 
-    void schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit);
+    void historyInsert(const uint64_t pc, const PPred::event_t event);
+
+    bool get_stall() const {
+      return stall;
+    }
+
+    int get_cycle_period() const {
+      return cycle_period;
+    }
 
   protected:
-    Stats::Scalar freq;
-    Stats::Scalar ticks;
-    Stats::Scalar ttn;
-    Stats::Scalar stall;
+    Stats::Scalar stat_freq;
+    Stats::Scalar stat_ticks;
+    Stats::Scalar stat_ttn;
+    Stats::Scalar stat_stall;
 
     SrcClockDomain* sysClkDomain;
 
@@ -151,11 +110,12 @@ class PPredUnit : public ClockedObject
     double max_current;
     double supply_voltage;
     double supply_current;
-    Addr PC;
-    int cycle_period;
+    uint64_t PC;
+    const int cycle_period;
     double emergency;
     double emergency_duration;
     int id;
+    PPred::HistoryRegister history;
   private:
     int period;
     double delta;
@@ -165,47 +125,7 @@ class PPredUnit : public ClockedObject
     double clk_half;
     Tick period_normal;
     Tick period_half;
-};
-
-/**
- * Event to Perform the power prediction
- */
-class PowerPredEvent : public GlobalEvent
-{
-  private:
-    Tick repeat;
-    PPredUnit* unit;
-
-  public:
-    PowerPredEvent(Tick _when, Tick _repeat, PPredUnit* _unit = NULL)
-        : GlobalEvent(_when, Power_Event_Pri, AutoDelete),
-          repeat(_repeat),
-          unit(_unit)
-    {
-    }
-
-    virtual void
-    process()
-    {
-        DPRINTF(PowerPred, "PowerPredEvent::process() curTick %i\n",
-            curTick());
-        if (unit != NULL)
-        {
-            if (Stats::pythonGetProfiling()) {
-              repeat = PPred::interface.sim_period;
-              if (PPred::interface.stat_event_fired) {
-                PPred::interface.stat_event_fired = false;
-                unit->process();
-              }
-            }
-            unit->schedPowerPredEvent(curTick() + repeat, repeat, unit);
-        }
-    }
-
-    const char *description() const
-    {
-        return "GlobalPowerPredictionEvent";
-    }
+    bool stall;
 };
 
 #endif // __CPU_PRED_PPRED_UNIT_HH__

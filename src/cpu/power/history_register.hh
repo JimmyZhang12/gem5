@@ -76,6 +76,15 @@ public:
   HistoryRegister(size_t len = 4);
 
   /**
+   * resize
+   * Resize the history register
+   * @param len The length of the new history register
+   */
+  void resize(size_t len = 4) {
+    signature.resize(len);
+  }
+
+  /**
    * Convert the History Register to an Event type
    * @return Entry type that can be hashed or looked up in a CAM
    */

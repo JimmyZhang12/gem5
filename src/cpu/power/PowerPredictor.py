@@ -55,6 +55,9 @@ class PowerPredictor(ClockedObject):
     clk = Param.Float(3.5e9, "Default Clock Freq")
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
+    cpu_id = Param.Unsigned(0, "Cpu ID")
+    signature_length = Param.Unsigned(1,"Length of History Snapshot " \
+        "(Figure 2)")
 
 class Test(PowerPredictor):
     type = 'Test'
@@ -111,8 +114,6 @@ class HarvardPowerPredictor(PowerPredictor):
     cxx_class = "Harvard"
     cxx_header = "cpu/power/harvard.hh"
 
-    signature_length = Param.Unsigned(4,"Length of History Snapshot " \
-        "(Figure 2)")
     table_size = Param.Unsigned(128, "Size of UArch Event Table")
     bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \

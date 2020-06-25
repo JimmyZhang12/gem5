@@ -92,8 +92,6 @@ class PerceptronPredictor : public PPredUnit
       EMERGENCY
     };
 
-    PPred::HistoryRegister hr;
-
     state_t state;
     state_t next_state;
 
