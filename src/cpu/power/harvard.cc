@@ -41,7 +41,7 @@
  */
 
 
-#include "cpu/power/uarch_event.hh"
+#include "cpu/power/harvard.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -52,26 +52,27 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "debug/uArchEventPowerPred.hh"
+#include "debug/HarvardPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-uArchEventPredictor::uArchEventPredictor(const Params *params)
+Harvard::Harvard(const Params *params)
     : PPredUnit(params)
 {
-    DPRINTF(uArchEventPowerPred,
-            "uArchEventPredictor::uArchEventPredictor()\n");
+    DPRINTF(HarvardPowerPred,
+            "Harvard::Harvard()\n");
     state = NORMAL;
     next_state = NORMAL;
-    table.resize(params->table_size, 1);
-    // Globally Exposed PPred Register for collecting uArch Events
-    PPred::ppred_history_registers.push_back(PPred::HistoryRegister(1));
+    table.resize(params->table_size, params->signature_length, 3,
+                  params->bloom_filter_size);
+    PPred::ppred_history_registers.push_back(
+                  PPred::HistoryRegister(params->signature_length));
     t_count = 0;
     e_count = 0;
 }
 
 void
-uArchEventPredictor::regStats()
+Harvard::regStats()
 {
     PPredUnit::regStats();
 
@@ -96,9 +97,9 @@ uArchEventPredictor::regStats()
 }
 
 void
-uArchEventPredictor::tick(void)
+Harvard::tick(void)
 {
-  DPRINTF(uArchEventPowerPred, "uArchEventPredictor::tick()\n");
+  DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
   supply_voltage = Stats::pythonGetVoltage();
   supply_current = Stats::pythonGetCurrent();
   sv = supply_voltage;
@@ -181,10 +182,10 @@ uArchEventPredictor::tick(void)
   return;
 }
 
-uArchEventPredictor*
-uArchEventPredictorParams::create()
+Harvard*
+HarvardPowerPredictorParams::create()
 {
-  return new uArchEventPredictor(this);
+  return new Harvard(this);
 }
 
 

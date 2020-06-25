@@ -50,6 +50,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/power/bloomfilter.h"
 #include "cpu/power/event_type.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
@@ -108,26 +109,17 @@ public:
   /**
    * Returns the last updated counter
    */
-  uint64_t get_lru(void) { return last_updated; }
+  uint64_t get_lru(void) const { return last_updated; }
 
+  uint64_t get_access(void) const { return access_count; }
+
+  uint64_t get_pc(void) const { return anchor_pc; }
+
+  std::vector<event_t> get_history(void) const { return history; }
+
+  void print();
 };
 
-/**
- * Need to extend on the hash function to hash an arbitrary class
- */
-//namespace std {
-//  template <>
-//  struct hash<Entry> {
-//    size_t operator()(const Entry& k) const {
-//      hash<uint64_t> h1;
-//      hash<vector<event_t>> h2;
-//      size_t seed = 0;
-//      seed ^= h1(k.pc) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-//      seed ^= h2(k.history) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-//      return seed;
-//    }
-//  };
-//}
 
 class Table {
   // Prediction Table, Table of Entries
@@ -177,8 +169,102 @@ public:
    * Ticks the event history table for the LRU Policy
    */
   void tick(void);
+
+  void print();
+};
+
+class TableBloom {
+  // Prediction Table, Table of Entries
+  std::vector<Entry> prediction_table;
+  Bloomfilter<Entry> bf;
+
+  uint64_t threshold;
+
+public:
+  // Stats:
+  uint64_t insertions;
+  uint64_t matches_cam;
+  uint64_t matches_bloom;
+  uint64_t misses;
+
+  /**
+   * Create a new table
+   * @param table_size The number of entries
+   * @param history_length The number of events per history
+   * @param n The n hashes of the bloom filter
+   * @param bf_size The size of the bloom filter table
+   * @param seed The srand seed for the bloom filter n hashes
+   * @param threshold The access count threshold required to insert a cam
+   *    table entry into the bloom filter on replacement
+   * @return None
+   */
+  TableBloom(uint64_t table_size = 0,
+             uint64_t history_length = 0,
+             uint64_t n = 3,
+             uint64_t bf_size=2048,
+             uint64_t seed = 0,
+             uint64_t threshold = 1);
+
+  /**
+   * Resize Table
+   * @param table_size The number of entries
+   * @param history_length The number of events per history
+   * @param n The n hashes of the bloom filter
+   * @param bf_size The size of the bloom filter table
+   * @param seed The srand seed for the bloom filter n hashes
+   * @param threshold The access count threshold required to insert a cam
+   *    table entry into the bloom filter on replacement
+   * @return None
+   */
+  void resize(uint64_t table_size = 0,
+              uint64_t history_length = 0,
+              uint64_t n = 3,
+              uint64_t bf_size=2048,
+              uint64_t seed = 0);
+
+  /**
+   * Find an entry in the prediction table
+   * @param pc The anchor program counter
+   * @param history The event history register
+   * @return boolean return true if the event is in the table
+   */
+  bool find(uint64_t pc, std::vector<event_t> history);
+  bool find(const Entry& obj);
+
+  /**
+   * Insert an Entry based on LRU Replacement Policy
+   * @param pc The anchor program counter
+   * @param history The event history register
+   * @return boolean insert success
+   */
+  bool insert(uint64_t pc, std::vector<event_t> history);
+  bool insert(const Entry& obj);
+
+  /**
+   * Ticks the event history table for the LRU Policy
+   */
+  void tick(void);
+
+  void print();
 };
 
 } // namespace PPred
+
+/**
+ * Need to extend on the hash function to hash an arbitrary class
+ */
+namespace std {
+  template <>
+  struct hash<PPred::Entry> {
+    size_t operator()(const PPred::Entry& k) const {
+      hash<uint64_t> h1;
+      hash<vector<PPred::event_t>> h2;
+      size_t seed = 0;
+      seed ^= h1(k.get_pc()) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      seed ^= h2(k.get_history()) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      return seed;
+    }
+  };
+} // namespace std
 
 #endif

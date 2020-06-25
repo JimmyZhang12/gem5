@@ -8,7 +8,8 @@ ARG user
 
 RUN apt-get update && \
     apt-get install -y gcc-multilib make valgrind git gdb build-essential && \
-    apt-get install -y flex bison autoconf zlib1g-dev libgoogle-perftools-dev
+    apt-get install -y flex bison autoconf zlib1g-dev libgoogle-perftools-dev && \
+    apt-get install -y clang clang++
 
 RUN apt-get update && \
     apt-get install -y gcc make python python-pip && \

@@ -43,6 +43,10 @@
 /**
  * Bloomfilter constructor, initializes the offset array and the table to
  * false.
+ * @param n The number of hashes to perform on the input object
+ * @param size The size of the table
+ * @param seed The seed for srand() for generating the n hashes
+ * @return None
  */
 template<class T>
 Bloomfilter<T>::Bloomfilter(unsigned int n, unsigned int size, unsigned int seed) {
@@ -62,6 +66,9 @@ Bloomfilter<T>::Bloomfilter(unsigned int n, unsigned int size, unsigned int seed
  */
 template<class T>
 bool Bloomfilter<T>::find(const T obj) const {
+  if(table.size() == 0 || offset.size() == 0) {
+    return false;
+  }
   bool retval = true;
   int idx = 0;
   for(size_t i = 0; i < offset.size(); i++) {
@@ -77,10 +84,32 @@ bool Bloomfilter<T>::find(const T obj) const {
  */
 template<class T>
 void Bloomfilter<T>::insert(const T obj) {
+  if(table.size() == 0) {
+    return;
+  }
   int idx = 0;
   for(size_t i = 0; i < offset.size(); i++) {
     idx = h(offset[i], obj) % table.size();
     table[idx] = true;
+  }
+}
+
+/**
+ * resize, clears out the bloom filter and resets the seed, n hash ways and the
+ * size of the underlying table.
+ * @param n The number of hashes to perform on the input object
+ * @param size The size of the table
+ * @param seed The seed for srand() for generating the n hashes
+ * @return None
+ */
+template<class T>
+void Bloomfilter<T>::resize(unsigned int n, unsigned int size, unsigned int seed) {
+  clear();
+  std::srand(seed);
+  offset.resize(n, 0);
+  table.resize(size, false);
+  for(size_t i = 0; i < offset.size(); i++) {
+    offset[i] = std::rand();
   }
 }
 

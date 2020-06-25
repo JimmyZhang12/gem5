@@ -72,7 +72,7 @@ def m5_to_mcpat(voltage, freq, temperature):
   generate_xml(m5_stats_file, m5_config_file, i_f, voltage=voltage, \
               frequency=freq, temperature=temperature)
   run_mcpat(i_f, "5", "1", o_f, e_f)
-  mcpat_trees.append(parse_output(o_f))
+  mcpat_trees = [parse_output(o_f)]
 
 def dump():
   dump_stats(mcpat_trees)

@@ -325,6 +325,21 @@ for i in range(np):
                     table_size=128,
                     hysteresis=0.005,
                     duration=50)
+        elif options.power_pred_type == "HarvardPowerPredictor":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    # Specific
+                    table_size=128,
+                    signature_length=4,
+                    bloom_filter_size=2048,
+                    hysteresis=0.005,
+                    duration=50)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain
 

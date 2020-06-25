@@ -718,8 +718,10 @@ DefaultCommit<Impl>::tick()
             DPRINTF(Commit,"[tid:%i] Can't commit, Instruction [sn:%llu] PC "
                     "%s is head of ROB and not ready\n",
                     tid, inst->seqNum, inst->pcState());
-            PPred::ppred_history_registers[0].add_event(
-                inst->pcState().instAddr(), PPred::COMMIT_BLOCK);
+            if (PPred::ppred_history_registers.size() != 0) {
+                PPred::ppred_history_registers[0].add_event(
+                    inst->pcState().instAddr(), PPred::COMMIT_BLOCK);
+            }
         }
 
         DPRINTF(Commit, "[tid:%i] ROB has %d insts & %d free entries.\n",
