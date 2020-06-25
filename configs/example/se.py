@@ -340,6 +340,20 @@ for i in range(np):
                     bloom_filter_size=2048,
                     hysteresis=0.005,
                     duration=50)
+        elif options.power_pred_type == "PerceptronPredictor":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    # Specific
+                    signature_length=256,
+                    training_output=options.power_pred_train_name,
+                    hysteresis=0.005,
+                    duration=50)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain
 

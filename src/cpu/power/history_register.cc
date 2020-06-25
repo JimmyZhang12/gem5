@@ -42,6 +42,8 @@
 
 #include "cpu/power/history_register.hh"
 
+#include <iostream>
+
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"

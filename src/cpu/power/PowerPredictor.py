@@ -95,6 +95,17 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
         "the auxiliary circuit.")
     limit = Param.Float(10, "Limit on the istep")
 
+class PerceptronPredictor(PowerPredictor):
+    type = "PerceptronPredictor"
+    cxx_class = "PerceptronPredictor"
+    cxx_header = "cpu/power/perceptron_predictor.hh"
+
+    signature_length = Param.Unsigned(256,"Length of History Snapshot")
+    training_output = Param.String("td.csv","CSV of output training data")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    duration = Param.Unsigned(50, "The number of cycles to throttle for")
+
 class HarvardPowerPredictor(PowerPredictor):
     type = "HarvardPowerPredictor"
     cxx_class = "Harvard"

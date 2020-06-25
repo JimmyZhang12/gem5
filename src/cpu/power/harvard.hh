@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_UARCH_EVENT_HH__
-#define __CPU_POWER_UARCH_EVENT_HH__
+#ifndef __CPU_POWER_HARVARD_HH__
+#define __CPU_POWER_HARVARD_HH__
 
 #include <deque>
 #include <string>
@@ -75,9 +75,6 @@ class Harvard : public PPredUnit
 
     /**
      * Update the Harvard State Machine.
-     * @param tid The thread ID.
-     * @param inst_PC The PC to look up.
-     * @return boolean throttle/no_throttle
      */
     void tick(void);
 
@@ -109,4 +106,4 @@ class Harvard : public PPredUnit
     Stats::Scalar sc;
 };
 
-#endif // __CPU_PRED_UARCH_EVENT_HH__
+#endif // __CPU_PRED_HARVARD_HH__
