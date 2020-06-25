@@ -40,93 +40,72 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_HISTORY_REGISTER_HH__
-#define __CPU_POWER_HISTORY_REGISTER_HH__
+#ifndef __CPU_POWER_PERCEPTRON_PREDICTOR_HH__
+#define __CPU_POWER_PERCEPTRON_PREDICTOR_HH__
 
-#include <cassert>
-#include <cstdlib>
+#include <deque>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/power/event_type.hh"
-#include "cpu/power/prediction_table.hh"
+#include "cpu/power/history_register.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
+#include "params/PerceptronPredictor.hh"
+#include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-namespace PPred {
+class PerceptronPredictor : public PPredUnit
+{
+  public:
 
-class HistoryRegister {
-  /**
-   * Event History of Execution
-   */
-  std::vector<event_t> signature;
+    typedef PerceptronPredictorParams Params;
 
-  /**
-   * PC of last event
-   */
-  uint64_t anchor_pc;
+    /**
+     * @param params The params object, that has the size of the BP and BTB.
+     */
+    PerceptronPredictor(const Params *p);
 
-public:
-  /**
-   * Default Constructor
-   */
-  HistoryRegister(size_t len = 4);
+    /**
+     * Registers statistics.
+     */
+    void regStats() override;
 
-  /**
-   * Convert the History Register to an Event type
-   * @return Entry type that can be hashed or looked up in a CAM
-   */
-  Entry get_entry();
+    /**
+     * Update the Perceptron State Machine.
+     */
+    void tick(void);
 
-  /**
-   * Add Event
-   * Adds Event to the HistoryRegister; requires an event_t enum and ad the PC
-   * of the uArch event
-   * @param PC Current Program Counter
-   * @param event uArch Event Type from the event_t enum
-   * @return None
-   */
-  void add_event(uint64_t PC, event_t event);
+  protected:
+    double threshold;
+    double hysteresis;
+    unsigned int latency;
+    unsigned int throttle_duration;
 
-  /**
-   * Friend ostream& operator<<
-   * Write the contents of the History Register out to a stream
-   * @param os The output stream
-   * @param t This
-   * @return output stream reference
-   */
-  friend std::ostream& operator<<(std::ostream& os, const HistoryRegister& t) {
-    // Print PC Followed by all the uArchEvent IDs
-    os << std::hex << t.get_pc();
-    for (auto i : t.get_signature()) {
-      os << ",";
-      os << std::dec << i;
-    }
-    return os;
-  }
+  private:
+    enum state_t {
+      NORMAL=1,
+      THROTTLE,
+      EMERGENCY
+    };
 
-  /**
-   * get_signature
-   * Return the signature vector
-   * @return Anchor Signature
-   */
-  std::vector<event_t> get_signature() const {
-    return signature;
-  }
+    PPred::HistoryRegister hr;
 
-  /**
-   * get_pc
-   * Return the PC value
-   * @return Anchor PC
-   */
-  uint64_t get_pc() const {
-    return anchor_pc;
-  }
+    state_t state;
+    state_t next_state;
+
+    // Counter for # Cycles to delay
+    unsigned int e_count;
+    unsigned int t_count;
+    Stats::Scalar s;
+    Stats::Scalar ns;
+    Stats::Scalar sv;
+    Stats::Scalar sc;
+
+    std::string output_fname;
 };
 
-} // namespace PPred
-
-#endif // __CPU_POWER_HISTORY_REGISTER_HH__
+#endif // __CPU_POWER_PERCEPTRON_PREDICTOR_HH__

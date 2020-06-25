@@ -442,6 +442,9 @@ def addSEOptions(parser):
     parser.add_option("--power_pred_history_size", type="int",
                       default=1,
                       help="Number of PCs to concat")
+    parser.add_option("--power_pred_train_name", type="str",
+                      default="training.csv",
+                      help="File Name and Path for Gen Training Data")
 
 
 def addFSOptions(parser):
