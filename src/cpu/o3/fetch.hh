@@ -443,7 +443,7 @@ class DefaultFetch
     /** BPredUnit. */
     BPredUnit *branchPred;
 
-    /** BPredUnit. */
+    /** PPredUnit. */
     PPredUnit *powerPred;
 
     TheISA::PCState pc[Impl::MaxThreads];

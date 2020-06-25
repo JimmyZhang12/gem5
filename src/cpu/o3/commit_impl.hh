@@ -86,6 +86,7 @@ template <class Impl>
 DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
     : commitPolicy(params->smtCommitPolicy),
       cpu(_cpu),
+      powerPred(nullptr),
       iewToCommitDelay(params->iewToCommitDelay),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToROBDelay(params->renameToROBDelay),
@@ -129,6 +130,8 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         renameMap[tid] = nullptr;
     }
     interrupt = NoFault;
+
+    powerPred = params->powerPred;
 }
 
 template <class Impl>
@@ -718,8 +721,8 @@ DefaultCommit<Impl>::tick()
             DPRINTF(Commit,"[tid:%i] Can't commit, Instruction [sn:%llu] PC "
                     "%s is head of ROB and not ready\n",
                     tid, inst->seqNum, inst->pcState());
-            if (PPred::ppred_history_registers.size() != 0) {
-                PPred::ppred_history_registers[0].add_event(
+            if (powerPred) {
+                powerPred->historyInsert(
                     inst->pcState().instAddr(), PPred::COMMIT_BLOCK);
             }
         }

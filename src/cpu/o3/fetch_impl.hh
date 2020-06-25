@@ -596,17 +596,18 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
         // TODO: Fix This so its all done through Pointer instead of
         // Globals, And PPred Unit is ticked through CPU class and not
         // Global Queue Class...
-        if (PPred::ppred_history_registers.size() != 0) {
-          PPred::ppred_history_registers[0].add_event(
-              inst->pcState().instAddr(), PPred::BRANCH_T);
+        if (powerPred) {
+            powerPred->historyInsert(
+                inst->pcState().instAddr(), PPred::BRANCH_T);
         }
+
     } else {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be not taken\n",
                 tid, inst->seqNum, inst->pcState().instAddr());
-        if (PPred::ppred_history_registers.size() != 0) {
-            PPred::ppred_history_registers[0].add_event(
-                inst->pcState().instAddr(),PPred::BRANCH_NT);
+        if (powerPred) {
+            powerPred->historyInsert(
+                inst->pcState().instAddr(), PPred::BRANCH_NT);
         }
     }
 
@@ -638,8 +639,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     if (cacheBlocked) {
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
                 tid);
-        if (PPred::ppred_history_registers.size() != 0) {
-          PPred::ppred_history_registers[0].add_event(pc, PPred::ICACHE_BLOCK);
+        if (powerPred) {
+            powerPred->historyInsert(
+                inst->pcState().instAddr(), PPred::ICACHE_BLOCK);
         }
         return false;
 
@@ -650,8 +652,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         // fetch is switched out.
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, interrupt pending\n",
                 tid);
-        if (PPred::ppred_history_registers.size() != 0) {
-          PPred::ppred_history_registers[0].add_event(pc, PPred::ICACHE_BLOCK);
+        if (powerPred) {
+            powerPred->historyInsert(
+                inst->pcState().instAddr(), PPred::ICACHE_BLOCK);
         }
         return false;
     }
@@ -659,8 +662,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     // Align the fetch address to the start of a fetch buffer segment.
     Addr fetchBufferBlockPC = fetchBufferAlignPC(vaddr);
 
-    if (PPred::ppred_history_registers.size() != 0) {
-      PPred::ppred_history_registers[0].add_event(pc, PPred::FETCH);
+    if (powerPred) {
+        powerPred->historyInsert(
+            inst->pcState().instAddr(), PPred::FETCH);
     }
 
     DPRINTF(Fetch, "[tid:%i] Fetching cache line %#x for addr %#x\n",

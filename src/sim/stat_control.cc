@@ -234,33 +234,11 @@ class StatEvent : public GlobalEvent
     virtual void
     process()
     {
-        if (pythonGetProfiling()) {
-          // Help with fast forwarding to the
-          // ROI as stat event takes lots of time....
-          repeat = PPred::interface.sim_period;
-          if (numCPUClockCyclesStats >= PPred::interface.cycle_period) {
-            DPRINTF(StatEvent, "StatEvent::process() curTick: %i\n, "
-                    "numCPUClockCycles: %i\n", curTick(),
-                    numCPUClockCyclesStats);
-            numCPUClockCyclesStats = 0;
-            if (first_time) {
-              if (reset)
-                  Stats::reset();
-                  PPred::interface.instr_count0 = numCommittedInsts;
-              first_time = false;
-            }
-            else {
-              PPred::interface.instr_count = numCommittedInsts;
-              pythonSetCommittedInstr(PPred::interface.instr_count
-                  - PPred::interface.instr_count0);
-              if (dump)
-                  Stats::dump();
-
-              if (reset)
-                  Stats::reset();
-            }
-            PPred::interface.stat_event_fired = true;
-          }
+        if (reset) {
+            Stats::reset();
+        }
+        if (dump) {
+            Stats::dump();
         }
         if (repeat) {
             Stats::schedStatEvent(dump, reset, curTick() + repeat, repeat);

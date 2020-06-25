@@ -90,6 +90,7 @@ template <class Impl>
 InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
                                          DerivO3CPUParams *params)
     : cpu(cpu_ptr),
+      powerPred(nullptr),
       iewStage(iew_ptr),
       fuPool(params->fuPool),
       iqPolicy(params->smtIQPolicy),
@@ -158,6 +159,8 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
     for (ThreadID tid = numThreads; tid < Impl::MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
+
+    powerPred = params->powerPred;
 }
 
 template <class Impl>

@@ -54,6 +54,7 @@
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
@@ -282,6 +283,9 @@ class InstructionQueue
 
     /** Pointer to the CPU. */
     O3CPU *cpu;
+
+    /** PPredUnit. */
+    PPredUnit *powerPred;
 
     /** Cache interface. */
     MemInterface *dcacheInterface;

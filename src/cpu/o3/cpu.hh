@@ -57,14 +57,16 @@
 #include "arch/types.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/activity.hh"
+#include "cpu/base.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
-#include "cpu/activity.hh"
-#include "cpu/base.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
+
 //#include "cpu/o3/thread_context.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/process.hh"
@@ -74,9 +76,6 @@ class Checker;
 class ThreadContext;
 template <class>
 class O3ThreadContext;
-
-extern uint64_t numCPUClockCyclesStats;
-extern uint64_t numCommittedInsts;
 
 class Checkpoint;
 class Process;
@@ -595,6 +594,9 @@ class FullO3CPU : public BaseO3CPU
     /** Active Threads List */
     std::list<ThreadID> activeThreads;
 
+    /** PPredUnit. */
+    PPredUnit *powerPred;
+
     /**
      *  This is a list of threads that are trying to exit. Each thread id
      *  is mapped to a boolean value denoting whether the thread is ready
@@ -789,6 +791,13 @@ class FullO3CPU : public BaseO3CPU
     //number of misc
     Stats::Scalar miscRegfileReads;
     Stats::Scalar miscRegfileWrites;
+
+  private:
+    bool ppred_first_time;
+    uint64_t ppred_instr_count_0;
+    uint64_t ppred_instr_count;
+    uint64_t ppred_numCommittedInsts;
+    uint64_t ppred_numCPUClockCyclesStats;
 };
 
 #endif // __CPU_O3_CPU_HH__

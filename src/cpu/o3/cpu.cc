@@ -48,6 +48,7 @@
 
 #include "arch/generic/traits.hh"
 #include "arch/kernel_stats.hh"
+#include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
@@ -76,9 +77,6 @@
 #endif
 
 struct BaseCPUParams;
-
-uint64_t numCPUClockCyclesStats = 0;
-uint64_t numCommittedInsts = 0;
 
 using namespace TheISA;
 using namespace std;
@@ -375,6 +373,12 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
     for (ThreadID tid = 0; tid < this->numThreads; tid++)
         this->thread[tid]->setFuncExeInst(0);
+
+    ppred_first_time = true;
+    ppred_instr_count_0 = 0;
+    ppred_instr_count = 0;
+    ppred_numCommittedInsts = 0;
+    ppred_numCPUClockCyclesStats = 0;
 }
 
 template <class Impl>
@@ -530,6 +534,7 @@ FullO3CPU<Impl>::regStats()
         .prereq(miscRegfileWrites);
 }
 
+
 template <class Impl>
 void
 FullO3CPU<Impl>::tick()
@@ -539,17 +544,35 @@ FullO3CPU<Impl>::tick()
     assert(drainState() != DrainState::Drained);
 
     ++numCycles;
-    ++numCPUClockCyclesStats;
+    ++ppred_numCPUClockCyclesStats;
+
+    if (powerPred) {
+        if (ppred_numCPUClockCyclesStats >= powerPred->timing_tick() \
+              && Stats::pythonGetProfiling()) {
+            ppred_numCPUClockCyclesStats = 0;
+            if (ppred_first_time) {
+                Stats::reset();
+                ppred_instr_count_0 = ppred_numCommittedInsts;
+                ppred_first_time = false;
+            }
+            else {
+                ppred_instr_count = ppred_numCommittedInsts;
+                Stats::pythonSetCommittedInstr(
+                    ppred_instr_count - ppred_instr_count_0);
+                Stats::dump();
+                Stats::reset();
+                powerPred->tick();
+            }
+        }
+        if (powerPred->get_if_stall()) {
+            fetch.setPowerPredStall();
+        }
+        else {
+            fetch.unsetPowerPredStall();
+        }
+    }
 
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
-
-    // Check the PPred Unit if there is a throttle
-    if (PPred::interface.if_stall) {
-      fetch.setPowerPredStall();
-    }
-    else {
-      fetch.unsetPowerPredStall();
-    }
 
     //Tick each of the stages
     fetch.tick();
@@ -1524,7 +1547,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->numInsts++;
         committedInsts[tid]++;
         system->totalNumInsts++;
-        numCommittedInsts++;
+        ppred_numCommittedInsts++;
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);

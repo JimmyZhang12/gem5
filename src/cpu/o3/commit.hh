@@ -49,6 +49,7 @@
 #include "base/statistics.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
@@ -360,6 +361,9 @@ class DefaultCommit
   private:
     /** Pointer to O3CPU. */
     O3CPU *cpu;
+
+    /** PPredUnit. */
+    PPredUnit *powerPred;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;

@@ -203,14 +203,6 @@ PPredUnit::schedPowerPredEvent(Tick when, Tick repeat, PPredUnit* unit)
                                                         repeat, unit);
 }
 
-namespace PPred {
-
-std::vector<GlobalEvent*> ppred_events;
-
-std::vector<HistoryRegister> ppred_history_registers;
-
-PPredIF interface;
-
 void
 updateEvents()
 {

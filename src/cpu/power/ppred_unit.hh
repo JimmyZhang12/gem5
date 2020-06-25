@@ -71,8 +71,6 @@ class PPredIF {
     PPredIF() {
       sim_period = 0;
       cycle_period = 0;
-      instr_count = 0;
-      instr_count0 = 0;
       stat_event_fired = false;
       if_stall = false;
     }
