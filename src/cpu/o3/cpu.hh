@@ -597,6 +597,9 @@ class FullO3CPU : public BaseO3CPU
     /** PPredUnit. */
     PPredUnit *powerPred;
 
+    /** PPredStat Reference */
+    PPredStat* ppred_stat;
+
     /**
      *  This is a list of threads that are trying to exit. Each thread id
      *  is mapped to a boolean value denoting whether the thread is ready
@@ -793,11 +796,12 @@ class FullO3CPU : public BaseO3CPU
     Stats::Scalar miscRegfileWrites;
 
   private:
+    unsigned int cpu_id;
     bool ppred_first_time;
     uint64_t ppred_instr_count_0;
     uint64_t ppred_instr_count;
     uint64_t ppred_numCommittedInsts;
-    uint64_t ppred_numCPUClockCyclesStats;
+    uint64_t ppred_numCycles;
 };
 
 #endif // __CPU_O3_CPU_HH__

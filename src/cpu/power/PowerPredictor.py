@@ -149,3 +149,12 @@ class DecorOnly(PowerPredictor):
     type = "DecorOnly"
     cxx_class = "DecorOnly"
     cxx_header = "cpu/power/decor_only.hh"
+
+class PPredStat(ClockedObject):
+    type = "PPredStat"
+    cxx_class = "PPredStat"
+    cxx_header = "cpu/power/ppred_stat.hh"
+
+    stat_clk_domain = Param.SrcClockDomain(Parent.ppred_stat_clk, \
+                         "Clk domain for Stat Dump")
+    cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")

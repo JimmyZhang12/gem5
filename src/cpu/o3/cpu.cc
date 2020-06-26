@@ -55,6 +55,7 @@
 #include "cpu/checker/thread_context.hh"
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/thread_context.hh"
+#include "cpu/power/ppred_stat.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/simple_thread.hh"
@@ -141,7 +142,8 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       globalSeqNum(1),
       system(params->system),
-      lastRunningCycle(curCycle())
+      lastRunningCycle(curCycle()),
+      cpu_id(params->cpu_id)
 {
     if (!params->switched_out) {
         _status = Running;
@@ -375,11 +377,12 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
         this->thread[tid]->setFuncExeInst(0);
 
     powerPred = params->powerPred;
+    ppred_stat = params->ppred_stat;
     ppred_first_time = true;
     ppred_instr_count_0 = 0;
     ppred_instr_count = 0;
     ppred_numCommittedInsts = 0;
-    ppred_numCPUClockCyclesStats = 0;
+    ppred_numCycles = 0;
 }
 
 template <class Impl>
@@ -545,32 +548,32 @@ FullO3CPU<Impl>::tick()
     assert(drainState() != DrainState::Drained);
 
     ++numCycles;
-    ++ppred_numCPUClockCyclesStats;
+    ++ppred_numCycles;
 
-    if (powerPred) {
-        if (ppred_numCPUClockCyclesStats >= powerPred->get_cycle_period() \
-              && Stats::pythonGetProfiling()) {
-            ppred_numCPUClockCyclesStats = 0;
-            if (ppred_first_time) {
-                Stats::reset();
-                ppred_instr_count_0 = ppred_numCommittedInsts;
-                ppred_first_time = false;
-            }
-            else {
-                ppred_instr_count = ppred_numCommittedInsts;
-                Stats::pythonSetCommittedInstr(
-                    ppred_instr_count - ppred_instr_count_0);
-                Stats::dump();
-                Stats::reset();
-                powerPred->tick();
-            }
-        }
-        if (powerPred->get_stall()) {
-            fetch.setPowerPredStall();
+    if (powerPred && ppred_stat) {
+      if (ppred_stat->get_begin()) {
+        if (ppred_first_time) {
+          ppred_instr_count_0 = ppred_numCommittedInsts;
+          ppred_first_time = false;
         }
         else {
-            fetch.unsetPowerPredStall();
+          ppred_instr_count = ppred_numCommittedInsts;
+          // Use CPU0 instr count as the main count
+          if (cpu_id == 0) {
+            //std::cout << ppred_instr_count - ppred_instr_count_0 << "," <<
+            //  ppred_numCommittedInsts << "," << ppred_numCycles <<"\n";
+            Stats::pythonSetCommittedInstr(
+                ppred_instr_count - ppred_instr_count_0);
+          }
+          powerPred->tick();
         }
+        if (powerPred->get_stall()) {
+          fetch.setPowerPredStall();
+        }
+        else {
+          fetch.unsetPowerPredStall();
+        }
+      }
     }
 
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
@@ -605,7 +608,8 @@ FullO3CPU<Impl>::tick()
             DPRINTF(O3CPU, "Switched out!\n");
             // increment stat
             lastRunningCycle = curCycle();
-        } else if (!activityRec.active() || _status == Idle) {
+        //} else if (!activityRec.active() || _status == Idle) {
+        } else if (_status == Idle) {
             DPRINTF(O3CPU, "Idle!\n");
             lastRunningCycle = curCycle();
             timesIdled++;

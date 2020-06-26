@@ -74,9 +74,6 @@ class PPredUnit : public ClockedObject
 
     /**
      * Tick: Invoke the Derived Predictor
-     * @param tid The thread ID.
-     * @param inst_PC The PC to look up.
-     * @return Quantized value of the power prediction.
      */
     virtual void tick(void) = 0;
 

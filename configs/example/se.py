@@ -223,6 +223,12 @@ if options.simpoint_profile:
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
 
+# Clock for dumping stats
+system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
+                                   voltage_domain = system.voltage_domain)
+system.ppred_stat = PPredStat(cycle_period = options.power_pred_cpu_cycles)
+system.ppred_stat.clk_domain = system.ppred_stat_clk
+
 for i in range(np):
     if options.smt:
         system.cpu[i].workload = multiprocesses
@@ -356,6 +362,8 @@ for i in range(np):
                     duration=50)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain
+        # Give core a reference to the global stat dump
+        system.cpu[i].ppred_stat = system.ppred_stat
 
 
     if options.indirect_bp_type:
@@ -364,6 +372,7 @@ for i in range(np):
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
     system.cpu[i].createThreads()
+
 
 if options.ruby:
     Ruby.create_system(options, False, system)
