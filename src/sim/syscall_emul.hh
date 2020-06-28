@@ -304,17 +304,17 @@ SyscallReturn listenFunc(SyscallDesc *desc, int num, ThreadContext *tc,
 SyscallReturn connectFunc(SyscallDesc *desc, int num, ThreadContext *tc,
                           int tgt_fd, Addr buf_ptr, int addrlen);
 
-#if defined(SYS_getdents)
+//#if defined(SYS_getdents)
 // Target getdents() handler.
 SyscallReturn getdentsFunc(SyscallDesc *desc, int num, ThreadContext *tc,
                            int tgt_fd, Addr buf_ptr, unsigned count);
-#endif
+//#endif
 
-#if defined(SYS_getdents64)
+//#if defined(SYS_getdents64)
 // Target getdents() handler.
 SyscallReturn getdents64Func(SyscallDesc *desc, int num, ThreadContext *tc,
                              int tgt_fd, Addr buf_ptr, unsigned count);
-#endif
+//#endif
 
 // Target sendto() handler.
 SyscallReturn sendtoFunc(SyscallDesc *desc, int num, ThreadContext *tc,
@@ -1850,6 +1850,26 @@ mmapFunc(SyscallDesc *desc, int num, ThreadContext *tc,
     }
 
     return start;
+}
+
+template <class OS>
+SyscallReturn
+pread64Func(SyscallDesc *desc, int num, ThreadContext *tc,
+             int tgt_fd, Addr bufPtr, int nbytes, int offset)
+{
+    auto p = tc->getProcessPtr();
+
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
+        return -EBADF;
+    int sim_fd = ffdp->getSimFD();
+
+    BufferArg bufArg(bufPtr, nbytes);
+    bufArg.copyIn(tc->getVirtProxy());
+
+    int bytes_read = pread(sim_fd, bufArg.bufferPtr(), nbytes, offset);
+
+    return (bytes_read == -1) ? -errno : bytes_read;
 }
 
 template <class OS>

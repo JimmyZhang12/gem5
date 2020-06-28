@@ -85,6 +85,8 @@ class PPredUnit : public ClockedObject
 
     void unsetStall();
 
+    void get_analog_stats();
+
     void historyInsert(const uint64_t pc, const PPred::event_t event);
 
     bool get_stall() const {
@@ -101,18 +103,30 @@ class PPredUnit : public ClockedObject
     Stats::Scalar stat_ttn;
     Stats::Scalar stat_stall;
 
+    Stats::Scalar sv;
+    Stats::Scalar sc;
+    Stats::Scalar rtc;
+    Stats::Scalar trtc;
+    Stats::Scalar ptrtc;
+
     SrcClockDomain* sysClkDomain;
 
     double min_current;
     double max_current;
+
     double supply_voltage;
     double supply_current;
+    double core_runtime_current;
+    double total_core_runtime_current;
+    double pct_total_runtime_current;
+
     uint64_t PC;
     const int cycle_period;
     double emergency;
     double emergency_duration;
     int id;
     PPred::HistoryRegister history;
+    bool hr_updated;
   private:
     int period;
     double delta;

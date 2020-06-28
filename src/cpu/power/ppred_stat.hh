@@ -82,6 +82,12 @@ class PPredStat : public ClockedObject
     /** Clock Domain */
     SrcClockDomain* clkDomain;
 
+    /** Freq */
+    double frequency;
+
+    /** Ncores */
+    double ncores;
+
     /** Time */
     bool first_time;
 

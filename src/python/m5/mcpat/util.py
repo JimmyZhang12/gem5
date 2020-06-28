@@ -86,9 +86,14 @@ def parse_output(output_file):
     return ret
 
   def split_list(lines):
+    core_id = 0
     ret = []
     sub = []
     for i in lines:
+      if "Core:" in i:
+        i = i.replace("Core:", "Core"+str(core_id)+":")
+        core_id += 1
+
       if i == "\n":
         ret.append(sub)
         sub = []
@@ -153,10 +158,29 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
     p = subprocess.Popen(mcpat, stdout=ostd, stderr=oerr)
     p.wait()
 
-def calc_total_power(data):
+def get_data(path, mcpat_trees):
+  data = {}
+  def filter(value):
+    if "nan" in value.split(" ")[0] or "inf" in value.split(" ")[0]:
+      # McPAT Messed Up?
+      return "0"
+    else:
+      return value.split(" ")[0]
+
+  for key, value in mcpat_trees[-1].find(path).data.items():
+    data[key] = filter(value.split(" ")[0])
+  return data
+
+def calc_total_power(data, power_gating = False):
   # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
   # Gating
-  return float(data[0]) + float(data[7]) + float(data[5])
+  if power_gating:
+    return float(data["Gate Leakage"]) + \
+           float(data["Subthreshold Leakage with power gating"]) + \
+           float(data["Runtime Dynamic"])
+  return float(data["Gate Leakage"]) + \
+         float(data["Subthreshold Leakage"]) + \
+         float(data["Runtime Dynamic"])
 
 def calc_req(power, voltage):
   return voltage*voltage/power
@@ -178,14 +202,10 @@ def dump_stats(mcpat_trees):
     # Print the header line:
     for epoch in mcpat_trees:
       epoch.print_csv_line_data(full_dump)
-      data_line = []
-      header = []
-      for key, value in epoch.find("Processor").data.items():
-        header.append(key)
-        data_line.append(value.split(" ")[0])
+      data = get_data("Processor", mcpat_trees)
 
       # Calculate Total Power:
-      power = calc_total_power(data_line)
+      power = calc_total_power(data)
       data = []
       req = calc_req(power, 1.0)
       data.append(str(i*float(options.power_profile_interval)))

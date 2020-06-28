@@ -65,6 +65,10 @@ extern double pythonGetCurrent();
 
 extern bool pythonGetProfiling();
 
+extern double pythonCoreCurrent(int id);
+
+extern double pythonTotalCurrent();
+
 extern void pythonSetCommittedInstr(uint64_t num);
 
 /**

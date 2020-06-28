@@ -72,8 +72,7 @@ void
 Test::tick(void)
 {
   DPRINTF(TestPowerPred, "Test::lookup()\n");
-  Stats::pythonGetVoltage();
-  Stats::pythonGetCurrent();
+  get_analog_stats();
   return;
 }
 

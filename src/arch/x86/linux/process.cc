@@ -275,7 +275,7 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /*  14 */ { "rt_sigprocmask", ignoreWarnOnceFunc },
     /*  15 */ { "rt_sigreturn" },
     /*  16 */ { "ioctl", ioctlFunc<X86Linux64> },
-    /*  17 */ { "pread64" },
+    /*  17 */ { "pread64", pread64Func<X86Linux64> },
     /*  18 */ { "pwrite64", pwrite64Func<X86Linux64> },
     /*  19 */ { "readv", readvFunc<X86Linux64> },
     /*  20 */ { "writev", writevFunc<X86Linux64> },
@@ -336,11 +336,11 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /*  75 */ { "fdatasync" },
     /*  76 */ { "truncate", truncateFunc },
     /*  77 */ { "ftruncate", ftruncateFunc },
-#if defined(SYS_getdents)
+//#if defined(SYS_getdents)
     /*  78 */ { "getdents", getdentsFunc },
-#else
-    /*  78 */ { "getdents" },
-#endif
+//#else
+//    /*  78 */ { "getdents" },
+//#endif
     /*  79 */ { "getcwd", getcwdFunc },
     /*  80 */ { "chdir", chdirFunc },
     /*  81 */ { "fchdir" },
@@ -404,12 +404,12 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /* 139 */ { "sysfs" },
     /* 140 */ { "getpriority" },
     /* 141 */ { "setpriority", ignoreFunc },
-    /* 142 */ { "sched_setparam" },
-    /* 143 */ { "sched_getparam" },
-    /* 144 */ { "sched_setscheduler" },
-    /* 145 */ { "sched_getscheduler" },
-    /* 146 */ { "sched_get_priority_max" },
-    /* 147 */ { "sched_get_priority_min" },
+    /* 142 */ { "sched_setparam" , ignoreFunc },
+    /* 143 */ { "sched_getparam" , ignoreFunc },
+    /* 144 */ { "sched_setscheduler" , ignoreFunc },
+    /* 145 */ { "sched_getscheduler" , ignoreFunc },
+    /* 146 */ { "sched_get_priority_max" , ignoreFunc },
+    /* 147 */ { "sched_get_priority_min" , ignoreFunc },
     /* 148 */ { "sched_rr_get_interval" },
     /* 149 */ { "mlock" },
     /* 150 */ { "munlock" },
@@ -479,7 +479,11 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs64[] = {
     /* 214 */ { "epoll_ctl_old" },
     /* 215 */ { "epoll_wait_old" },
     /* 216 */ { "remap_file_pages" },
-    /* 217 */ { "getdents64" },
+//#if defined(SYS_getdents64)
+    /* 217 */ { "getdents64", getdents64Func },
+//#else
+//    /* 217 */ { "getdents64"},
+//#endif
     /* 218 */ { "set_tid_address", setTidAddressFunc },
     /* 219 */ { "restart_syscall" },
     /* 220 */ { "semtimedop" },
@@ -739,11 +743,11 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
     /* 138 */ { "setfsuid" },
     /* 139 */ { "setfsgid" },
     /* 140 */ { "_llseek", _llseekFunc },
-#if defined(SYS_getdents)
+//#if defined(SYS_getdents)
     /* 141 */ { "getdents", getdentsFunc },
-#else
-    /* 141 */ { "getdents" },
-#endif
+//#else
+//    /* 141 */ { "getdents" },
+//#endif
     /* 142 */ { "_newselect" },
     /* 143 */ { "flock" },
     /* 144 */ { "msync" },
@@ -823,7 +827,11 @@ static SyscallDescABI<DefaultSyscallABI> syscallDescs32[] = {
     /* 218 */ { "mincore" },
     /* 219 */ { "madvise", ignoreFunc },
     /* 220 */ { "madvise1" },
-    /* 221 */ { "getdents64" },
+#if defined(SYS_getdents64)
+    /* 221 */ { "getdents64", getdents64Func },
+#else
+    /* 221 */ { "getdents64"},
+#endif
     /* 222 */ { "fcntl64" },
     /* 223 */ { "unused" },
     /* 224 */ { "gettid", gettidFunc },

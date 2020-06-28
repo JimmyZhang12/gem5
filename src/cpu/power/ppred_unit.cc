@@ -69,15 +69,19 @@ PPredUnit::PPredUnit(const Params *params)
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
     supply_voltage = 0.0;
     supply_current = 0.0;
+    core_runtime_current = 0.0;
+    total_core_runtime_current = 0.0;
+    pct_total_runtime_current = 0.0;
 
-    vpi_shm::set_voltage_set(voltage_set);
-    vpi_shm::set_freq(clk, cycle_period);
     period_normal = this->clockPeriod();
     period_half = this->clockPeriod()*2;
 
     stall = false;
     this->id = params->cpu_id;
+    vpi_shm::set_voltage_set(voltage_set, id);
+    vpi_shm::set_core_freq(clk, id);
     history.resize(params->signature_length);
+    hr_updated = false;
 }
 
 void
@@ -101,6 +105,31 @@ PPredUnit::regStats()
         .name(name() + ".stall")
         .desc("PPred Issue a stall?")
         ;
+    sv
+        .name(name() + ".supply_voltage")
+        .desc("Supply Voltage")
+        .precision(6)
+        ;
+    sc
+        .name(name() + ".supply_current")
+        .desc("Supply Current")
+        .precision(6)
+        ;
+    rtc
+        .name(name() + ".core_runtime_current")
+        .desc("Core Runtime Current")
+        .precision(6)
+        ;
+    trtc
+        .name(name() + ".total_runtime_current")
+        .desc("Total Runtime Current")
+        .precision(6)
+        ;
+    ptrtc
+        .name(name() + ".pct_total_runtime_current")
+        .desc("Percent Total Runtime Current")
+        .precision(6)
+        ;
 }
 
 void
@@ -108,8 +137,7 @@ PPredUnit::clkThrottle()
 {
     // Set the CPU Clock Object to Half Freq
     sysClkDomain->clockPeriod(period_half);
-    vpi_shm::set_freq(clk_half, cycle_period);
-    stat_ttn = vpi_shm::get_time_to_next();
+    vpi_shm::set_core_freq(clk_half, id);
     stat_freq = clk_half;
 }
 
@@ -118,8 +146,7 @@ PPredUnit::clkRestore()
 {
     // Set the CPU Clock Object to Normal
     sysClkDomain->clockPeriod(period_normal);
-    vpi_shm::set_freq(clk, cycle_period);
-    stat_ttn = vpi_shm::get_time_to_next();
+    vpi_shm::set_core_freq(clk, id);
     stat_freq = clk;
 }
 
@@ -138,8 +165,24 @@ PPredUnit::unsetStall()
 }
 
 void
+PPredUnit::get_analog_stats() {
+  supply_voltage = Stats::pythonGetVoltage();
+  supply_current = Stats::pythonGetCurrent();
+  core_runtime_current = Stats::pythonCoreCurrent(id);
+  total_core_runtime_current = Stats::pythonTotalCurrent();
+  pct_total_runtime_current = core_runtime_current\
+      /total_core_runtime_current;
+  sv = supply_voltage;
+  sc = supply_current;
+  rtc = core_runtime_current;
+  trtc = total_core_runtime_current;
+  ptrtc = pct_total_runtime_current;
+}
+
+void
 PPredUnit::historyInsert(const uint64_t pc, const PPred::event_t event) {
   PC = pc;
   history.add_event(pc, event);
+  hr_updated = true;
 }
 

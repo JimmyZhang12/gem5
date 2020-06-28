@@ -226,7 +226,10 @@ if options.simpoint_profile:
 # Clock for dumping stats
 system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
                                    voltage_domain = system.voltage_domain)
-system.ppred_stat = PPredStat(cycle_period = options.power_pred_cpu_cycles)
+system.ppred_stat = PPredStat( \
+    cycle_period = options.power_pred_cpu_cycles, \
+    frequency = options.power_pred_cpu_freq, \
+    ncores = np)
 system.ppred_stat.clk_domain = system.ppred_stat_clk
 
 for i in range(np):
@@ -256,6 +259,7 @@ for i in range(np):
                 powerPredClass(
                     # Base
                     period=options.power_profile_interval,
+                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
@@ -266,6 +270,7 @@ for i in range(np):
                 powerPredClass(
                     # Base
                     period=options.power_profile_interval,
+                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
@@ -284,6 +289,7 @@ for i in range(np):
                 powerPredClass(
                     # Base
                     period=options.power_profile_interval,
+                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
@@ -302,6 +308,7 @@ for i in range(np):
                     # Base
                     period=options.power_profile_interval,
                     cycle_period=options.power_pred_cpu_cycles,
+                    cpu_id=i,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
@@ -314,6 +321,7 @@ for i in range(np):
                 powerPredClass(
                     # Base
                     period=options.power_profile_interval,
+                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
@@ -323,6 +331,7 @@ for i in range(np):
                 powerPredClass(
                     # Base
                     period=options.power_profile_interval,
+                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
@@ -336,6 +345,7 @@ for i in range(np):
                 powerPredClass(
                     # Base
                     period=options.power_profile_interval,
+                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,

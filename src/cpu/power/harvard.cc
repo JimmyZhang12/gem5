@@ -68,6 +68,11 @@ Harvard::Harvard(const Params *params)
     history.resize(params->signature_length);
     t_count = 0;
     e_count = 0;
+    num_ve = 0;
+    total_misspred = 0;
+    total_preds = 0;
+    total_pred_action = 0;
+    total_pred_inaction = 0;
 }
 
 void
@@ -83,14 +88,29 @@ Harvard::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
+    nve
+        .name(name() + ".num_voltage_emergency")
+        .desc("Num Voltage Emergencies")
         ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
+    tmp
+        .name(name() + ".total_mispred")
+        .desc("Total Misprediction")
+        ;
+    tpred
+        .name(name() + ".total_predictions")
+        .desc("Total Predictions")
+        ;
+    taction
+        .name(name() + ".total_action")
+        .desc("Total Actions Taken")
+        ;
+    tiaction
+        .name(name() + ".total_inaction")
+        .desc("Total No Actions Taken")
+        ;
+    mp_rate
+        .name(name() + ".mispred_rate")
+        .desc("Misprediction Rate")
         .precision(6)
         ;
 }
@@ -99,10 +119,7 @@ void
 Harvard::tick(void)
 {
   DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
+  get_analog_stats();
 
   table.tick();
 
@@ -114,14 +131,29 @@ Harvard::tick(void)
         next_state = EMERGENCY;
         table.insert(this->history.get_entry());
       }
-      else if (table.find(this->history.get_entry())) {
-        next_state = THROTTLE;
+      // If hr updated:
+      if (hr_updated) {
+        if (table.find(this->history.get_entry())) {
+          total_pred_action++;
+          next_state = THROTTLE;
+        }
+        else {
+          total_pred_inaction++;
+        }
+        hr_updated = false;
+        total_preds++;
       }
       break;
     }
     case EMERGENCY : {
       // DECOR Rollback
       next_state = EMERGENCY;
+      if (e_count == 0) {
+        num_ve++;
+      }
+      if (t_count == 0) {
+        total_misspred++;
+      }
       if (e_count > emergency_duration &&
          supply_voltage > emergency + hysteresis) {
         next_state = NORMAL;
@@ -177,6 +209,16 @@ Harvard::tick(void)
   ns = next_state;
   // Update Next State Transition:
   state = next_state;
+
+  // Set Permanant Stats:
+  nve = num_ve;
+  tmp = total_misspred;
+  tpred = total_preds;
+  taction = total_pred_action;
+  tiaction = total_pred_inaction;
+  if (total_preds != 0) {
+    mp_rate = (double)total_misspred/(double)total_preds;
+  }
   return;
 }
 

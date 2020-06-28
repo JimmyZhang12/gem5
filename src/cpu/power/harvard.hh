@@ -101,8 +101,20 @@ class Harvard : public PPredUnit
     unsigned int t_count;
     Stats::Scalar s;
     Stats::Scalar ns;
-    Stats::Scalar sv;
-    Stats::Scalar sc;
+
+    // Permanant Stats:
+    // Num Voltage Emergencies
+    uint64_t num_ve;
+    uint64_t total_misspred;
+    uint64_t total_preds;
+    uint64_t total_pred_action;
+    uint64_t total_pred_inaction;
+    Stats::Scalar nve;
+    Stats::Scalar tmp;
+    Stats::Scalar tpred;
+    Stats::Scalar taction;
+    Stats::Scalar tiaction;
+    Stats::Scalar mp_rate;
 };
 
 #endif // __CPU_PRED_HARVARD_HH__

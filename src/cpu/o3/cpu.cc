@@ -87,6 +87,11 @@ BaseO3CPU::BaseO3CPU(BaseCPUParams *params)
 {
 }
 
+uint64_t global_total_cycles = 0;
+uint64_t global_total_instrs = 0;
+uint64_t global_total_cycles_0 = 0;
+uint64_t global_total_instrs_0 = 0;
+
 void
 BaseO3CPU::regStats()
 {
@@ -142,8 +147,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       globalSeqNum(1),
       system(params->system),
-      lastRunningCycle(curCycle()),
-      cpu_id(params->cpu_id)
+      lastRunningCycle(curCycle())
 {
     if (!params->switched_out) {
         _status = Running;
@@ -383,6 +387,8 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     ppred_instr_count = 0;
     ppred_numCommittedInsts = 0;
     ppred_numCycles = 0;
+    ppred_cycle_count = 0;
+    ppred_cycle_count_0 = 0;
 }
 
 template <class Impl>
@@ -549,22 +555,34 @@ FullO3CPU<Impl>::tick()
 
     ++numCycles;
     ++ppred_numCycles;
+    ++ppred_cycle_count;
+    ++global_total_cycles;
 
     if (powerPred && ppred_stat) {
       if (ppred_stat->get_begin()) {
         if (ppred_first_time) {
           ppred_instr_count_0 = ppred_numCommittedInsts;
           ppred_first_time = false;
+          ppred_cycle_count_0 = ppred_cycle_count;
+          if (this->cpuId() == 0) {
+            global_total_instrs_0 = global_total_instrs;
+            global_total_cycles_0 = global_total_cycles;
+          }
         }
         else {
+//std::cout << ppred_numCommittedInsts << ",";
+//std::cout << global_total_cycles - global_total_cycles_0 << ",";
+//std::cout << global_total_instrs - global_total_instrs_0 << ",";
+//std::cout << ppred_cycle_count - ppred_cycle_count_0 << ",";
+//std::cout << ppred_numCommittedInsts - ppred_instr_count_0 << ",";
+//std::cout << "\n";
           ppred_instr_count = ppred_numCommittedInsts;
-          // Use CPU0 instr count as the main count
-          if (cpu_id == 0) {
-            //std::cout << ppred_instr_count - ppred_instr_count_0 << "," <<
-            //  ppred_numCommittedInsts << "," << ppred_numCycles <<"\n";
-            Stats::pythonSetCommittedInstr(
-                ppred_instr_count - ppred_instr_count_0);
-          }
+          globalTotalCycles = global_total_cycles - global_total_cycles_0;
+          globalTotalInstrs = global_total_instrs - global_total_instrs_0;
+          localCycleCount = ppred_cycle_count - ppred_cycle_count_0;
+          localInstrCount = ppred_numCommittedInsts - ppred_instr_count_0;
+          Stats::pythonSetCommittedInstr(
+              global_total_instrs - global_total_instrs_0);
           powerPred->tick();
         }
         if (powerPred->get_stall()) {
@@ -1553,6 +1571,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
         committedInsts[tid]++;
         system->totalNumInsts++;
         ppred_numCommittedInsts++;
+        global_total_instrs++;
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);

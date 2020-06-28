@@ -43,7 +43,7 @@ from util import *
 
 class Core:
   def __init__(self, component_id, component_name, \
-                stat_dict, config_dict, sim_dict, ruby):
+                stat_dict, config_dict, sim_dict, ruby, core_i=0):
     self.name = "core"
     self.id = "core"
 
@@ -241,7 +241,7 @@ class Core:
 
     # Init the Directory Parameters and Stats:
     self.parameters["clock_rate"][0]= \
-      str(float(sim_dict["frequency"]))
+      str(float(sim_dict["frequency"][core_i]))
     self.parameters["vdd"][0] = str(float(sim_dict["voltage"]))
     self.parameters["power_gating_vcc"][0] = "-1"
     self.parameters["opt_local"][0] = "0"
@@ -335,8 +335,10 @@ class Core:
       str(int(stat_dict["commit.int_insts"][1]))
     self.stats["committed_fp_instructions"][0]= \
       str(int(stat_dict["commit.fp_insts"][1]))
+    #self.stats["pipeline_duty_cycle"][0]= \
+    #  str(float(stat_dict["ipc_total"][1]))
     self.stats["pipeline_duty_cycle"][0]= \
-      str(float(stat_dict["ipc_total"][1]))
+      str(float(1.0))
     self.stats["total_cycles"][0] = str(int(stat_dict["numCycles"][1]) + 1)
     self.stats["idle_cycles"][0] = str(int(stat_dict["idleCycles"][1]) + 1)
     self.stats["busy_cycles"][0]= \

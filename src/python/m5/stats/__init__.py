@@ -376,6 +376,14 @@ def get_current():
     global lastCurrent
     return lastCurrent
 
+def get_core_runtime_dynamic(core_id = 0):
+    path = "Processor:Core"+str(core_id)
+    return mcpat.get_runtime_dynamic(path)
+
+def get_total_runtime_dynamic():
+    path = "Processor"
+    return mcpat.get_runtime_dynamic(path)
+
 def get_voltage():
     if not profiling:
         return 1
@@ -437,7 +445,9 @@ def dump(root=None, exit=False):
             voltage = 0
             current = 0
             mp_v = vpi_shm.mp_get_voltage_set()
-            mp_f = vpi_shm.mp_get_freq()
+            mp_f = []
+            for i in range(vpi_shm.mp_get_ncores()):
+              mp_f.append(vpi_shm.mp_get_freq(i))
             if(options.ncverilog_enable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v

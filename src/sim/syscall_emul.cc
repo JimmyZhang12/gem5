@@ -1156,7 +1156,7 @@ rmdirFunc(SyscallDesc *desc, int num, ThreadContext *tc, Addr pathname)
     return (result == -1) ? -errno : result;
 }
 
-#if defined(SYS_getdents) || defined(SYS_getdents64)
+//#if defined(SYS_getdents) || defined(SYS_getdents64)
 template<typename DE, int SYS_NUM>
 static SyscallReturn
 getdentsImpl(SyscallDesc *desc, int callnum, ThreadContext *tc,
@@ -1197,9 +1197,9 @@ getdentsImpl(SyscallDesc *desc, int callnum, ThreadContext *tc,
     buf_arg.copyOut(tc->getVirtProxy());
     return status;
 }
-#endif
+//#endif
 
-#if defined(SYS_getdents)
+//#if defined(SYS_getdents)
 SyscallReturn
 getdentsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
              int tgt_fd, Addr buf_ptr, unsigned count)
@@ -1214,9 +1214,9 @@ getdentsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc,
     return getdentsImpl<LinDent, SYS_getdents>(desc, callnum, tc,
                                                tgt_fd, buf_ptr, count);
 }
-#endif
+//#endif
 
-#if defined(SYS_getdents64)
+//#if defined(SYS_getdents64)
 SyscallReturn
 getdents64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
                int tgt_fd, Addr buf_ptr, unsigned count)
@@ -1231,7 +1231,7 @@ getdents64Func(SyscallDesc *desc, int callnum, ThreadContext *tc,
     return getdentsImpl<LinDent64, SYS_getdents64>(desc, callnum, tc,
                                                    tgt_fd, buf_ptr, count);
 }
-#endif
+//#endif
 
 SyscallReturn
 shutdownFunc(SyscallDesc *desc, int num, ThreadContext *tc,

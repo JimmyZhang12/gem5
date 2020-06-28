@@ -795,11 +795,17 @@ class FullO3CPU : public BaseO3CPU
     Stats::Scalar miscRegfileReads;
     Stats::Scalar miscRegfileWrites;
 
+    Stats::Scalar globalTotalCycles;
+    Stats::Scalar globalTotalInstrs;
+    Stats::Scalar localCycleCount;
+    Stats::Scalar localInstrCount;
+
   private:
-    unsigned int cpu_id;
     bool ppred_first_time;
     uint64_t ppred_instr_count_0;
+    uint64_t ppred_cycle_count_0;
     uint64_t ppred_instr_count;
+    uint64_t ppred_cycle_count;
     uint64_t ppred_numCommittedInsts;
     uint64_t ppred_numCycles;
 };

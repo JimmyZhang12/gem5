@@ -33,7 +33,6 @@
 from xml.etree import ElementTree
 from xml.dom import minidom
 import math
-
 from core import Core
 from cache import Cache
 from noc import NoC
@@ -135,6 +134,9 @@ class System:
     if ruby:
       num_l3 = 1
 
+    # T Core Clk
+    tcore_clk = max(sim_dict["frequency"])
+
     # Intialize the Parameters based on the config
     self.parameters["number_of_cores"][0] = str(num_cpu)
     self.parameters["number_of_L1Directories"][0] = str(num_cpu)
@@ -158,7 +160,7 @@ class System:
       config_dict["system.tech_node"] \
       if "system.tech_node" in config_dict.keys() else "22"
     self.parameters["target_core_clockrate"][0] = \
-      str(float(sim_dict["frequency"]))
+      str(float(tcore_clk))
     self.parameters["temperature"][0] = str(sim_dict["temperature"])
     self.parameters["number_cache_levels"][0] = \
       str(3) if num_l3 != 0 else str(2)
@@ -173,23 +175,38 @@ class System:
     # Intialize the Parameters based on the stats
     num_zeros = int(math.floor(math.log10(num_cpu)) + 1)
 
+    total_cycles = []
+    idle_cycles = []
+    zeros = 0
+    mc = 0 # Max Cycles from all cpus
+    tb = 0 # The average busy cycles of all cpus that did work
+    ti = 0 # The average idle cycles of all cpus that did work
+    cpu_i = 0
+
+    if num_cpu > 1:
+      for i in range(num_cpu):
+        total_cycles.append(int(stat_dict[ \
+          "system.cpu{a}.numCycles".format(a=str(i).zfill(num_zeros))][1]))
+        if total_cycles[-1] == 0:
+          zeros += 1
+        idle_cycles.append(int(stat_dict[ \
+          "system.cpu{a}.idleCycles".format(a=str(i).zfill(num_zeros))][1]))
+      mc = max(total_cycles)
+      ti = sum(idle_cycles)/(num_cpu - zeros)
+      tb = max(total_cycles) - ti
+
     self.stats["total_cycles"][0] = \
       str(int(stat_dict["system.cpu.numCycles"][1])) if(num_cpu==1) \
-      else str(int(stat_dict[ \
-        "system.cpu{a}.numCycles".format(a=str(0).zfill(num_zeros))][1]))
+      else str(int(mc))
     self.stats["idle_cycles"][0] = \
       str(int(stat_dict["system.cpu.idleCycles"][1])) if(num_cpu==1) \
-      else str(int(stat_dict[ \
-        "system.cpu{a}.idleCycles".format(a=str(0).zfill(num_zeros))][1]))
+      else str(int(ti))
     self.stats["busy_cycles"][0] = \
       str(int(stat_dict["system.cpu.numCycles"][1]) \
       -int(stat_dict["system.cpu.idleCycles"][1])) \
-      if(num_cpu==1) else str(int(stat_dict[ \
-        "system.cpu{a}.numCycles".format(a=str(0).zfill(num_zeros))][1]) \
-      -int(stat_dict[ \
-        "system.cpu{a}.idleCycles".format(a=str(0).zfill(num_zeros))][1]))
+      if(num_cpu==1) else str(int(tb))
 
-    assert (self.stats["total_cycles"] > 0)
+    assert (self.stats["total_cycles"][0] > 0)
 
     # Intialize all the devices
     self.core = \
@@ -207,7 +224,8 @@ class System:
           +"."+","+"system.cpu"+str(i)+"." \
           +",system.ruby.L0", config_dict, "0"), \
         sim_dict, \
-        ruby
+        ruby,
+        i
       ) \
       for i in range(int(self.parameters["number_of_cores"][0])) \
     ]

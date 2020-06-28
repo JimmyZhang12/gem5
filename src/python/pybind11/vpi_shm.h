@@ -82,13 +82,17 @@ int create_shm(int process, char* name);
 
 void destroy_shm();
 
-void set_driver_signals(double load, uint32_t term);
+void init(double frequency, int ncores);
 
-void set_prediction(double prediction);
+void set_ttn(double frequency, int cycles);
 
-void set_freq(double freq, int cycles);
+void set_driver_signals(double load, uint32_t term, int i = 0);
 
-void set_voltage_set(double v_set);
+void set_prediction(double prediction, int i = 0);
+
+void set_core_freq(double freq, int i = 0);
+
+void set_voltage_set(double v_set, int i = 0);
 
 double get_voltage();
 

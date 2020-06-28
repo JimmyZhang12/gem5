@@ -48,11 +48,11 @@ mapped* shm_ptr = NULL;
 
 char name_buff[256] = "";
 
-double ppred;
-bool new_prediction;
+std::vector<double> ppred;
+std::vector<bool> new_prediction;
 
-double freq = 3.5e9; // Hz
-uint32_t ttn = (uint32_t)((1.0/freq)*1.0e12); // ps
+std::vector<double> freq; // Hz
+uint32_t ttn = (uint32_t)((1.0/3.5e9)*1.0e12); // ps
 double v_set = 1.0;
 
 void
@@ -190,7 +190,7 @@ ack_supply()
 
 
 void
-set_driver_signals(double load, uint32_t term)
+set_driver_signals(double load, uint32_t term, int i)
 {
     // Wait for the verilog simulation to consume the previous data:
     while (1)
@@ -198,11 +198,11 @@ set_driver_signals(double load, uint32_t term)
         sem_wait(&shm_ptr->pv.sem);
         if (shm_ptr->pv.new_data == NO_NEW_DATA)
         {
-            if (new_prediction)
+            if (new_prediction[0])
             {
-                shm_ptr->pv.data.prediction = ppred;
+                shm_ptr->pv.data.prediction = ppred[0];
                 shm_ptr->pv.data.enable = 1;
-                new_prediction = false;
+                new_prediction[0] = false;
             }
             else
             {
@@ -222,22 +222,35 @@ set_driver_signals(double load, uint32_t term)
 }
 
 void
-set_prediction(double prediction)
+set_prediction(double prediction, int i)
 {
-    ppred = prediction;
-    new_prediction = true;
+    ppred[i] = prediction;
+    new_prediction[i] = true;
 }
 
 void
-set_freq(double frequency, int cycles)
+set_ttn(double frequency, int cycles)
 {
-    freq = frequency;
     ttn = (uint32_t)(cycles/(frequency)*1.0e12); // Convert to
                                                  // ps/clk
 }
 
 void
-set_voltage_set(double voltage_set)
+init(double frequency, int ncores) {
+  freq.resize(ncores, frequency);
+  ppred.resize(ncores, 0.0);
+  new_prediction.resize(ncores, false);
+}
+
+void
+set_core_freq(double frequency, int i) {
+  if (freq.size() > i) {
+    freq[i] = frequency;
+  }
+}
+
+void
+set_voltage_set(double voltage_set, int i)
 {
     v_set = voltage_set;
 }
@@ -249,14 +262,20 @@ mp_get_voltage_set() {
 }
 
 double
-mp_get_freq() {
+mp_get_freq(int core_i) {
     // McPAT will use this for Power Calc
     // Return MHz
-    return freq/1.0e6;
+    return freq[core_i]/1.0e6;
+}
+
+int
+mp_get_ncores() {
+  return freq.size();
 }
 
 /**
- * Used by the VPI python code to launch the ncverilog sim
+ * Used by the VPI python code to launch the ncverilog sim,
+ * set only once by the PPredStat class
  */
 int
 get_time_to_next() {
@@ -286,4 +305,5 @@ pybind_init_vpi_shm(py::module &m_native)
           "Get Voltage Set");
     m.def("get_time_to_next", &vpi_shm::get_time_to_next,
           "Get Voltage Set");
+    m.def("mp_get_ncores", &vpi_shm::mp_get_ncores, "Get num cores");
 }

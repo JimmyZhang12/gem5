@@ -85,8 +85,8 @@ def initialize(name):
   vpi.create_shm(0, name)
   return
 
-def set_driver_signals(load, term_sim):
-  vpi.set_driver_signals(load, term_sim)
+def set_driver_signals(load, term_sim, i=0):
+  vpi.set_driver_signals(load, term_sim, i)
 
 def get_voltage():
   return vpi.get_voltage()
@@ -97,11 +97,14 @@ def get_current():
 def ack_supply():
   return vpi.ack_supply()
 
-def mp_get_freq():
-  return vpi.mp_get_freq()
+def mp_get_freq(i = 0):
+  return vpi.mp_get_freq(i)
 
-def mp_get_voltage_set():
+def mp_get_voltage_set(i = 0):
   return vpi.mp_get_voltage_set()
+
+def mp_get_ncores():
+  return vpi.mp_get_ncores()
 
 def stop():
   subprocess.Popen(['reset']).wait()

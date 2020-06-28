@@ -158,3 +158,5 @@ class PPredStat(ClockedObject):
     stat_clk_domain = Param.SrcClockDomain(Parent.ppred_stat_clk, \
                          "Clk domain for Stat Dump")
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
+    frequency = Param.Float(3.5e9, "Default clock freq")
+    ncores = Param.Unsigned(1, "Number of cores to sim")

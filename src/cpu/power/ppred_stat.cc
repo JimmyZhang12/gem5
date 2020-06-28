@@ -44,7 +44,9 @@ PPredStat::PPredStat(const Params *params)
   tickEvent([this]{ tick(); }, "PPredStat tick",
             false, Event::Power_Event_Pri),
   cycles(params->cycle_period),
-  clkDomain(params->stat_clk_domain)
+  clkDomain(params->stat_clk_domain),
+  frequency(params->frequency),
+  ncores(params->ncores)
 {
   /* Do Nothing */
   first_time = true;
@@ -54,6 +56,8 @@ PPredStat::PPredStat(const Params *params)
         clockEdge(Cycles(cycles)));
     schedule(tickEvent, clockEdge(Cycles(cycles)));
   }
+  vpi_shm::init(frequency, ncores);
+  vpi_shm::set_ttn(frequency, cycles);
 }
 
 /**

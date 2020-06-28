@@ -94,6 +94,20 @@ pythonGetCurrent()
     return m.attr("get_current")().cast<double>();
 }
 
+double
+pythonCoreCurrent(int id)
+{
+    py::module m = py::module::import("m5.stats");
+    return m.attr("get_core_runtime_dynamic")(id).cast<double>();
+}
+
+double
+pythonTotalCurrent()
+{
+    py::module m = py::module::import("m5.stats");
+    return m.attr("get_total_runtime_dynamic")().cast<double>();
+}
+
 bool
 pythonGetProfiling()
 {

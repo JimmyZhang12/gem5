@@ -118,6 +118,28 @@ public:
   }
 
   /**
+   * == operator
+   * Compare the other HR to self
+   * @param other
+   * @return bool
+   */
+  bool operator==(const HistoryRegister& other) const {
+    return (this->get_signature() == other.get_signature() && \
+        this->get_pc() == other.get_pc());
+  }
+
+  /**
+   * != operator
+   * Compare the other HR to self
+   * @param other
+   * @return bool
+   */
+  bool operator!=(const HistoryRegister& other) const {
+    return (this->get_signature() != other.get_signature() || \
+        this->get_pc() != other.get_pc());
+  }
+
+  /**
    * get_signature
    * Return the signature vector
    * @return Anchor Signature

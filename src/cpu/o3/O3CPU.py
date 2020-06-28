@@ -183,7 +183,6 @@ class DerivO3CPU(BaseCPU):
                                        "Ref to ppred stat dump")
     needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
                           "Enable TSO Memory model")
-    cpu_id = Param.Unsigned(0, "Cpu ID")
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:
