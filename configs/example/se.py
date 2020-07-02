@@ -193,9 +193,10 @@ system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs
-system.cpu_clk_domain = SrcClockDomain(clock = options.sys_clock,
+system.cpu_clk_domain = [SrcClockDomain(clock = options.sys_clock,
                                        voltage_domain =
                                        system.cpu_voltage_domain)
+                                       for i in range(np)]
 
 # If elastic tracing is enabled, then configure the cpu and attach the elastic
 # trace probe
@@ -204,8 +205,8 @@ if options.elastic_trace_en:
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.
-for cpu in system.cpu:
-    cpu.clk_domain = system.cpu_clk_domain
+for cpu, clk in zip(system.cpu, system.cpu_clk_domain):
+    cpu.clk_domain = clk
 
 if ObjectList.is_kvm_cpu(CPUClass) or ObjectList.is_kvm_cpu(FutureClass):
     if buildEnv['TARGET_ISA'] == 'x86':
@@ -371,7 +372,7 @@ for i in range(np):
                     hysteresis=0.005,
                     duration=50)
         system.cpu[i].powerPred.clk_domain = \
-            system.cpu_clk_domain
+            system.cpu_clk_domain[i]
         # Give core a reference to the global stat dump
         system.cpu[i].ppred_stat = system.ppred_stat
 

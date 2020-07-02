@@ -372,7 +372,7 @@ if main['GCC'] or main['CLANG']:
         main.Append(CCFLAGS=['-I/usr/local/include'])
         main.Append(CXXFLAGS=['-I/usr/local/include'])
 
-    main.Append(LINKFLAGS='-Wl,--as-needed')
+    main.Append(LINKFLAGS='-Wl,--as-needed -L/usr/local/lib')
     main['FILTER_PSHLINKFLAGS'] = lambda x: str(x).replace(' -shared', '')
     main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
     if GetOption('gold_linker'):
@@ -1227,6 +1227,9 @@ for variant_path in variant_paths:
 
     if env['USE_PNG']:
         env.Append(LIBS=['png'])
+
+    env.Append(LIBS=['boost_serialization'])
+    env.Append(LIBS=['boost_iostreams'])
 
     if env['EFENCE']:
         env.Append(LIBS=['efence'])

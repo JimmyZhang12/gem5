@@ -102,11 +102,11 @@ def config_cache(options, system):
             assert(options.num_cpus == options.num_l2caches)
             # Create array of private caches and l2 busses to connect in the
             # next section:
-            system.l2 = [l2_cache_class(clk_domain=system.cpu_clk_domain,
+            system.l2 = [l2_cache_class(clk_domain=system.cpu_clk_domain[i],
                                         size=options.l2_size,
                                         assoc=options.l2_assoc)
                                         for i in range(options.num_cpus)]
-            system.tol2bus = [L2XBar(clk_domain=system.cpu_clk_domain)
+            system.tol2bus = [L2XBar(clk_domain=system.cpu_clk_domain[i])
                               for i in range(options.num_cpus)]
             for i in range(options.num_cpus):
                 system.l2[i].cpu_side = system.tol2bus[i].master
@@ -122,11 +122,11 @@ def config_cache(options, system):
             # Provide a clock for the L2 and the L1-to-L2 bus here as they
             # are not connected using addTwoLevelCacheHierarchy. Use the
             # same clock as the CPUs.
-            system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
+            system.l2 = l2_cache_class(clk_domain=system.clk_domain,
                                        size=options.l2_size,
                                        assoc=options.l2_assoc)
 
-            system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
+            system.tol2bus = L2XBar(clk_domain = system.clk_domain)
             system.l2.cpu_side = system.tol2bus.master
             if options.l2_hwp_type:
                 hwpClass = ObjectList.hwp_list.get(options.l2_hwp_type)
@@ -140,11 +140,11 @@ def config_cache(options, system):
            # Provide a clock for the L3 and the L2-to-L3 bus here as they
            # are not connected using addTwoLevelCacheHierarchy. Use the
            # same clock as the CPUs.
-           system.l3 = l3_cache_class(clk_domain=system.cpu_clk_domain,
+           system.l3 = l3_cache_class(clk_domain=system.clk_domain,
                                       size=options.l3_size,
                                       assoc=options.l3_assoc)
 
-           system.tol3bus = L2XBar(clk_domain = system.cpu_clk_domain)
+           system.tol3bus = L2XBar(clk_domain = system.clk_domain)
            system.l3.cpu_side = system.tol3bus.master
            system.l3.mem_side = system.membus.slave
            if options.l3_hwp_type:
