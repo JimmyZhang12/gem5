@@ -108,7 +108,11 @@ class PPredUnit : public ClockedObject
     Stats::Scalar sv;
     Stats::Scalar sc;
     Stats::Scalar rtc;
+    Stats::Scalar rtc_p;
+    Stats::Scalar rtc_d;
     Stats::Scalar trtc;
+    Stats::Scalar trtc_p;
+    Stats::Scalar trtc_d;
     Stats::Scalar ptrtc;
 
     SrcClockDomain* sysClkDomain;
@@ -118,8 +122,16 @@ class PPredUnit : public ClockedObject
 
     double supply_voltage;
     double supply_current;
+
+    // Core Runtime Current
     double core_runtime_current;
+    double core_runtime_current_prev;
+    double core_runtime_current_di;
+
+    // Total Core Runtime Current
     double total_core_runtime_current;
+    double total_core_runtime_current_prev;
+    double total_core_runtime_current_di;
     double pct_total_runtime_current;
 
     uint64_t PC;

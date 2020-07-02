@@ -110,8 +110,12 @@ PerceptronPredictor::tick(void)
   // Write History Register to File
   std::ofstream ofs;
   ofs.open(output_fname, std::ios_base::app);
-  ofs << supply_voltage << "," << supply_current << "," <<
-      this->history << "\n";
+  ofs << supply_voltage << "," << supply_current << ",";
+  ofs << core_runtime_current << ",";
+  ofs << core_runtime_current_di << ",";
+  ofs << total_core_runtime_current << ",";
+  ofs << total_core_runtime_current_di << ",";
+  ofs << this->history << "\n";
   ofs.close();
 
   // Transition Logic

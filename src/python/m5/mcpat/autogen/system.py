@@ -164,7 +164,7 @@ class System:
     self.parameters["temperature"][0] = str(sim_dict["temperature"])
     self.parameters["number_cache_levels"][0] = \
       str(3) if num_l3 != 0 else str(2)
-    self.parameters["device_type"][0] = str(0)
+    self.parameters["device_type"][0] = str(sim_dict["device_type"])
     self.parameters["longer_channel_device"][0] = str(1)
     self.parameters["power_gating"][0] = str(1)
     self.parameters["machine_bits"][0] = str(64)

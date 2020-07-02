@@ -46,7 +46,7 @@ from m5.objects.FuncUnit import *
 
 class IntALU(FUDesc):
     opList = [ OpDesc(opClass='IntAlu') ]
-    count = 6
+    count = Param.Unsigned(6, "Num Int ALUs")
 
 class IntMultDiv(FUDesc):
     opList = [ OpDesc(opClass='IntMult', opLat=3),
@@ -59,13 +59,13 @@ class IntMultDiv(FUDesc):
     if buildEnv['TARGET_ISA'] in ('x86'):
         opList[1].opLat=1
 
-    count=2
+    count = Param.Unsigned(4, "Num Int Multiply Divide")
 
 class FP_ALU(FUDesc):
     opList = [ OpDesc(opClass='FloatAdd', opLat=2),
                OpDesc(opClass='FloatCmp', opLat=2),
                OpDesc(opClass='FloatCvt', opLat=2) ]
-    count = 4
+    count = Param.Unsigned(4, "Num FP ALU")
 
 class FP_MultDiv(FUDesc):
     opList = [ OpDesc(opClass='FloatMult', opLat=4),
@@ -73,7 +73,7 @@ class FP_MultDiv(FUDesc):
                OpDesc(opClass='FloatMisc', opLat=3),
                OpDesc(opClass='FloatDiv', opLat=12, pipelined=False),
                OpDesc(opClass='FloatSqrt', opLat=24, pipelined=False) ]
-    count = 2
+    count = Param.Unsigned(2, "Num FP Mult Div")
 
 class SIMD_Unit(FUDesc):
     opList = [ OpDesc(opClass='SimdAdd'),
@@ -102,28 +102,28 @@ class SIMD_Unit(FUDesc):
                OpDesc(opClass='SimdReduceCmp'),
                OpDesc(opClass='SimdFloatReduceAdd'),
                OpDesc(opClass='SimdFloatReduceCmp') ]
-    count = 4
+    count = Param.Unsigned(2, "Num SIMD UNIT")
 
 class PredALU(FUDesc):
     opList = [ OpDesc(opClass='SimdPredAlu') ]
-    count = 1
+    count = Param.Unsigned(1, "Num SIMD Pred ALU")
 
 class ReadPort(FUDesc):
     opList = [ OpDesc(opClass='MemRead'),
                OpDesc(opClass='FloatMemRead') ]
-    count = 0
+    count = Param.Unsigned(0, "Num Read Port")
 
 class WritePort(FUDesc):
     opList = [ OpDesc(opClass='MemWrite'),
                OpDesc(opClass='FloatMemWrite') ]
-    count = 0
+    count = Param.Unsigned(0, "Num Write Port")
 
 class RdWrPort(FUDesc):
     opList = [ OpDesc(opClass='MemRead'), OpDesc(opClass='MemWrite'),
                OpDesc(opClass='FloatMemRead'), OpDesc(opClass='FloatMemWrite')]
-    count = 4
+    count = Param.Unsigned(4, "Num Read/Write Port")
 
 class IprPort(FUDesc):
     opList = [ OpDesc(opClass='IprAccess', opLat = 3, pipelined = False) ]
-    count = 1
+    count = Param.Unsigned(1, "Num Ipr Port")
 

@@ -49,7 +49,7 @@ iter = 0
 mcpat_trees = []
 stat_trace=[]
 
-def m5_to_mcpat(voltage, freq, temperature):
+def m5_to_mcpat(voltage, freq, temperature, device_type):
   from m5 import options
 
   global iter
@@ -70,7 +70,7 @@ def m5_to_mcpat(voltage, freq, temperature):
   o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
   e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
   generate_xml(m5_stats_file, m5_config_file, i_f, voltage=voltage, \
-              frequency=freq, temperature=temperature)
+              frequency=freq, temperature=temperature, device_type=device_type)
   run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees = [parse_output(o_f)]
 

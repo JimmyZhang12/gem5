@@ -165,6 +165,9 @@ def parse_options():
         help="set the path for mcpat output")
     option("--mcpat_testname", type='str', default="",
         help="name for the output")
+    option("--mcpat_device_type", type='int', default=0,
+        help="Device Type; O: High Performance Type "
+        "1: Low Standby Power 2: Low Operating Power")
 
     # NCVerilog options:
     group("ncverilog options")

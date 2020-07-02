@@ -123,6 +123,7 @@ def get_processes(options):
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
+Options.addO3CPUOptions(parser)
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
@@ -376,6 +377,37 @@ for i in range(np):
         # Give core a reference to the global stat dump
         system.cpu[i].ppred_stat = system.ppred_stat
 
+    # Configure CPU Parameters:
+    system.cpu[i].fetchWidth = options.cpu_superscalar_width
+    system.cpu[i].decodeWidth = options.cpu_superscalar_width
+    system.cpu[i].renameWidth = options.cpu_superscalar_width
+    system.cpu[i].dispatchWidth = options.cpu_superscalar_width
+    system.cpu[i].issueWidth = options.cpu_superscalar_width
+    system.cpu[i].wbWidth = options.cpu_superscalar_width
+    system.cpu[i].commitWidth = options.cpu_superscalar_width
+    system.cpu[i].squashWidth = options.cpu_superscalar_width
+    # Fetch
+    system.cpu[i].fetchBufferSize = options.cpu_fetch_buffer_size
+    system.cpu[i].fetchQueueSize = options.cpu_fetch_q_size
+    # LSQ
+    system.cpu[i].LQEntries = options.cpu_lq_size
+    system.cpu[i].SQEntries = options.cpu_sq_size
+    # ROB
+    system.cpu[i].numRobs = options.cpu_num_robs
+    system.cpu[i].numROBEntries = options.cpu_num_rob_entries
+    # Regfile
+    system.cpu[i].numPhysIntRegs = options.cpu_phys_int_regs
+    system.cpu[i].numPhysFloatRegs = options.cpu_phys_fp_regs
+    system.cpu[i].numPhysVecRegs = options.cpu_phys_vec_regs
+    system.cpu[i].numPhysVecPredRegs = options.cpu_phys_vec_pred_regs
+    # Instruction Queue
+    system.cpu[i].numIQEntries = options.cpu_num_iq_entries
+    # FU POOL
+    system.cpu[i].fuPool.IntALU.count = options.cpu_intALUcount
+    system.cpu[i].fuPool.IntMultDiv.count = options.cpu_intMULDIVcount
+    system.cpu[i].fuPool.FP_ALU.count = options.cpu_fpALUcount
+    system.cpu[i].fuPool.FP_MultDiv.count = options.cpu_fpMULDIVcount
+    system.cpu[i].fuPool.SIMD_UNIT.count = options.cpu_simdcount
 
     if options.indirect_bp_type:
         indirectBPClass = \

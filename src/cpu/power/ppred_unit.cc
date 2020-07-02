@@ -168,14 +168,23 @@ void
 PPredUnit::get_analog_stats() {
   supply_voltage = Stats::pythonGetVoltage();
   supply_current = Stats::pythonGetCurrent();
+  core_runtime_current_prev = core_runtime_current;
   core_runtime_current = Stats::pythonCoreCurrent(id);
+  core_runtime_current_di = core_runtime_current - core_runtime_current_prev;
+  total_core_runtime_current_prev = core_runtime_current;
   total_core_runtime_current = Stats::pythonTotalCurrent();
+  total_core_runtime_current_di = total_core_runtime_current -
+      total_core_runtime_current_prev;
   pct_total_runtime_current = core_runtime_current\
       /total_core_runtime_current;
   sv = supply_voltage;
   sc = supply_current;
   rtc = core_runtime_current;
+  rtc_p = core_runtime_current_prev;
+  rtc_d = core_runtime_current_di;
   trtc = total_core_runtime_current;
+  trtc_p = total_core_runtime_current_prev;
+  trtc_d = total_core_runtime_current_di;
   ptrtc = pct_total_runtime_current;
 }
 

@@ -370,6 +370,53 @@ def addCommonOptions(parser):
                       choices=["arm", "thumb", "aarch64"],
                       help="ARM instruction set.")
 
+def addO3CPUOptions(parser):
+    parser.add_option("--cpu_superscalar_width", type=int, default=8,
+                      help="Width of the CPU, applies to Fetch, Decode, "
+                      "Issue, Rename, Dispatch, Commit, Writeback, Squash")
+    # Fetch Unit
+    parser.add_option("--cpu_fetch_buffer_size", type=int, default=64,
+                      help="Fetch queue_size")
+    parser.add_option("--cpu_fetch_q_size", type=int, default=32,
+                      help="Fetch Width")
+
+    # LQ/SQ
+    parser.add_option("--cpu_lq_size", type=int, default=32,
+                      help="Instruction queue_size")
+    parser.add_option("--cpu_sq_size", type=int, default=32,
+                      help="Store queue_size")
+
+    # ROB
+    parser.add_option("--cpu_num_robs", type=int, default=1,
+                      help="Number of Reorder Buffers")
+    parser.add_option("--cpu_num_rob_entries", type=int, default=192,
+                      help="Number of entries in the Reorder Buffers")
+
+    # Regfile
+    parser.add_option("--cpu_phys_int_regs", type=int, default=256,
+                      help="number of Physical Int Registers")
+    parser.add_option("--cpu_phys_fp_regs", type=int, default=256,
+                      help="number of Physical FP Registers")
+    parser.add_option("--cpu_phys_vec_regs", type=int, default=256,
+                      help="number of Physical Vector Registers")
+    parser.add_option("--cpu_phys_vec_pred_regs", type=int, default=32,
+                      help="number of Physical Vector Predicate Registers")
+
+    # Instruction Queue
+    parser.add_option("--cpu_num_iq_entries", type=int, default=64,
+                      help="Number of entries in the Reorder Buffers")
+
+    # FU Pool Options
+    parser.add_option("--cpu_intALUcount", type=int, default=6,
+                      help="Num int ALU")
+    parser.add_option("--cpu_intMULDIVcount", type=int, default=4,
+                      help="Num int Multiply/Divide Units")
+    parser.add_option("--cpu_fpALUcount", type=int, default=4,
+                      help="Num FP ALU")
+    parser.add_option("--cpu_fpMULDIVcount", type=int, default=2,
+                      help="Num FP Multiply/Divide Units")
+    parser.add_option("--cpu_simdcount", type=int, default=2,
+                      help="Num SIMD Units")
 
 def addSEOptions(parser):
     # Benchmark options

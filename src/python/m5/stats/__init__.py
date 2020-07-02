@@ -451,7 +451,8 @@ def dump(root=None, exit=False):
             if(options.ncverilog_enable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v
-                    mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
+                    mcpat.m5_to_mcpat(mp_v, mp_f, \
+                        380.0, options.mcpat_device_type)
                     resistance = mcpat.get_last_r(mp_v)
                     current = mcpat.get_last_i(mp_v)
                     power = mcpat.get_last_p(mp_v)
@@ -466,12 +467,14 @@ def dump(root=None, exit=False):
                     init_ncsim = False
                 else:
                     if options.ncverilog_feedback:
-                      mcpat.m5_to_mcpat(lv, mp_f, 380.0)
+                      mcpat.m5_to_mcpat(lv, mp_f, \
+                          380.0, options.mcpat_device_type)
                       resistance = mcpat.get_last_r(lv)
                       current = mcpat.get_last_i(lv)
                       power = mcpat.get_last_p(lv)
                     else:
-                      mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
+                      mcpat.m5_to_mcpat(mp_v, mp_f, \
+                          380.0, options.mcpat_device_type)
                       resistance = mcpat.get_last_r(mp_v)
                       current = mcpat.get_last_i(mp_v)
                       power = mcpat.get_last_p(mp_v)
@@ -481,7 +484,8 @@ def dump(root=None, exit=False):
                     lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
             else:
-                mcpat.m5_to_mcpat(mp_v, mp_f, 380.0)
+                mcpat.m5_to_mcpat(mp_v, mp_f, \
+                    380.0, options.mcpat_device_type)
 
             max_dump = options.power_profile_duration
             max_instr = options.power_profile_instrs
