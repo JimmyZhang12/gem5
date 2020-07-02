@@ -52,6 +52,8 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
+#include "cpu/power/ml/array.h"
+#include "cpu/power/ml/perceptron.h"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
 #include "params/PerceptronPredictor.hh"
@@ -91,6 +93,8 @@ class PerceptronPredictor : public PPredUnit
       THROTTLE,
       EMERGENCY
     };
+
+    Classifier perceptron;
 
     state_t state;
     state_t next_state;

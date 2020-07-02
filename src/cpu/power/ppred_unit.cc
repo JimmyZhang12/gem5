@@ -180,9 +180,11 @@ PPredUnit::get_analog_stats() {
 }
 
 void
-PPredUnit::historyInsert(const uint64_t pc, const PPred::event_t event) {
-  PC = pc;
-  history.add_event(pc, event);
-  hr_updated = true;
+PPredUnit::historyInsert(const PPred::event_t event) {
+  hr_updated = history.add_event(event);
 }
 
+void
+PPredUnit::historySetPC(const uint64_t pc) {
+  history.set_pc(pc);
+}

@@ -40,6 +40,8 @@
  * Authors: Andrew Smith
  */
 
+#include "cpu/power/dnn_predictor.hh"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
@@ -51,16 +53,16 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "cpu/power/perceptron_predictor.hh"
+#include "cpu/power/ml/utility.h"
 #include "debug/PerceptronPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-PerceptronPredictor::PerceptronPredictor(const Params *params)
+DNNPredictor::DNNPredictor(const Params *params)
     : PPredUnit(params)
 {
     DPRINTF(PerceptronPowerPred,
-            "PerceptronPredictor::PerceptronPredictor()\n");
+            "DNNPredictor::DNNPredictor()\n");
     state = NORMAL;
     next_state = NORMAL;
     t_count = 0;
@@ -69,10 +71,13 @@ PerceptronPredictor::PerceptronPredictor(const Params *params)
     std::ofstream outfile;
     outfile.open(output_fname, std::ios_base::out);
     outfile.close();
+
+    assert(params->dnn_file != "");
+    restore_dnn(dnn, params->dnn_file);
 }
 
 void
-PerceptronPredictor::regStats()
+DNNPredictor::regStats()
 {
     PPredUnit::regStats();
 
@@ -97,9 +102,9 @@ PerceptronPredictor::regStats()
 }
 
 void
-PerceptronPredictor::tick(void)
+DNNPredictor::tick(void)
 {
-  DPRINTF(PerceptronPowerPred, "PerceptronPredictor::tick()\n");
+  DPRINTF(PerceptronPowerPred, "DNNPredictor::tick()\n");
   supply_voltage = Stats::pythonGetVoltage();
   supply_current = Stats::pythonGetCurrent();
   sv = supply_voltage;
@@ -164,10 +169,10 @@ PerceptronPredictor::tick(void)
   return;
 }
 
-PerceptronPredictor*
-PerceptronPredictorParams::create()
+DNNPredictor*
+DNNPredictorParams::create()
 {
-  return new PerceptronPredictor(this);
+  return new DNNPredictor(this);
 }
 
 

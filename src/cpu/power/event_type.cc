@@ -6,13 +6,11 @@
 std::map<int, std::string> PPred::event_t_name = {
   {BRANCH_T,     "BRANCH_T"},
   {BRANCH_NT,    "BRANCH_NT"},
+  {BRANCH_MP,    "BRANCH_MISS"},
   {FETCH,        "FETCH"},
   {ICACHE_FETCH, "ICACHE_FETCH"},
   {ICACHE_BLOCK, "ICACHE_BLOCK"},
-  {COMMIT_BLOCK, "COMMIT_BLOCK"}
-//  {IQ,           "IQ"},
-//  {L2,           "L2"},
-//  {FLUSH,        "FLUSH"},
-//  {DL1,          "DL1"},
-//  {DTLB,         "DTLB"}
+  {COMMIT_BLOCK, "COMMIT_BLOCK"},
+  {IQ_FULL,      "IQ_FULL"},
+  {LSQ_FULL,     "LSQ_FULL"}
 };

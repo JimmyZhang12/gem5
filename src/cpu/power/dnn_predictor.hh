@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_PERCEPTRON_PREDICTOR_HH__
-#define __CPU_POWER_PERCEPTRON_PREDICTOR_HH__
+#ifndef __CPU_POWER_DNN_PREDICTOR_HH__
+#define __CPU_POWER_DNN_PREDICTOR_HH__
 
 #include <deque>
 #include <iostream>
@@ -52,22 +52,24 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
+#include "cpu/power/ml/array.h"
+#include "cpu/power/ml/dnn.h"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
-#include "params/PerceptronPredictor.hh"
+#include "params/DNNPredictor.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class PerceptronPredictor : public PPredUnit
+class DNNPredictor : public PPredUnit
 {
   public:
 
-    typedef PerceptronPredictorParams Params;
+    typedef DNNPredictorParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    PerceptronPredictor(const Params *p);
+    DNNPredictor(const Params *p);
 
     /**
      * Registers statistics.
@@ -92,6 +94,8 @@ class PerceptronPredictor : public PPredUnit
       EMERGENCY
     };
 
+    DNN dnn;
+
     state_t state;
     state_t next_state;
 
@@ -106,4 +110,4 @@ class PerceptronPredictor : public PPredUnit
     std::string output_fname;
 };
 
-#endif // __CPU_POWER_PERCEPTRON_PREDICTOR_HH__
+#endif // __CPU_POWER_DNN_PREDICTOR_HH__

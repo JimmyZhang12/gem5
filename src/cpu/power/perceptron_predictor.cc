@@ -53,6 +53,7 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "cpu/power/ml/utility.h"
 #include "debug/PerceptronPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"

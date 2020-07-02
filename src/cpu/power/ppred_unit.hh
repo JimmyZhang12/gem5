@@ -87,7 +87,9 @@ class PPredUnit : public ClockedObject
 
     void get_analog_stats();
 
-    void historyInsert(const uint64_t pc, const PPred::event_t event);
+    void historyInsert(const PPred::event_t event);
+
+    void historySetPC(const uint64_t pc);
 
     bool get_stall() const {
       return stall;

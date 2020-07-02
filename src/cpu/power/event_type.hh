@@ -51,15 +51,13 @@ namespace PPred {
 typedef enum : int {
   BRANCH_T=1,
   BRANCH_NT,
+  BRANCH_MP,
   FETCH,
   ICACHE_FETCH,
   ICACHE_BLOCK,
-  COMMIT_BLOCK
-//  IQ,
-//  L2,
-//  FLUSH,
-//  DL1,
-//  DTLB
+  COMMIT_BLOCK,
+  IQ_FULL,
+  LSQ_FULL
 } event_t;
 
 

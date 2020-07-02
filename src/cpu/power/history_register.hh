@@ -52,6 +52,7 @@
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/power/event_type.hh"
+#include "cpu/power/ml/array.h"
 #include "cpu/power/prediction_table.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
@@ -67,7 +68,12 @@ class HistoryRegister {
   /**
    * PC of last event
    */
-  uint64_t anchor_pc;
+  std::vector<uint64_t> pc;
+
+  /**
+   * PC of tick
+   */
+  uint64_t inst_pc;
 
 public:
   /**
@@ -91,14 +97,28 @@ public:
   Entry get_entry();
 
   /**
-   * Add Event
-   * Adds Event to the HistoryRegister; requires an event_t enum and ad the PC
-   * of the uArch event
-   * @param PC Current Program Counter
-   * @param event uArch Event Type from the event_t enum
-   * @return None
+   * Convert the History Register to an Array2D type that can be used in the
+   * perceptron and DNN
+   * @return Array2D
    */
-  void add_event(uint64_t PC, event_t event);
+  Array2D get_array2d();
+
+  /**
+   * Add Event
+   * Adds Event to the HistoryRegister; takes the internal updating PC
+   * register, and external event and adds to the PC/Event registers. This is
+   * so events that dont have reference to a PC can also insert events, such as
+   * the memory hierarchy.
+   * @param event uArch Event Type from the event_t enum
+   * @return if the event is added correctly
+   */
+  bool add_event(event_t event);
+
+  /**
+   * Set the internal PC value, called from the cpu.tick() function.
+   * @param pc The current pc value at the time of the cpu.tick() function.
+   */
+  void set_pc(uint64_t pc);
 
   /**
    * Friend ostream& operator<<
@@ -109,8 +129,13 @@ public:
    */
   friend std::ostream& operator<<(std::ostream& os, const HistoryRegister& t) {
     // Print PC Followed by all the uArchEvent IDs
-    os << std::hex << t.get_pc();
-    for (auto i : t.get_signature()) {
+    for (size_t i = 0; i < t.pc.size(); i++) {
+      if (i != 0) {
+        os << ",";
+      }
+      os << std::hex << t.pc[i];
+    }
+    for (auto i : t.signature) {
       os << ",";
       os << std::dec << i;
     }
@@ -154,7 +179,7 @@ public:
    * @return Anchor PC
    */
   uint64_t get_pc() const {
-    return anchor_pc;
+    return pc[0];
   }
 };
 

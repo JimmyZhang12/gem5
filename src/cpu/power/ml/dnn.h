@@ -24,6 +24,8 @@ class DNN {
   size_t hidden_layers;
 
 public:
+  DNN() {};
+
   /**
    * Constructor
    * Create a 3 Layer DNN, 1 Input, 1 Hidden, 1 Output Layer

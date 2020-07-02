@@ -58,6 +58,7 @@
  */
 PPred::HistoryRegister::HistoryRegister(size_t len) {
   this->signature.resize(len, BRANCH_T);
+  this->pc.resize(len, 0);
 }
 
 /**
@@ -65,29 +66,69 @@ PPred::HistoryRegister::HistoryRegister(size_t len) {
  * @return Entry type that can be hashed or looked up in a CAM
  */
 PPred::Entry PPred::HistoryRegister::get_entry() {
-  return PPred::Entry(this->anchor_pc, this->signature);
+  return PPred::Entry(this->pc[0], this->signature);
+}
+
+/**
+ * Convert the History Register to an Array2D type that can be used in the
+ * perceptron and DNN. Returns a 1x(2*len(EHR)) array.
+ * @return Array2D
+ */
+Array2D PPred::HistoryRegister::get_array2d() {
+  Array2D ret = Array2D(1,pc.size()+signature.size(), 0.0);
+  for (size_t i = 0; i < pc.size(); i++) {
+    ret.data[0][i] = (double)pc[i];
+    ret.data[0][i+pc.size()] = (double)(int)signature[i];
+  }
+  return ret;
 }
 
 /**
  * Add Event
- * Adds Event to the HistoryRegister; requires an event_t enum and ad the PC
- * of the uArch event
- * @param PC Current Program Counter
+ * Adds Event to the HistoryRegister; takes the internal updating PC
+ * register, and external event and adds to the PC/Event registers. This is
+ * so events that dont have reference to a PC can also insert events, such as
+ * the memory hierarchy.
  * @param event uArch Event Type from the event_t enum
- * @return None
+ * @return if the event is added correctly
  */
-void PPred::HistoryRegister::add_event(uint64_t PC, PPred::event_t event) {
-  this->anchor_pc = PC;
+bool PPred::HistoryRegister::add_event(PPred::event_t event) {
+  // First check if the event isnt already in the HR for the same PC
+  for (size_t i = 0; i < signature.size(); i++) {
+    if (pc[i] != inst_pc) {
+      // Not in the most recent set of PCs, any other match would
+      // be from a previous time frame
+      break;
+    }
+    if (signature[i] == event && pc[i] == inst_pc) {
+      // Event & PC value are a duplicate
+      return false;
+    }
+  }
+
   // shift all the vector elements:
   for (int i = (int)signature.size() - 2; i >= 0; i--) {
     this->signature[i+1] = this->signature[i];
   }
+  for (int i = (int)pc.size() - 2; i >= 0; i--) {
+    this->pc[i+1] = this->pc[i];
+  }
   this->signature[0] = event;
+  this->pc[0] = this->inst_pc;
   // Print Vector & PC
   DPRINTF(HistoryRegister, "[ HistoryRegister ] add_event(): PC %d; " \
-  "Signature", this->anchor_pc);
+  "Signature", this->pc[0]);
   //for (auto i : this->signature) {
   //  DPRINTF(HistoryRegister, "%s,", PPred::event_t_name[i]);
   //}
   DPRINTF(HistoryRegister, "\n");
+  return true;
+}
+
+/**
+ * Set the internal PC value, called from the cpu.tick() function.
+ * @param pc The current pc value at the time of the cpu.tick() function.
+ */
+void PPred::HistoryRegister::set_pc(uint64_t pc) {
+  this->inst_pc = pc;
 }

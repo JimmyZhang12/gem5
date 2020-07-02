@@ -109,6 +109,18 @@ class PerceptronPredictor(PowerPredictor):
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
 
+class DNNPredictor(PowerPredictor):
+    type = "DNNPredictor"
+    cxx_class = "DNNPredictor"
+    cxx_header = "cpu/power/dnn_predictor.hh"
+
+    dnn_file = Param.String("", "File to restore DNN model from " \
+        "Must have same input and output dimensions as features & actions")
+    training_output = Param.String("td.csv","CSV of output training data")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    duration = Param.Unsigned(50, "The number of cycles to throttle for")
+
 class HarvardPowerPredictor(PowerPredictor):
     type = "HarvardPowerPredictor"
     cxx_class = "Harvard"

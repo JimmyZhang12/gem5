@@ -50,6 +50,8 @@
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/scoreboard.hh"
+#include "cpu/power/event_type.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "debug/IEW.hh"
 #include "sim/probe/probe.hh"
@@ -405,6 +407,9 @@ class DefaultIEW
      * in instToCommit().
      */
     unsigned wbCycle;
+
+    /** PowerPred */
+    PPredUnit* powerPred;
 
     /** Writeback width. */
     unsigned wbWidth;

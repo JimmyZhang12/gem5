@@ -546,6 +546,9 @@ bool
 InstructionQueue<Impl>::isFull()
 {
     if (freeEntries == 0) {
+        if (powerPred) {
+            powerPred->historyInsert(PPred::IQ_FULL);
+        }
         return(true);
     } else {
         return(false);

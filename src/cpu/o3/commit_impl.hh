@@ -722,8 +722,7 @@ DefaultCommit<Impl>::tick()
                     "%s is head of ROB and not ready\n",
                     tid, inst->seqNum, inst->pcState());
             if (powerPred) {
-                powerPred->historyInsert(
-                    inst->pcState().instAddr(), PPred::COMMIT_BLOCK);
+                powerPred->historyInsert(PPred::COMMIT_BLOCK);
             }
         }
 

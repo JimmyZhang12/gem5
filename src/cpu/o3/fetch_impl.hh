@@ -586,7 +586,9 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
     ThreadID tid = inst->threadNumber;
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
                                         nextPC, tid);
-
+    if (powerPred) {
+      powerPred->historySetPC(inst->pcState().instAddr());
+    }
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be taken to %s\n",
@@ -595,17 +597,14 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
         // Globals, And PPred Unit is ticked through CPU class and not
         // Global Queue Class...
         if (powerPred) {
-            powerPred->historyInsert(
-                inst->pcState().instAddr(), PPred::BRANCH_T);
+            powerPred->historyInsert(PPred::BRANCH_T);
         }
-
     } else {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
                 "predicted to be not taken\n",
                 tid, inst->seqNum, inst->pcState().instAddr());
         if (powerPred) {
-            powerPred->historyInsert(
-                inst->pcState().instAddr(), PPred::BRANCH_NT);
+            powerPred->historyInsert(PPred::BRANCH_NT);
         }
     }
 
@@ -638,10 +637,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
                 tid);
         if (powerPred) {
-            powerPred->historyInsert(pc, PPred::ICACHE_BLOCK);
+            powerPred->historyInsert(PPred::ICACHE_BLOCK);
         }
         return false;
-
     } else if (checkInterrupt(pc) && !delayedCommit[tid]) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
@@ -650,7 +648,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, interrupt pending\n",
                 tid);
         if (powerPred) {
-            powerPred->historyInsert(pc, PPred::ICACHE_BLOCK);
+            powerPred->historyInsert(PPred::ICACHE_BLOCK);
         }
         return false;
     }
@@ -659,7 +657,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     Addr fetchBufferBlockPC = fetchBufferAlignPC(vaddr);
 
     if (powerPred) {
-        powerPred->historyInsert(pc, PPred::FETCH);
+        powerPred->historyInsert(PPred::FETCH);
     }
 
     DPRINTF(Fetch, "[tid:%i] Fetching cache line %#x for addr %#x\n",
@@ -1093,9 +1091,15 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
                               fromCommit->commitInfo[tid].pc,
                               fromCommit->commitInfo[tid].branchTaken,
                               tid);
+            if (powerPred) {
+                powerPred->historyInsert(PPred::BRANCH_MP);
+            }
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
+            if (powerPred) {
+                powerPred->historyInsert(PPred::BRANCH_MP);
+            }
         }
 
         return true;
@@ -1116,9 +1120,15 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
                               fromDecode->decodeInfo[tid].nextPC,
                               fromDecode->decodeInfo[tid].branchTaken,
                               tid);
+            if (powerPred) {
+                powerPred->historyInsert(PPred::BRANCH_MP);
+            }
         } else {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               tid);
+            if (powerPred) {
+                powerPred->historyInsert(PPred::BRANCH_MP);
+            }
         }
 
         if (fetchStatus[tid] != Squashing) {

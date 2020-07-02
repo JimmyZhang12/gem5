@@ -78,6 +78,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
       issueWidth(params->issueWidth),
       wbNumInst(0),
       wbCycle(0),
+      powerPred(nullptr),
       wbWidth(params->wbWidth),
       numThreads(params->numThreads)
 {
@@ -109,6 +110,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
         fetchRedirect[tid] = false;
     }
 
+    powerPred = params->powerPred;
     updateLSQNextCycle = false;
 
     skidBufferMax = (renameToIEWDelay + 1) * params->renameWidth;
@@ -1050,6 +1052,9 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             toRename->iewUnblock[tid] = false;
 
             ++iewLSQFullEvents;
+            if (powerPred) {
+                powerPred->historyInsert(PPred::LSQ_FULL);
+            }
             break;
         }
 
