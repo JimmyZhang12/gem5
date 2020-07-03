@@ -102,8 +102,6 @@ class Sensor : public PPredUnit
     int e_count;
     Stats::Scalar s;
     Stats::Scalar ns;
-    Stats::Scalar sv;
-    Stats::Scalar sc;
 };
 
 #endif // __CPU_PRED_SENSOR_HH__

@@ -56,7 +56,7 @@ class PowerPredictor(ClockedObject):
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
     cpu_id = Param.Unsigned(0, "Cpu ID")
-    signature_length = Param.Unsigned(1,"Length of History Snapshot " \
+    signature_length = Param.Unsigned(256,"Length of History Snapshot " \
         "(Figure 2)")
 
 class Test(PowerPredictor):
@@ -103,7 +103,6 @@ class PerceptronPredictor(PowerPredictor):
     cxx_class = "PerceptronPredictor"
     cxx_header = "cpu/power/perceptron_predictor.hh"
 
-    signature_length = Param.Unsigned(256,"Length of History Snapshot")
     training_output = Param.String("td.csv","CSV of output training data")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")

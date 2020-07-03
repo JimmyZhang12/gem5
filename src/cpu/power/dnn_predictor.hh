@@ -104,8 +104,6 @@ class DNNPredictor : public PPredUnit
     unsigned int t_count;
     Stats::Scalar s;
     Stats::Scalar ns;
-    Stats::Scalar sv;
-    Stats::Scalar sc;
 
     std::string output_fname;
 };

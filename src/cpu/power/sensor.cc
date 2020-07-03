@@ -85,26 +85,13 @@ Sensor::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
-        ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
-        .precision(6)
-        ;
 }
 
 void
 Sensor::tick(void)
 {
   DPRINTF(SensorPowerPred, "Sensor::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
+  get_analog_stats();
 
   // Transition Logic
   switch(state) {

@@ -120,9 +120,29 @@ PPredUnit::regStats()
         .desc("Core Runtime Current")
         .precision(6)
         ;
+    rtc_p
+        .name(name() + ".core_runtime_current_prev")
+        .desc("Previous Core Runtime Current")
+        .precision(6)
+        ;
+    rtc_d
+        .name(name() + ".core_runtime_current_di")
+        .desc("Change in Runtime Current")
+        .precision(6)
+        ;
     trtc
         .name(name() + ".total_runtime_current")
         .desc("Total Runtime Current")
+        .precision(6)
+        ;
+    trtc_p
+        .name(name() + ".total_runtime_current_prev")
+        .desc("Previous Total Runtime Current")
+        .precision(6)
+        ;
+    trtc_d
+        .name(name() + ".total_runtime_current_di")
+        .desc("Change in Total Runtime Current")
         .precision(6)
         ;
     ptrtc

@@ -78,18 +78,18 @@ def dump():
   dump_stats(mcpat_trees)
 
 
-def get_last_p(voltage):
+def get_last_p(voltage, power_gating=False, scale_factor=1.0):
   data = get_data("Processor", mcpat_trees)
-  return calc_total_power(data)
+  return calc_total_power(data, power_gating, scale_factor)
 
-def get_last_r(voltage):
+def get_last_r(voltage, power_gating=False, scale_factor=1.0):
   data = get_data("Processor", mcpat_trees)
-  power = calc_total_power(data)
+  power = calc_total_power(data, power_gating, scale_factor)
   return calc_req(power, voltage)
 
-def get_last_i(voltage):
+def get_last_i(voltage, power_gating=False, scale_factor=1.0):
   data = get_data("Processor", mcpat_trees)
-  power = calc_total_power(data)
+  power = calc_total_power(data, power_gating, scale_factor)
   return power/voltage;
 
 def get_runtime_dynamic(path):

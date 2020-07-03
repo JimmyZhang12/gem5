@@ -71,6 +71,14 @@ PerceptronPredictor::PerceptronPredictor(const Params *params)
     std::ofstream outfile;
     outfile.open(output_fname, std::ios_base::out);
     outfile.close();
+    // Write History Register to File
+    std::ofstream ofs;
+    ofs.open(output_fname, std::ios_base::app);
+    ofs << "#supply_voltage,supply_current,";
+    ofs << "core_runtime_current,core_runtime_current_di,";
+    ofs << "total_core_runtime_current,total_core_runtime_current_di,";
+    ofs << "history_register_dump" << "\n";
+    ofs.close();
 }
 
 void
@@ -86,26 +94,13 @@ PerceptronPredictor::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
-        ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
-        .precision(6)
-        ;
 }
 
 void
 PerceptronPredictor::tick(void)
 {
   DPRINTF(PerceptronPowerPred, "PerceptronPredictor::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
+  get_analog_stats();
 
   // Write History Register to File
   std::ofstream ofs;

@@ -453,9 +453,15 @@ def dump(root=None, exit=False):
                     # Run an Initial McPAT stats run with 1.0v
                     mcpat.m5_to_mcpat(mp_v, mp_f, \
                         380.0, options.mcpat_device_type)
-                    resistance = mcpat.get_last_r(mp_v)
-                    current = mcpat.get_last_i(mp_v)
-                    power = mcpat.get_last_p(mp_v)
+                    resistance = mcpat.get_last_r(mp_v, \
+                        options.mcpat_use_fg_pg, \
+                        options.mcpat_scale_factor)
+                    current = mcpat.get_last_i(mp_v, \
+                        options.mcpat_use_fg_pg, \
+                        options.mcpat_scale_factor)
+                    power = mcpat.get_last_p(mp_v, \
+                        options.mcpat_use_fg_pg, \
+                        options.mcpat_scale_factor)
                     # Run Init and warmup PowerSupply
                     vpi_shm.initialize(options.mcpat_testname)
                     for i in range(int(options.ncverilog_warmup)):
@@ -469,15 +475,27 @@ def dump(root=None, exit=False):
                     if options.ncverilog_feedback:
                       mcpat.m5_to_mcpat(lv, mp_f, \
                           380.0, options.mcpat_device_type)
-                      resistance = mcpat.get_last_r(lv)
-                      current = mcpat.get_last_i(lv)
-                      power = mcpat.get_last_p(lv)
+                      resistance = mcpat.get_last_r(lv, \
+                          options.mcpat_use_fg_pg, \
+                          options.mcpat_scale_factor)
+                      current = mcpat.get_last_i(lv, \
+                          options.mcpat_use_fg_pg, \
+                          options.mcpat_scale_factor)
+                      power = mcpat.get_last_p(lv, \
+                          options.mcpat_use_fg_pg, \
+                          options.mcpat_scale_factor)
                     else:
                       mcpat.m5_to_mcpat(mp_v, mp_f, \
                           380.0, options.mcpat_device_type)
-                      resistance = mcpat.get_last_r(mp_v)
-                      current = mcpat.get_last_i(mp_v)
-                      power = mcpat.get_last_p(mp_v)
+                      resistance = mcpat.get_last_r(mp_v, \
+                          options.mcpat_use_fg_pg, \
+                          options.mcpat_scale_factor)
+                      current = mcpat.get_last_i(mp_v, \
+                          options.mcpat_use_fg_pg, \
+                          options.mcpat_scale_factor)
+                      power = mcpat.get_last_p(mp_v, \
+                          options.mcpat_use_fg_pg, \
+                          options.mcpat_scale_factor)
                     vpi_shm.set_driver_signals(current, 0)
                     lv = vpi_shm.get_voltage()
                     lastVoltage=lv

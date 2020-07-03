@@ -352,9 +352,9 @@ for i in range(np):
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
+                    signature_length=4,
                     # Specific
                     table_size=128,
-                    signature_length=4,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
                     duration=50)
@@ -367,8 +367,8 @@ for i in range(np):
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
-                    # Specific
                     signature_length=256,
+                    # Specific
                     training_output=options.power_pred_train_name,
                     hysteresis=0.005,
                     duration=50)
@@ -403,11 +403,11 @@ for i in range(np):
     # Instruction Queue
     system.cpu[i].numIQEntries = options.cpu_num_iq_entries
     # FU POOL
-    system.cpu[i].fuPool.IntALU.count = options.cpu_intALUcount
-    system.cpu[i].fuPool.IntMultDiv.count = options.cpu_intMULDIVcount
-    system.cpu[i].fuPool.FP_ALU.count = options.cpu_fpALUcount
-    system.cpu[i].fuPool.FP_MultDiv.count = options.cpu_fpMULDIVcount
-    system.cpu[i].fuPool.SIMD_UNIT.count = options.cpu_simdcount
+    system.cpu[i].fuPool.FUList[0].count = options.cpu_intALUcount
+    system.cpu[i].fuPool.FUList[1].count = options.cpu_intMULDIVcount
+    system.cpu[i].fuPool.FUList[2].count = options.cpu_fpALUcount
+    system.cpu[i].fuPool.FUList[3].count = options.cpu_fpMULDIVcount
+    system.cpu[i].fuPool.FUList[5].count = options.cpu_simdcount
 
     if options.indirect_bp_type:
         indirectBPClass = \

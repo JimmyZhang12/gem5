@@ -89,26 +89,14 @@ DNNPredictor::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
-        ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
-        .precision(6)
-        ;
 }
 
 void
 DNNPredictor::tick(void)
 {
   DPRINTF(PerceptronPowerPred, "DNNPredictor::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
+
+  get_analog_stats();
 
   // Write History Register to File
   std::ofstream ofs;

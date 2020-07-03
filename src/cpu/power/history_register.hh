@@ -88,6 +88,7 @@ public:
    */
   void resize(size_t len = 4) {
     signature.resize(len);
+    pc.resize(len);
   }
 
   /**
@@ -135,9 +136,9 @@ public:
       }
       os << std::hex << t.pc[i];
     }
-    for (auto i : t.signature) {
+    for (size_t i = 0; i < t.signature.size(); i++) {
       os << ",";
-      os << std::dec << i;
+      os << std::dec << t.signature[i];
     }
     return os;
   }

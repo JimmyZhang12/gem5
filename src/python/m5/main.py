@@ -157,6 +157,10 @@ def parse_options():
     group("mcpat options")
     option("--mcpat_enable", action="store_true", default=False,
         help="If set, then mcpat and power profiling is disabled")
+    option("--mcpat_use_fg_pg", action="store_true", default=False,
+        help="If set Use McPAT Fine Grained Power Gating")
+    option("--mcpat_scale_factor", type='float', default=1.0,
+        help="McPAT Power Scaling Factor as < 22nm Does Not Work")
     option("--mcpat_path", type='str', default="",
         help="set the path to mcpat")
     option("--mcpat_template", type='str', default="",

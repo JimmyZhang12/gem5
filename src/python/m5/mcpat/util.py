@@ -171,16 +171,16 @@ def get_data(path, mcpat_trees):
     data[key] = filter(value.split(" ")[0])
   return data
 
-def calc_total_power(data, power_gating = False):
+def calc_total_power(data, power_gating = False, scale_factor=1.0):
   # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
   # Gating
   if power_gating:
-    return float(data["Gate Leakage"]) + \
+    return (float(data["Gate Leakage"]) + \
            float(data["Subthreshold Leakage with power gating"]) + \
-           float(data["Runtime Dynamic"])
-  return float(data["Gate Leakage"]) + \
+           float(data["Runtime Dynamic"]))*scale_factor
+  return (float(data["Gate Leakage"]) + \
          float(data["Subthreshold Leakage"]) + \
-         float(data["Runtime Dynamic"])
+         float(data["Runtime Dynamic"]))*scale_factor
 
 def calc_req(power, voltage):
   return voltage*voltage/power
