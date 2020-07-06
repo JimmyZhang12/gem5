@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_DNN_PREDICTOR_HH__
-#define __CPU_POWER_DNN_PREDICTOR_HH__
+#ifndef __CPU_POWER_PERCEPTRON_PREDICTOR_UTA_HH__
+#define __CPU_POWER_PERCEPTRON_PREDICTOR_UTA_HH__
 
 #include <deque>
 #include <iostream>
@@ -53,23 +53,31 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
 #include "cpu/power/ml/array.h"
-#include "cpu/power/ml/dnn.h"
+#include "cpu/power/ml/perceptron.h"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
-#include "params/DNNPredictor.hh"
+#include "params/PerceptronPredictorUTA.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class DNNPredictor : public PPredUnit
+/**
+ * Class Perceptron Predictor UTA
+ *
+ * This power predictor is adapted from the UT
+ * Austin Perceptron based branch predictor.
+ *
+ * https://www.cs.utexas.edu/~lin/papers/hpca01.pdf
+ */
+class PerceptronPredictorUTA : public PPredUnit
 {
   public:
 
-    typedef DNNPredictorParams Params;
+    typedef PerceptronPredictorUTAParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    DNNPredictor(const Params *p);
+    PerceptronPredictorUTA(const Params *p);
 
     /**
      * Registers statistics.
@@ -82,6 +90,7 @@ class DNNPredictor : public PPredUnit
     void tick(void);
 
   protected:
+    double threshold;
     double hysteresis;
     unsigned int latency;
     unsigned int throttle_duration;
@@ -93,9 +102,23 @@ class DNNPredictor : public PPredUnit
       EMERGENCY
     };
 
-    DNN dnn;
-    uint64_t action;
+    /** Training Rate */
+    double eta;
+
+    /** Perceptron Table */
+    std::vector<Array2D> table;
+
+    /** Signature Length */
     uint64_t events;
+
+    /** Previous Entry for Training */
+    uint64_t previous_idx;
+    uint64_t pc;
+    Array2D previous_e;
+    Array2D e;
+    bool train;
+    bool emergency_occured;
+    bool pred;
 
     state_t state;
     state_t next_state;
@@ -119,9 +142,7 @@ class DNNPredictor : public PPredUnit
     Stats::Scalar taction;
     Stats::Scalar tiaction;
     Stats::Scalar mp_rate;
-    Stats::Scalar act; // The action returned by perceptron
-
-    std::string output_fname;
 };
 
-#endif // __CPU_POWER_DNN_PREDICTOR_HH__
+#endif // __CPU_POWER_PERCEPTRON_PREDICTOR_UTA_HH__
+

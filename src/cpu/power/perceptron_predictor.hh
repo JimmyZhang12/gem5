@@ -82,7 +82,6 @@ class PerceptronPredictor : public PPredUnit
     void tick(void);
 
   protected:
-    double threshold;
     double hysteresis;
     unsigned int latency;
     unsigned int throttle_duration;
@@ -95,6 +94,8 @@ class PerceptronPredictor : public PPredUnit
     };
 
     Classifier perceptron;
+    uint64_t action;
+    uint64_t events;
 
     state_t state;
     state_t next_state;
@@ -104,6 +105,21 @@ class PerceptronPredictor : public PPredUnit
     unsigned int t_count;
     Stats::Scalar s;
     Stats::Scalar ns;
+
+    // Permanant Stats:
+    // Num Voltage Emergencies
+    uint64_t num_ve;
+    uint64_t total_misspred;
+    uint64_t total_preds;
+    uint64_t total_pred_action;
+    uint64_t total_pred_inaction;
+    Stats::Scalar nve;
+    Stats::Scalar tmp;
+    Stats::Scalar tpred;
+    Stats::Scalar taction;
+    Stats::Scalar tiaction;
+    Stats::Scalar mp_rate;
+    Stats::Scalar act; // The action returned by perceptron
 
     std::string output_fname;
 };

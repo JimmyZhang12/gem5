@@ -40,34 +40,31 @@
  * Authors: Andrew Smith
  */
 
-
-#include "cpu/power/harvard.hh"
+#include "cpu/power/perceptron_predictor_uta.hh"
 
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "debug/HarvardPowerPred.hh"
+#include "cpu/power/ml/utility.h"
+#include "debug/PerceptronUTAPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Harvard::Harvard(const Params *params)
+PerceptronPredictorUTA::PerceptronPredictorUTA(const Params *params)
     : PPredUnit(params)
 {
-    DPRINTF(HarvardPowerPred,
-            "Harvard::Harvard()\n");
+    DPRINTF(PerceptronUTAPowerPred,
+            "PerceptronPredictorUTA::PerceptronPredictorUTA()\n");
     state = NORMAL;
     next_state = NORMAL;
-    table.resize(params->table_size, params->signature_length, 3,
-                  params->bloom_filter_size);
-    history.resize(params->signature_length);
-    throttle_duration = params->duration;
-    hysteresis = params->hysteresis;
     t_count = 0;
     e_count = 0;
     num_ve = 0;
@@ -75,10 +72,17 @@ Harvard::Harvard(const Params *params)
     total_preds = 0;
     total_pred_action = 0;
     total_pred_inaction = 0;
+    eta = params->eta;
+    events = params->events;
+    throttle_duration = params->duration;
+    table.resize(params->table_size, \
+        Array2D(1, params->events, 1.0));
+    previous_idx = 0;
+    pc = 0;
 }
 
 void
-Harvard::regStats()
+PerceptronPredictorUTA::regStats()
 {
     PPredUnit::regStats();
 
@@ -118,29 +122,49 @@ Harvard::regStats()
 }
 
 void
-Harvard::tick(void)
+PerceptronPredictorUTA::tick(void)
 {
-  DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
+  //DPRINTF(PerceptronUTAPowerPred, "PerceptronPredictorUTA::tick()\n");
   get_analog_stats();
-
-  table.tick();
+  double prediction = 0.0;
 
   // Transition Logic
   switch(state) {
     case NORMAL : {
       next_state = NORMAL;
       if (supply_voltage < emergency) {
+        DPRINTF(PerceptronUTAPowerPred, "Emergency Occured");
+        emergency_occured = true;
         next_state = EMERGENCY;
-        table.insert(this->history.get_entry());
       }
       // If hr updated:
       if (hr_updated) {
-        if (table.find(this->history.get_entry())) {
+        // Signal we need to train
+        train = true;
+        // Update Old PC:
+        previous_idx = pc;
+        // Get PC from HR
+        pc = history.get_pc();
+        // Store old e
+        previous_e = e;
+        // Get array2d from HR with no pc
+        e = history.get_array2d(events, true);
+        // Compute "hash"
+        pc = pc % table.size();
+
+        // Eval Perceptron
+        prediction = (table[pc]*e.transpose()).data[0][0];
+
+        if (prediction > 0.0) {
+          pred = true;
           total_pred_action++;
           next_state = THROTTLE;
+          DPRINTF(PerceptronUTAPowerPred, "Predict Throttle\n");
         }
         else {
+          pred = false;
           total_pred_inaction++;
+          DPRINTF(PerceptronUTAPowerPred, "Predict No Throttle\n");
         }
         hr_updated = false;
         total_preds++;
@@ -166,8 +190,9 @@ Harvard::tick(void)
       // Pre-emptive Throttle
       next_state = THROTTLE;
       if (supply_voltage < emergency) {
+        DPRINTF(PerceptronUTAPowerPred, "Emergency Occured");
+        emergency_occured = true;
         next_state = EMERGENCY;
-        table.insert(this->history.get_entry());
       }
       else if (t_count > throttle_duration &&
                supply_voltage > emergency + hysteresis) {
@@ -191,13 +216,13 @@ Harvard::tick(void)
       break;
     }
     case EMERGENCY : {
-      e_count += cycle_period;
+      e_count += 1;
       clkThrottle();
       setStall();
       break;
     }
     case THROTTLE : {
-      t_count += cycle_period;
+      t_count += 1;
       clkThrottle();
       break;
     }
@@ -212,6 +237,38 @@ Harvard::tick(void)
   // Update Next State Transition:
   state = next_state;
 
+  // If emergency occured: Train the Perceptron
+  if (train) {
+    if (emergency_occured) {
+      if (pred) {
+        // We predicted the emergency and made
+        // right prediction but emergency was
+        // unavoidable
+      }
+      else {
+        // We made the decition not to
+        // throttle and emergency occured,
+        // train in positive direction
+        table[previous_idx] = table[previous_idx] + previous_e*eta;
+        DPRINTF(PerceptronUTAPowerPred, "Train Re-enforce");
+      }
+    }
+    else {
+      if (pred) {
+        // Cant tell if emergency would have
+        // occured without prediction
+      }
+      else {
+        // No emergency and no throttle, train
+        // in negative direction
+        table[previous_idx] = table[previous_idx] - previous_e*eta;
+        DPRINTF(PerceptronUTAPowerPred, "Train Negative");
+      }
+    }
+    train = false;
+    emergency_occured = false;
+  }
+
   // Set Permanant Stats:
   nve = num_ve;
   tmp = total_misspred;
@@ -224,10 +281,8 @@ Harvard::tick(void)
   return;
 }
 
-Harvard*
-HarvardPowerPredictorParams::create()
+PerceptronPredictorUTA*
+PerceptronPredictorUTAParams::create()
 {
-  return new Harvard(this);
+  return new PerceptronPredictorUTA(this);
 }
-
-

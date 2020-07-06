@@ -67,10 +67,13 @@ uArchEventPredictor::uArchEventPredictor(const Params *params)
     this->history.resize(1);
     t_count = 0;
     e_count = 0;
+    throttle_duration = params->duration;
+    hysteresis = params->hysteresis;
     total_misspred = 0;
     total_preds = 0;
     total_pred_action = 0;
     total_pred_inaction = 0;
+    num_ve = 0;
 }
 
 void
@@ -187,13 +190,13 @@ uArchEventPredictor::tick(void)
       break;
     }
     case EMERGENCY : {
-      e_count += cycle_period;
+      e_count += 1;
       clkThrottle();
       setStall();
       break;
     }
     case THROTTLE : {
-      t_count += cycle_period;
+      t_count += 1;
       clkThrottle();
       break;
     }

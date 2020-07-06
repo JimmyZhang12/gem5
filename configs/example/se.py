@@ -315,7 +315,7 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     # Specific
-                    threshold=0.98,
+                    threshold=0.97,
                     hysteresis=0.005,
                     duration=50)
         elif options.power_pred_type == "DecorOnly":
@@ -370,6 +370,41 @@ for i in range(np):
                     signature_length=256,
                     # Specific
                     training_output=options.power_pred_train_name,
+                    action_length=options.power_pred_actions,
+                    events=options.power_pred_events,
+                    model=options.power_pred_model,
+                    hysteresis=0.005,
+                    duration=50)
+        elif options.power_pred_type == "DNNPredictor":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    signature_length=256,
+                    # Specific
+                    action_length=options.power_pred_actions,
+                    events=options.power_pred_events,
+                    model=options.power_pred_model,
+                    hysteresis=0.005,
+                    duration=50)
+        elif options.power_pred_type == "PerceptronPredictorUTA":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    signature_length=256,
+                    # Specific
+                    events=32,
+                    eta=0.25,
+                    table_size=2048,
                     hysteresis=0.005,
                     duration=50)
         system.cpu[i].powerPred.clk_domain = \

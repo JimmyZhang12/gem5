@@ -42,6 +42,7 @@
 
 #include "cpu/power/history_register.hh"
 
+#include <cmath>
 #include <iostream>
 
 #include "arch/isa_traits.hh"
@@ -49,6 +50,7 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "cpu/power/ml/func.h"
 #include "debug/HistoryRegister.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
@@ -71,14 +73,68 @@ PPred::Entry PPred::HistoryRegister::get_entry() {
 
 /**
  * Convert the History Register to an Array2D type that can be used in the
- * perceptron and DNN. Returns a 1x(2*len(EHR)) array.
+ * perceptron and DNN
+ *
+ * Rescales the Portions of the features to [0,1]
+ *
+ * @param events Number of events/pcs to return
+ * @param no_pc Return an array with no PC values
+ * @param anchor_pc Return an array with [anchor_pc, e0, e1,...]
  * @return Array2D
  */
-Array2D PPred::HistoryRegister::get_array2d() {
-  Array2D ret = Array2D(1,pc.size()+signature.size(), 0.0);
-  for (size_t i = 0; i < pc.size(); i++) {
+Array2D PPred::HistoryRegister::get_array2d(size_t events,
+                                            bool no_pc,
+                                            bool anchor_pc) {
+  assert(events <= signature.size());
+  Array2D ret;
+  Array2D temp;
+  if (no_pc) {
+    ret = Array2D(1, events, 0.0);
+    for (size_t i = 0; i < events; i++) {
+      ret.data[0][i] = (double)(int)signature[i];
+    }
+    return ret;
+  }
+  if (anchor_pc) {
+    ret = Array2D(1, 1+events, 0.0);
+    for (size_t i = 0; i < events; i++) {
+      ret.data[0][i+1] = (double)(int)signature[i];
+    }
+    ret.data[0][0] = (double)pc[0];
+    return ret;
+  }
+  ret = Array2D(1, 2*events, 0.0);
+  for (size_t i = 0; i < events; i++) {
     ret.data[0][i] = (double)pc[i];
-    ret.data[0][i+pc.size()] = (double)(int)signature[i];
+    ret.data[0][i+events] = (double)(int)signature[i];
+  }
+  if (no_pc) {
+    // rescale just the Events:
+    temp = rescale(ret.get_subset(1, events, 0, 0), \
+        0.0, 9.0, 0.0, 1.0);
+    ret.apply_subset(temp, 0, 0);
+  }
+  else if (anchor_pc) {
+    // rescale PC and Events:
+    // First rescale PC
+    temp = rescale(ret.get_subset(1, 1, 0, 0), \
+        0.0, (double)std::pow((double)2.0,(double)64), 0.0, 1.0);
+    ret.apply_subset(temp, 0, 0);
+    // First rescale Events
+    temp = rescale(ret.get_subset(1, events, 0, 1), \
+        0.0, 9.0, 0.0, 1.0);
+    ret.apply_subset(temp, 0, 1);
+  }
+  else {
+    // rescale PC and Events:
+    // First rescale PC
+    temp = rescale(ret.get_subset(1, events, 0, 0), \
+        0.0, (double)std::pow((double)2.0,(double)64), 0.0, 1.0);
+    ret.apply_subset(temp, 0, 0);
+    // First rescale Events
+    temp = rescale(ret.get_subset(1, events, 0, events), \
+        0.0, 9.0, 0.0, 1.0);
+    ret.apply_subset(temp, 0, events);
   }
   return ret;
 }

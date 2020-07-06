@@ -165,3 +165,30 @@ Array2D normalize(const Array2D &input) {
   }
   return ret;
 }
+
+/**
+ * rescale
+ * Rescale all the elemets in the array from [a0,a1] -> [b0, b1]
+ * @param input
+ * @param a0, a1 The source range
+ * @param b0, b1 The destination range
+ * @return scaled input
+ */
+Array2D rescale(const Array2D &input,
+                double a0,
+                double a1,
+                double b0,
+                double b1) {
+  assert(input.width > 0);
+  assert(input.height > 0);
+  Array2D ret = input;
+  double da = a1 - a0;
+  double db = b1 - b0;
+  // Apply rescaling
+  for (size_t i = 0; i < ret.height; i++) {
+    for (size_t j = 0; j < ret.width; j++) {
+      ret.data[i][j] = (db*(ret.data[i][j]-a0)/da)+b0;
+    }
+  }
+  return ret;
+}

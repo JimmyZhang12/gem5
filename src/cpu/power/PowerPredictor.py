@@ -58,6 +58,7 @@ class PowerPredictor(ClockedObject):
     cpu_id = Param.Unsigned(0, "Cpu ID")
     signature_length = Param.Unsigned(256,"Length of History Snapshot " \
         "(Figure 2)")
+    action_length = Param.Unsigned(2,"Number of Throttle Actions")
 
 class Test(PowerPredictor):
     type = 'Test'
@@ -98,28 +99,61 @@ class SimpleHistoryPowerPredictor(PowerPredictor):
         "the auxiliary circuit.")
     limit = Param.Float(10, "Limit on the istep")
 
+
+##Class Perceptron Predictor UTA
+#
+# This power predictor is adapted from the UT
+# Austin Perceptron based branch predictor.
+#
+# https://www.cs.utexas.edu/~lin/papers/hpca01.pdf
+class PerceptronPredictorUTA(PowerPredictor):
+    type = "PerceptronPredictorUTA"
+    cxx_class = "PerceptronPredictorUTA"
+    cxx_header = "cpu/power/perceptron_predictor_uta.hh"
+    table_size = Param.Unsigned(2048, "Table of Perceptrons Size "
+        "(Figure 2)")
+    eta = Param.Float(0.25, "Training rate of the Perceptron")
+    events = Param.Unsigned(8, "Events in the EHR")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    duration = Param.Unsigned(50, "The number of cycles to throttle for")
+
+## Perceptron Power Predictor
+#
+# Pretrained Perceptron Model predictor
+#
 class PerceptronPredictor(PowerPredictor):
     type = "PerceptronPredictor"
     cxx_class = "PerceptronPredictor"
     cxx_header = "cpu/power/perceptron_predictor.hh"
 
+    events = Param.Unsigned(16, "Events in the EHR")
     training_output = Param.String("td.csv","CSV of output training data")
+    model = Param.String("", "Boost trained Model")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
 
+## Perceptron Power Predictor
+#
+# Pretrained DNN power predictor
+#
 class DNNPredictor(PowerPredictor):
     type = "DNNPredictor"
     cxx_class = "DNNPredictor"
     cxx_header = "cpu/power/dnn_predictor.hh"
 
-    dnn_file = Param.String("", "File to restore DNN model from " \
-        "Must have same input and output dimensions as features & actions")
-    training_output = Param.String("td.csv","CSV of output training data")
+    events = Param.Unsigned(16, "Events in the EHR")
+    model = Param.String("", "Boost trained Model")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
 
+## Harvard Power Predictor
+#
+# This predictor is a reconstruction of the Power Predictor from:
+#
+# https://ieeexplore.ieee.org/document/4798233
 class HarvardPowerPredictor(PowerPredictor):
     type = "HarvardPowerPredictor"
     cxx_class = "Harvard"
@@ -131,6 +165,12 @@ class HarvardPowerPredictor(PowerPredictor):
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
 
+## uArch Event Power Predictor
+#
+# This predictor is a reconstruction of the
+# simple single event power predictor from:
+#
+# https://ieeexplore.ieee.org/document/5090651
 class uArchEventPredictor(PowerPredictor):
     type = "uArchEventPredictor"
     cxx_class = "uArchEventPredictor"
@@ -142,6 +182,7 @@ class uArchEventPredictor(PowerPredictor):
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+
 
 class IdealSensor(PowerPredictor):
     type = "IdealSensor"

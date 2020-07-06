@@ -492,6 +492,16 @@ def addSEOptions(parser):
     parser.add_option("--power_pred_train_name", type="str",
                       default="training.csv",
                       help="File Name and Path for Gen Training Data")
+    parser.add_option("--power_pred_model", type="str",
+                      default="model.txt",
+                      help="File Name and Path to trained boost DNN/Perceptron"
+                      " Model")
+    parser.add_option("--power_pred_actions", type="int",
+                      default=2,
+                      help="Number of actions to take")
+    parser.add_option("--power_pred_events", type="int",
+                      default=16,
+                      help="Number of events to use in Perceptron/DNN")
 
 
 def addFSOptions(parser):

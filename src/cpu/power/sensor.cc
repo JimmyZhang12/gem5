@@ -70,6 +70,11 @@ Sensor::Sensor(const Params *params)
     e_count = 0;
     state = NORMAL;
     next_state = NORMAL;
+    num_ve = 0;
+    total_misspred = 0;
+    total_preds = 0;
+    total_pred_action = 0;
+    total_pred_inaction = 0;
 }
 
 void
@@ -84,6 +89,31 @@ Sensor::regStats()
     ns
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
+        ;
+    nve
+        .name(name() + ".num_voltage_emergency")
+        .desc("Num Voltage Emergencies")
+        ;
+    tmp
+        .name(name() + ".total_mispred")
+        .desc("Total Misprediction")
+        ;
+    tpred
+        .name(name() + ".total_predictions")
+        .desc("Total Predictions")
+        ;
+    taction
+        .name(name() + ".total_action")
+        .desc("Total Actions Taken")
+        ;
+    tiaction
+        .name(name() + ".total_inaction")
+        .desc("Total No Actions Taken")
+        ;
+    mp_rate
+        .name(name() + ".mispred_rate")
+        .desc("Misprediction Rate")
+        .precision(6)
         ;
 }
 
@@ -159,17 +189,17 @@ Sensor::tick(void)
       break;
     }
     case DELAY : {
-      d_count+=cycle_period;
+      d_count+=1;
       clkRestore();
       break;
     }
     case EMERGENCY : {
-      e_count+=cycle_period;
+      e_count+=1;
       clkThrottle();
       setStall();
     }
     case THROTTLE : {
-      t_count+=cycle_period;
+      t_count+=1;
       clkThrottle();
       break;
     }
@@ -183,6 +213,16 @@ Sensor::tick(void)
   ns = next_state;
   // Update Next State Transition:
   state = next_state;
+
+  // Set Permanant Stats:
+  nve = num_ve;
+  tmp = total_misspred;
+  tpred = total_preds;
+  taction = total_pred_action;
+  tiaction = total_pred_inaction;
+  if (total_preds != 0) {
+    mp_rate = (double)total_misspred/(double)total_preds;
+  }
   return;
 }
 

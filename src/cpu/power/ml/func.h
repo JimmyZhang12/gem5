@@ -52,4 +52,18 @@ Array2D standardize(const Array2D &input);
  */
 Array2D normalize(const Array2D &input);
 
+/**
+ * rescale
+ * Rescale all the elemets in the array from [a0,a1] -> [b0, b1]
+ * @param input
+ * @param a0, a1 The source range
+ * @param b0, b1 The destination range
+ * @return scaled input
+ */
+Array2D rescale(const Array2D &input,
+                double a0,
+                double a1,
+                double b0,
+                double b1);
+
 #endif // __FUNC_H__

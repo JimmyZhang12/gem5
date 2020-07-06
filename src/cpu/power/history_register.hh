@@ -100,9 +100,12 @@ public:
   /**
    * Convert the History Register to an Array2D type that can be used in the
    * perceptron and DNN
+   * @param events Number of events/pcs to return
+   * @param no_pc Return an array with no PC values
+   * @param anchor_pc Return an array with [anchor_pc, e0, e1,...]
    * @return Array2D
    */
-  Array2D get_array2d();
+  Array2D get_array2d(size_t events, bool no_pc=false, bool anchor_pc=false);
 
   /**
    * Add Event

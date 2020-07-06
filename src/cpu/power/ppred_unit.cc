@@ -82,6 +82,15 @@ PPredUnit::PPredUnit(const Params *params)
     vpi_shm::set_core_freq(clk, id);
     history.resize(params->signature_length);
     hr_updated = false;
+    clk_vals.resize(params->action_length);
+    period_vals.resize(params->action_length);
+    for (size_t i = 0; i < clk_vals.size(); i++) {
+        clk_vals[i] = rescale(((double)i/(double)params->action_length), \
+            0.0, 1.0, clk, clk_half);
+        period_vals[i] = (Tick)(int)rescale(((double)i/ \
+            (double)params->action_length),
+            0.0, 1.0, period_normal, period_half);
+    }
 }
 
 void
@@ -108,6 +117,11 @@ PPredUnit::regStats()
     sv
         .name(name() + ".supply_voltage")
         .desc("Supply Voltage")
+        .precision(6)
+        ;
+    svdv
+        .name(name() + ".supply_voltage_dv")
+        .desc("Change in Supply Voltage")
         .precision(6)
         ;
     sc
@@ -171,6 +185,21 @@ PPredUnit::clkRestore()
 }
 
 void
+PPredUnit::takeAction(size_t idx) {
+    // Set the CPU Clock Object to Normal
+    sysClkDomain->clockPeriod(period_vals[idx]);
+    vpi_shm::set_core_freq(clk_vals[idx], id);
+    stat_freq = clk_vals[idx];
+}
+
+double
+PPredUnit::rescale(double i, double a0, double a1, double b0, double b1) {
+  double d0 = a1 - a0;
+  double d1 = b1 - b0;
+  return (d1*(i-a0)/d0)+b0;
+}
+
+void
 PPredUnit::setStall()
 {
     stall = true;
@@ -186,18 +215,21 @@ PPredUnit::unsetStall()
 
 void
 PPredUnit::get_analog_stats() {
+  supply_voltage_prev = supply_voltage;
   supply_voltage = Stats::pythonGetVoltage();
+  supply_voltage_dv = supply_voltage - supply_voltage_prev;
   supply_current = Stats::pythonGetCurrent();
   core_runtime_current_prev = core_runtime_current;
   core_runtime_current = Stats::pythonCoreCurrent(id);
   core_runtime_current_di = core_runtime_current - core_runtime_current_prev;
-  total_core_runtime_current_prev = core_runtime_current;
+  total_core_runtime_current_prev = total_core_runtime_current;
   total_core_runtime_current = Stats::pythonTotalCurrent();
   total_core_runtime_current_di = total_core_runtime_current -
       total_core_runtime_current_prev;
   pct_total_runtime_current = core_runtime_current\
       /total_core_runtime_current;
   sv = supply_voltage;
+  svdv = supply_voltage_dv;
   sc = supply_current;
   rtc = core_runtime_current;
   rtc_p = core_runtime_current_prev;

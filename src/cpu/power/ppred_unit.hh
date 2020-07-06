@@ -77,9 +77,18 @@ class PPredUnit : public ClockedObject
      */
     virtual void tick(void) = 0;
 
+    /**
+     * Old Throttleing interface
+     */
     void clkThrottle();
 
     void clkRestore();
+
+    /**
+     * Take an action from the LUT
+     * Not nescescarily a Throttle Action
+     */
+    void takeAction(size_t idx = 0);
 
     void setStall();
 
@@ -106,6 +115,7 @@ class PPredUnit : public ClockedObject
     Stats::Scalar stat_stall;
 
     Stats::Scalar sv;
+    Stats::Scalar svdv;
     Stats::Scalar sc;
     Stats::Scalar rtc;
     Stats::Scalar rtc_p;
@@ -117,11 +127,14 @@ class PPredUnit : public ClockedObject
 
     SrcClockDomain* sysClkDomain;
 
+
     double min_current;
     double max_current;
 
     double supply_voltage;
     double supply_current;
+    double supply_voltage_prev;
+    double supply_voltage_dv;
 
     // Core Runtime Current
     double core_runtime_current;
@@ -141,6 +154,11 @@ class PPredUnit : public ClockedObject
     int id;
     PPred::HistoryRegister history;
     bool hr_updated;
+
+    uint64_t get_num_actions() {
+      return clk_vals.size();
+    }
+
   private:
     int period;
     double delta;
@@ -148,9 +166,20 @@ class PPredUnit : public ClockedObject
     double voltage_set;
     double clk;
     double clk_half;
+    std::vector<double> clk_vals;
+    std::vector<Tick> period_vals;
     Tick period_normal;
     Tick period_half;
     bool stall;
+
+    /**
+     * Rescale from range [a0, a1] -> [b0, b1]
+     */
+    double rescale(double i,
+                   double a0,
+                   double a1,
+                   double b0,
+                   double b1);
 };
 
 #endif // __CPU_PRED_PPRED_UNIT_HH__
