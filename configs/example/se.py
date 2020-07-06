@@ -314,10 +314,11 @@ for i in range(np):
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
+                    action_length=options.power_pred_actions,
                     # Specific
-                    threshold=0.97,
+                    threshold=0.98,
                     hysteresis=0.005,
-                    duration=50)
+                    duration=10)
         elif options.power_pred_type == "DecorOnly":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -341,7 +342,7 @@ for i in range(np):
                     # Specific
                     table_size=128,
                     hysteresis=0.005,
-                    duration=50)
+                    duration=20)
         elif options.power_pred_type == "HarvardPowerPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -357,7 +358,7 @@ for i in range(np):
                     table_size=128,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
-                    duration=50)
+                    duration=20)
         elif options.power_pred_type == "PerceptronPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -374,7 +375,7 @@ for i in range(np):
                     events=options.power_pred_events,
                     model=options.power_pred_model,
                     hysteresis=0.005,
-                    duration=50)
+                    duration=20)
         elif options.power_pred_type == "DNNPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -390,7 +391,7 @@ for i in range(np):
                     events=options.power_pred_events,
                     model=options.power_pred_model,
                     hysteresis=0.005,
-                    duration=50)
+                    duration=20)
         elif options.power_pred_type == "PerceptronPredictorUTA":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -402,11 +403,11 @@ for i in range(np):
                     emergency=options.power_pred_voltage_emergency,
                     signature_length=256,
                     # Specific
-                    events=32,
+                    events=options.power_pred_events,
                     eta=0.25,
                     table_size=2048,
                     hysteresis=0.005,
-                    duration=50)
+                    duration=20)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain[i]
         # Give core a reference to the global stat dump

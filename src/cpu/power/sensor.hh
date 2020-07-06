@@ -84,6 +84,8 @@ class Sensor : public PPredUnit
     double hysteresis;
     unsigned int latency;
     unsigned int throttle_duration;
+    unsigned int action;
+    unsigned int actions;
 
   private:
     enum state_t {
@@ -114,6 +116,7 @@ class Sensor : public PPredUnit
     Stats::Scalar taction;
     Stats::Scalar tiaction;
     Stats::Scalar mp_rate;
+    Stats::Scalar act;
 };
 
 #endif // __CPU_PRED_SENSOR_HH__

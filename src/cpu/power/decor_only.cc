@@ -65,6 +65,7 @@ DecorOnly::DecorOnly(const Params *params)
     t_count = 0;
     state = NORMAL;
     next_state = NORMAL;
+    num_ve = 0;
 }
 
 void
@@ -80,15 +81,9 @@ DecorOnly::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
-    sv
-        .name(name() + ".supply_voltage")
-        .desc("Supply Voltage")
-        .precision(6)
-        ;
-    sc
-        .name(name() + ".supply_current")
-        .desc("Supply Current")
-        .precision(6)
+    nve
+        .name(name() + ".num_voltage_emergency")
+        .desc("Num Voltage Emergencies")
         ;
 }
 
@@ -96,16 +91,14 @@ void
 DecorOnly::tick(void)
 {
   DPRINTF(DecorOnlyPowerPred, "DecorOnly::tick()\n");
-  supply_voltage = Stats::pythonGetVoltage();
-  supply_current = Stats::pythonGetCurrent();
-  sv = supply_voltage;
-  sc = supply_current;
+  get_analog_stats();
 
   // Transition Logic
   switch(state) {
     case NORMAL : {
       next_state = NORMAL;
       if (supply_voltage < emergency) {
+        num_ve++;
         next_state = EMERGENCY;
       }
       break;
@@ -137,7 +130,7 @@ DecorOnly::tick(void)
       break;
     }
     case EMERGENCY : {
-      e_count+=cycle_period;
+      e_count+=1;
       clkThrottle();
       setStall();
     }
@@ -151,6 +144,7 @@ DecorOnly::tick(void)
   ns = next_state;
   // Update Next State Transition:
   state = next_state;
+  nve = num_ve;
   return;
 }
 

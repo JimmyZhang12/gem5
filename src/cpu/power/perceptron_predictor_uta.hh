@@ -90,7 +90,6 @@ class PerceptronPredictorUTA : public PPredUnit
     void tick(void);
 
   protected:
-    double threshold;
     double hysteresis;
     unsigned int latency;
     unsigned int throttle_duration;

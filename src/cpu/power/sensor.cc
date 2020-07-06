@@ -45,6 +45,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 
 #include "arch/isa_traits.hh"
@@ -75,6 +76,8 @@ Sensor::Sensor(const Params *params)
     total_preds = 0;
     total_pred_action = 0;
     total_pred_inaction = 0;
+    actions = get_num_actions();
+    action = 0;
 }
 
 void
@@ -115,6 +118,10 @@ Sensor::regStats()
         .desc("Misprediction Rate")
         .precision(6)
         ;
+    act
+        .name(name() + ".action_taken")
+        .desc("Action taken")
+        ;
 }
 
 void
@@ -126,23 +133,39 @@ Sensor::tick(void)
   // Transition Logic
   switch(state) {
     case NORMAL : {
+      action = 0;
       next_state = NORMAL;
       if (supply_voltage < emergency){
         next_state = EMERGENCY;
       }
       else if (supply_voltage < threshold) {
+        action =
+            int(std::floor(actions*(1.0-
+            (supply_voltage-emergency) /
+            (threshold-emergency))));
         if (latency == 0) {
+          total_pred_action++;
           next_state = THROTTLE;
         }
         else {
           next_state = DELAY;
         }
       }
+      else {
+        total_pred_inaction++;
+      }
+      total_preds++;
       break;
     }
     case EMERGENCY : {
       // DECOR Rollback
       next_state = EMERGENCY;
+      if (e_count == 0) {
+        num_ve++;
+      }
+      if (t_count == 0) {
+        total_misspred++;
+      }
       if (e_count > emergency_duration &&
          supply_voltage > emergency + hysteresis) {
         next_state = NORMAL;
@@ -200,7 +223,7 @@ Sensor::tick(void)
     }
     case THROTTLE : {
       t_count+=1;
-      clkThrottle();
+      takeAction(action);
       break;
     }
     default : {
@@ -220,6 +243,7 @@ Sensor::tick(void)
   tpred = total_preds;
   taction = total_pred_action;
   tiaction = total_pred_inaction;
+  act = action;
   if (total_preds != 0) {
     mp_rate = (double)total_misspred/(double)total_preds;
   }

@@ -93,10 +93,10 @@ class DecorOnly : public PPredUnit
     // Counter for # Cycles to delay
     int t_count;
     int e_count;
+    uint64_t num_ve;
     Stats::Scalar s;
     Stats::Scalar ns;
-    Stats::Scalar sv;
-    Stats::Scalar sc;
+    Stats::Scalar nve;
 };
 
 #endif // __CPU_PRED_DECOR_ONLY_HH__

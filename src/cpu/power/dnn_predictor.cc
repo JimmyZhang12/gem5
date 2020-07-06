@@ -141,7 +141,7 @@ DNNPredictor::tick(void)
       // If hr updated:
       if (hr_updated) {
         action = dnn.eval(history.get_array2d(events));
-        action = std::rand() % get_num_actions();
+        //action = std::rand() % get_num_actions();
         if (action != 0) {
           total_pred_action++;
           next_state = THROTTLE;

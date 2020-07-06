@@ -75,10 +75,13 @@ PerceptronPredictorUTA::PerceptronPredictorUTA(const Params *params)
     eta = params->eta;
     events = params->events;
     throttle_duration = params->duration;
+    hysteresis = params->hysteresis;
     table.resize(params->table_size, \
         Array2D(1, params->events, 1.0));
     previous_idx = 0;
     pc = 0;
+    e = Array2D(1, params->events, 0.0);
+    previous_e = Array2D(1, params->events, 0.0);
 }
 
 void
@@ -249,7 +252,9 @@ PerceptronPredictorUTA::tick(void)
         // We made the decition not to
         // throttle and emergency occured,
         // train in positive direction
-        table[previous_idx] = table[previous_idx] + previous_e*eta;
+        //std::cout << table[previous_idx];
+        //std::cout << previous_e;
+        table[previous_idx] = table[previous_idx] + (previous_e*eta);
         DPRINTF(PerceptronUTAPowerPred, "Train Re-enforce");
       }
     }
@@ -261,7 +266,9 @@ PerceptronPredictorUTA::tick(void)
       else {
         // No emergency and no throttle, train
         // in negative direction
-        table[previous_idx] = table[previous_idx] - previous_e*eta;
+        //std::cout << table[previous_idx];
+        //std::cout << previous_e;
+        table[previous_idx] = table[previous_idx] - (previous_e*eta);
         DPRINTF(PerceptronUTAPowerPred, "Train Negative");
       }
     }
