@@ -212,6 +212,22 @@ DefaultIEW<Impl>::regStats()
         .name(name() + ".branchMispredicts")
         .desc("Number of branch mispredicts detected at execute");
 
+    intInstsReady
+        .name(name() + ".intInstsReady")
+        .desc("Total Int Instructions Ready");
+    floatInstsReady
+        .name(name() + ".floatInstsReady")
+        .desc("Total Float Instrucitons Ready");
+    memInstsReady
+        .name(name() + ".memInstsReady")
+        .desc("Total Mem Instructions Ready");
+    simdInstsReady
+        .name(name() + ".simdInstsReady")
+        .desc("Total SIMD Instrucitons Ready");
+    instsReady
+        .name(name() + ".totalInstsReady")
+        .desc("Total Instrucitons Ready");
+
     branchMispredicts = predictedTakenIncorrect + predictedNotTakenIncorrect;
 
     iewExecutedInsts
@@ -1517,6 +1533,19 @@ DefaultIEW<Impl>::tick()
     ldstQueue.tick();
 
     sortInsts();
+
+    //int int_insts = instQueue.getNumReadyIntInstr();
+    //int float_insts = instQueue.getNumReadyFloatInstr();
+    //int mem_insts = instQueue.getNumReadyMemInstr();
+    //int simd_insts = instQueue.getNumReadySIMDInstr();
+    //int instrs = instQueue.getNumReadyInstr();
+
+    //std::cout << int_insts << " ";
+    //std::cout << float_insts << " ";
+    //std::cout << mem_insts << " ";
+    //std::cout << simd_insts << " " << instrs << "\n";
+
+    instsReady += instQueue.getNumReadyInstr();
 
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();

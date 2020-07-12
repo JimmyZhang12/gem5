@@ -40,8 +40,8 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_TEST_HH__
-#define __CPU_POWER_TEST_HH__
+#ifndef __CPU_POWER_DEPENDENCY_ANALYSIS_HH__
+#define __CPU_POWER_DEPENDENCY_ANALYSIS_HH__
 
 #include <deque>
 #include <string>
@@ -52,40 +52,67 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/static_inst.hh"
-#include "params/Test.hh"
+#include "params/DepAnalysis.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
-class Test : public PPredUnit
+class DepAnalysis : public PPredUnit
 {
   public:
-    typedef TestParams Params;
+    typedef DepAnalysisParams Params;
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    Test(const Params *p);
+    DepAnalysis(const Params *p);
 
     /**
      * Registers statistics.
      */
     void regStats() override;
 
+    /**
+     * Update the Sensor State Machine.
+     * @param tid The thread ID.
+     * @param inst_PC The PC to look up.
+     * @return boolean throttle/no_throttle
+     */
     void tick(void);
 
   protected:
     double threshold;
+    unsigned int throttle_duration;
 
-    bool ve;
-    bool th;
-
-    // Permanant Stats:
-    uint64_t num_ve;
-    uint64_t num_threshold;
-    Stats::Scalar nve;
-    Stats::Scalar nth;
   private:
+    enum state_t {
+      NORMAL=1,            // Normal Execution State
+      EMERGENCY,           // Emergency DeCoR Checkpoint & Rollback
+      CPU_STALL_0,         // Like Normal; but used to denote a stall event 0
+      CPU_STALL_1,         // Like Normal; but used to denote a stall event 1
+      THROTTLE             // Throttle CPU
+    };
+
+    state_t state;
+    state_t next_state;
+
+    // Counter for # Cycles to delay
+    int t_count;
+    int e_count;
+    int s_count; // Delay after stall terminates as a window to issue stall
+    Stats::Scalar s;
+    Stats::Scalar ns;
+
+    uint64_t num_ve;
+    uint64_t total_misspred;
+    uint64_t total_preds;
+    uint64_t total_pred_action;
+    uint64_t total_pred_inaction;
+    Stats::Scalar nve;
+    Stats::Scalar tmp;
+    Stats::Scalar tpred;
+    Stats::Scalar taction;
+    Stats::Scalar tiaction;
+    Stats::Scalar mp_rate;
 };
 
-#endif // __CPU_PRED_TEST_HH__
-
+#endif // __CPU_PRED_DEPENDENCY_ANALYSIS_HH__

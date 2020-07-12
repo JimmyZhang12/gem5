@@ -172,6 +172,8 @@ def parse_options():
     option("--mcpat_device_type", type='int', default=0,
         help="Device Type; O: High Performance Type "
         "1: Low Standby Power 2: Low Operating Power")
+    option("--mcpat_save_space", action="store_true", default=False,
+        help="Do not keep mcpat output files")
 
     # NCVerilog options:
     group("ncverilog options")

@@ -249,3 +249,13 @@ void
 PPredUnit::historySetPC(const uint64_t pc) {
   history.set_pc(pc);
 }
+
+void
+PPredUnit::setNumInstrsPending(const uint64_t inst) {
+  pendingInstructions = inst;
+}
+
+void
+PPredUnit::setCPUStalled(const bool stalled) {
+  cpuStalled = stalled;
+}

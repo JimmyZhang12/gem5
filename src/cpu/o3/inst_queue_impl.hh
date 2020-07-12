@@ -1488,7 +1488,7 @@ InstructionQueue<Impl>::addIfReady(const DynInstPtr &inst)
         // or it has an older instruction than last time.
         if (!queueOnList[op_class]) {
             addToOrderList(op_class);
-        } else if (readyInsts[op_class].top()->seqNum  <
+        } else if (readyInsts[op_class].top()->seqNum <
                    (*readyIt[op_class]).oldestInst) {
             listOrder.erase(readyIt[op_class]);
             addToOrderList(op_class);
@@ -1630,5 +1630,72 @@ InstructionQueue<Impl>::dumpInsts()
         ++num;
     }
 }
+
+/**
+ * getNumReadyIntInstr
+ * Gets the number of ready integer instructions that can be executed.
+ * @return quantity of instructions
+ */
+template <class Impl>
+int
+InstructionQueue<Impl>::getNumReadyIntInstr() {
+  size_t instrs = 0;
+  for (int i = (int)IntAluOp; i <= (int)IntDivOp; i++) {
+    instrs += readyInsts[i].size();
+  }
+  return instrs;
+}
+
+/**
+ * getNumReadyFloatInstr
+ * Gets the number of ready integer instructions that can be executed.
+ * @return quantity of instructions
+ */
+template <class Impl>
+int
+InstructionQueue<Impl>::getNumReadyFloatInstr() {
+  size_t instrs = 0;
+  for (int i = (int)FloatAddOp; i <= (int)FloatSqrtOp; i++) {
+    instrs += readyInsts[i].size();
+  }
+  return instrs;
+}
+
+/**
+ * getNumReadyMemInstr
+ * Gets the number of ready memory instructions that can be executed.
+ * @return quantity of instructions
+ */
+template <class Impl>
+int
+InstructionQueue<Impl>::getNumReadyMemInstr() {
+  size_t instrs = 0;
+  for (int i = (int)MemReadOp; i <= (int)FloatMemWriteOp; i++) {
+    instrs += readyInsts[i].size();
+  }
+  return instrs;
+}
+
+/**
+ * getNumReadySIMDInstr
+ * Gets the number of ready SIMD instructions that can be executed.
+ * @return quantity of instructions
+ */
+template <class Impl>
+int
+InstructionQueue<Impl>::getNumReadySIMDInstr() {
+  size_t instrs = 0;
+  for (int i = (int)SimdAddOp; i <= (int)SimdPredAluOp; i++) {
+    instrs += readyInsts[i].size();
+  }
+  return instrs;
+}
+
+template <class Impl>
+int
+InstructionQueue<Impl>::getNumReadyInstr() {
+  return (int)instsToExecute.size();
+}
+
 
 #endif//__CPU_O3_INST_QUEUE_IMPL_HH__

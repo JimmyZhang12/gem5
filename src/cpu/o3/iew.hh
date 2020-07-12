@@ -454,6 +454,18 @@ class DefaultIEW
     /** Stat for total number of mispredicted branches detected at execute. */
     Stats::Formula branchMispredicts;
 
+    /** Stat for number of ready int instrs */
+    Stats::Scalar intInstsReady;
+    /** Stat for number of ready float instrs */
+    Stats::Scalar floatInstsReady;
+    /** Stat for number of ready mem instrs */
+    Stats::Scalar memInstsReady;
+    /** Stat for number of ready simd instrs */
+    Stats::Scalar simdInstsReady;
+
+    /** Stat for total instrs ready in a period */
+    Stats::Scalar instsReady;
+
     /** Stat for total number of executed instructions. */
     Stats::Scalar iewExecutedInsts;
     /** Stat for total number of executed load instructions. */

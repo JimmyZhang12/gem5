@@ -204,6 +204,41 @@ class InstructionQueue
     DynInstPtr getBlockedMemInstToExecute();
 
     /**
+     * getNumReadyIntInstr
+     * Gets the number of ready integer instructions that can be executed.
+     * @return quantity of instructions
+     */
+    int getNumReadyIntInstr();
+
+    /**
+     * getNumReadyFloatInstr
+     * Gets the number of ready integer instructions that can be executed.
+     * @return quantity of instructions
+     */
+    int getNumReadyFloatInstr();
+
+    /**
+     * getNumReadyMemInstr
+     * Gets the number of ready memory instructions that can be executed.
+     * @return quantity of instructions
+     */
+    int getNumReadyMemInstr();
+
+    /**
+     * getNumReadySIMDInstr
+     * Gets the number of ready SIMD instructions that can be executed.
+     * @return quantity of instructions
+     */
+    int getNumReadySIMDInstr();
+
+    /**
+     * getNumReadyInstr
+     * Gets the number of ready instructions that can be executed.
+     * @return quantity of instructions
+     */
+    int getNumReadyInstr();
+
+    /**
      * Records the instruction as the producer of a register without
      * adding it to the rest of the IQ.
      */

@@ -66,9 +66,14 @@ def m5_to_mcpat(voltage, freq, temperature, device_type):
   if not os.path.isdir(mcpat_output_path):
     os.mkdir(mcpat_output_path)
 
-  i_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".xml")
-  o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
-  e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
+  if(options.mcpat_save_space):
+    i_f = os.path.join(mcpat_output_path,"mp.xml")
+    o_f = os.path.join(mcpat_output_path,"mp.out")
+    e_f = os.path.join(mcpat_output_path,"mp.err")
+  else:
+    i_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".xml")
+    o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
+    e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
   generate_xml(m5_stats_file, m5_config_file, i_f, voltage=voltage, \
               frequency=freq, temperature=temperature, device_type=device_type)
   run_mcpat(i_f, "5", "1", o_f, e_f)

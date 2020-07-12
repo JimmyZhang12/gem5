@@ -475,7 +475,9 @@ def addSEOptions(parser):
     parser.add_option("--power_pred_voltage", type="float", default=1.0,
                       help="initial supply voltage")
     parser.add_option("--power_pred_voltage_emergency", type="float",
-                      default=0.95, help="Supply Voltage Emergency")
+                      default=0.90, help="Supply Voltage Emergency")
+    parser.add_option("--power_pred_voltage_threshold", type="float",
+                      default=0.95, help="Supply Voltage Threshold")
 
     parser.add_option("--power_pred_type", type="str",
                       default="TestPowerPredictor",

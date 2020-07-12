@@ -108,6 +108,17 @@ class PPredUnit : public ClockedObject
       return cycle_period;
     }
 
+    /**
+     * Used by the IEW or IQ to set the number of instructions that can be
+     * executed.
+     */
+    void setNumInstrsPending(const uint64_t inst);
+
+    /**
+     * Set by the CPU if it is stalled.
+     */
+    void setCPUStalled(const bool stalled);
+
   protected:
     Stats::Scalar stat_freq;
     Stats::Scalar stat_ticks;
@@ -146,6 +157,12 @@ class PPredUnit : public ClockedObject
     double total_core_runtime_current_prev;
     double total_core_runtime_current_di;
     double pct_total_runtime_current;
+
+    // Number of Pending Instructions
+    uint64_t pendingInstructions;
+
+    // Is Stalled
+    bool cpuStalled;
 
     uint64_t PC;
     const int cycle_period;

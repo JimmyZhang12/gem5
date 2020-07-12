@@ -64,6 +64,7 @@ class Test(PowerPredictor):
     type = 'Test'
     cxx_class = 'Test'
     cxx_header = 'cpu/power/test.hh'
+    threshold = Param.Float(0.975, "For evaluation purposes")
 
 class SimplePowerPredictor(PowerPredictor):
     type = 'SimplePowerPredictor'
@@ -196,6 +197,38 @@ class IdealSensor(PowerPredictor):
     duration = Param.Unsigned(20, "The number of cycles to throttle for")
     latency = Param.Unsigned(0, "Latency before the throttling action " \
         "is taken")
+
+## Dependency Analysis
+#
+# The Dependency Analysis Power Predictor. Voltage emergencies triggered by
+# stalls followed by activity. Track CPU Stalls and the number of instructions
+# waiting after the stall completes. If the number of instructions is large
+# then throttle.
+#
+class DepAnalysis(PowerPredictor):
+    type = "DepAnalysis"
+    cxx_class = "DepAnalysis"
+    cxx_header = "cpu/power/dependency_analysis.hh"
+
+    threshold = Param.Unsigned(4, "Number of instructions waiting on stall for"
+        " throttle")
+    duration = Param.Unsigned(20, "The number of cycles to throttle for")
+
+## Dependency Analysis
+#
+# The Dependency Analysis Power Predictor. Voltage emergencies triggered by
+# stalls followed by activity. Track CPU Stalls and the number of instructions
+# waiting after the stall completes. If the number of instructions is large
+# then throttle.
+#
+class ThrottleAfterStall(PowerPredictor):
+    type = "ThrottleAfterStall"
+    cxx_class = "ThrottleAfterStall"
+    cxx_header = "cpu/power/throttle_after_stall.hh"
+
+    threshold = Param.Unsigned(4, "Number of instructions waiting on stall for"
+        " throttle")
+    duration = Param.Unsigned(20, "The number of cycles to throttle for")
 
 class DecorOnly(PowerPredictor):
     type = "DecorOnly"

@@ -41,7 +41,7 @@
  */
 
 
-#include "cpu/power/sensor.hh"
+#include "cpu/power/dependency_analysis.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -54,19 +54,17 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/power/bloomfilter.h"
-#include "debug/SensorPowerPred.hh"
+#include "debug/DepAnalysisPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Sensor::Sensor(const Params *params)
+DepAnalysis::DepAnalysis(const Params *params)
     : PPredUnit(params),
     threshold(params->threshold),
-    hysteresis(params->hysteresis),
-    latency(params->latency),
     throttle_duration(params->duration)
 {
-    DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
-    d_count = 0;
+    DPRINTF(DepAnalysisPowerPred, "DepAnalysis::DepAnalysis()\n");
+    s_count = 0;
     t_count = 0;
     e_count = 0;
     state = NORMAL;
@@ -76,12 +74,10 @@ Sensor::Sensor(const Params *params)
     total_preds = 0;
     total_pred_action = 0;
     total_pred_inaction = 0;
-    actions = get_num_actions();
-    action = 0;
 }
 
 void
-Sensor::regStats()
+DepAnalysis::regStats()
 {
     PPredUnit::regStats();
 
@@ -118,43 +114,24 @@ Sensor::regStats()
         .desc("Misprediction Rate")
         .precision(6)
         ;
-    act
-        .name(name() + ".action_taken")
-        .desc("Action taken")
-        ;
 }
 
 void
-Sensor::tick(void)
+DepAnalysis::tick(void)
 {
-  DPRINTF(SensorPowerPred, "Sensor::tick()\n");
+  DPRINTF(DepAnalysisPowerPred, "DepAnalysis::tick()\n");
   get_analog_stats();
-  double action_raw = 0.0;
 
   // Transition Logic
   switch(state) {
     case NORMAL : {
-      action = 0;
       next_state = NORMAL;
       if (supply_voltage < emergency){
         next_state = EMERGENCY;
       }
-      else if (supply_voltage < threshold) {
-        action_raw = ((double)actions*(1.0 -
-            (supply_voltage-emergency)/(threshold-emergency)));
-        action = (int)action_raw;
-        if (latency == 0) {
-          total_pred_action++;
-          next_state = THROTTLE;
-        }
-        else {
-          next_state = DELAY;
-        }
+      else if (cpuStalled) {
+        next_state = CPU_STALL_0;
       }
-      else {
-        total_pred_inaction++;
-      }
-      total_preds++;
       break;
     }
     case EMERGENCY : {
@@ -167,18 +144,40 @@ Sensor::tick(void)
         total_misspred++;
       }
       if (e_count > emergency_duration &&
-         supply_voltage > emergency + hysteresis) {
+         supply_voltage > emergency) {
         next_state = NORMAL;
       }
       break;
     }
-    case DELAY : {
-      next_state = DELAY;
+    case CPU_STALL_0 : {
+      next_state = CPU_STALL_0;
       if (supply_voltage < emergency){
+        // Emergency Detected
         next_state = EMERGENCY;
       }
-      else if (d_count >= latency) {
+      else if (!cpuStalled) {
+        // CPU is no longer stalled; transition to throttle window:
+        next_state = CPU_STALL_1;
+      }
+      break;
+    }
+    case CPU_STALL_1 : {
+      next_state = CPU_STALL_1;
+      if (supply_voltage < emergency){
+        // Emergency Detected
+        next_state = EMERGENCY;
+      }
+      else if (pendingInstructions > threshold) {
+        // Number of Instructions > Threshold # Instructions; transition to
+        // THROTTLE
         next_state = THROTTLE;
+        total_pred_action++;
+      }
+      else if (s_count > 10) {
+        // If in 10 cycles after the stall resolves there is not > threshold
+        // instructions dependent; then transition back to normal.
+        next_state = NORMAL;
+        total_pred_inaction++;
       }
       break;
     }
@@ -187,7 +186,7 @@ Sensor::tick(void)
       if (supply_voltage < emergency){
         next_state = EMERGENCY;
       }
-      else if (supply_voltage >= threshold + hysteresis &&
+      else if (supply_voltage >= threshold &&
           t_count >= throttle_duration) {
         next_state = NORMAL;
       }
@@ -204,16 +203,11 @@ Sensor::tick(void)
   switch(state) {
     case NORMAL : {
       // Restore Frequency
-      d_count = 0;
       t_count = 0;
       e_count = 0;
+      s_count = 0;
       clkRestore();
       unsetStall();
-      break;
-    }
-    case DELAY : {
-      d_count+=1;
-      clkRestore();
       break;
     }
     case EMERGENCY : {
@@ -221,9 +215,17 @@ Sensor::tick(void)
       clkThrottle();
       setStall();
     }
+    case CPU_STALL_0 : {
+      s_count = 0;
+      clkRestore();
+    }
+    case CPU_STALL_1 : {
+      s_count += 1;
+      clkRestore();
+    }
     case THROTTLE : {
       t_count+=1;
-      takeAction(action);
+      clkThrottle();
       break;
     }
     default : {
@@ -243,16 +245,14 @@ Sensor::tick(void)
   tpred = total_preds;
   taction = total_pred_action;
   tiaction = total_pred_inaction;
-  act = action;
   if (total_preds != 0) {
     mp_rate = (double)total_misspred/(double)total_preds;
   }
   return;
 }
 
-Sensor*
-IdealSensorParams::create()
+DepAnalysis*
+DepAnalysisParams::create()
 {
-  return new Sensor(this);
+  return new DepAnalysis(this);
 }
-

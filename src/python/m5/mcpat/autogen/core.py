@@ -339,8 +339,8 @@ class Core:
     #  str(float(stat_dict["ipc_total"][1]))
     self.stats["pipeline_duty_cycle"][0]= \
       str(float(1.0))
-    self.stats["total_cycles"][0] = str(int(stat_dict["numCycles"][1]) + 1)
-    self.stats["idle_cycles"][0] = str(int(stat_dict["idleCycles"][1]) + 1)
+    self.stats["total_cycles"][0] = str(int(stat_dict["numCycles"][1]))
+    self.stats["idle_cycles"][0] = str(int(stat_dict["idleCycles"][1]))
     self.stats["busy_cycles"][0]= \
       str(int(stat_dict["numCycles"][1])-int(stat_dict["idleCycles"][1]))
     self.stats["ROB_reads"][0] = str(int(stat_dict["rob.rob_reads"][1]))

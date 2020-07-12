@@ -265,6 +265,7 @@ for i in range(np):
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
+                    threshold=options.power_pred_voltage_threshold,
                     emergency=options.power_pred_voltage_emergency)
         elif options.power_pred_type == "SimplePowerPredictor":
             ncb = math.floor(math.log(options.power_pred_table_size, 2))
@@ -316,7 +317,7 @@ for i in range(np):
                     emergency=options.power_pred_voltage_emergency,
                     action_length=options.power_pred_actions,
                     # Specific
-                    threshold=0.98,
+                    threshold=options.power_pred_voltage_threshold,
                     hysteresis=0.005,
                     duration=10)
         elif options.power_pred_type == "DecorOnly":
@@ -342,7 +343,7 @@ for i in range(np):
                     # Specific
                     table_size=128,
                     hysteresis=0.005,
-                    duration=20)
+                    duration=50)
         elif options.power_pred_type == "HarvardPowerPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -358,7 +359,7 @@ for i in range(np):
                     table_size=128,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
-                    duration=20)
+                    duration=50)
         elif options.power_pred_type == "PerceptronPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -375,7 +376,7 @@ for i in range(np):
                     events=options.power_pred_events,
                     model=options.power_pred_model,
                     hysteresis=0.005,
-                    duration=20)
+                    duration=50)
         elif options.power_pred_type == "DNNPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -391,7 +392,7 @@ for i in range(np):
                     events=options.power_pred_events,
                     model=options.power_pred_model,
                     hysteresis=0.005,
-                    duration=20)
+                    duration=50)
         elif options.power_pred_type == "PerceptronPredictorUTA":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -407,7 +408,7 @@ for i in range(np):
                     eta=0.25,
                     table_size=2048,
                     hysteresis=0.005,
-                    duration=20)
+                    duration=50)
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain[i]
         # Give core a reference to the global stat dump

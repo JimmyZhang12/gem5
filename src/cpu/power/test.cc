@@ -60,12 +60,25 @@ Test::Test(const Params *params)
     : PPredUnit(params)
 {
     DPRINTF(TestPowerPred, "Test::Test()\n");
+    threshold = params->threshold;
+    num_ve = 0;
+    num_threshold = 0;
+    ve = false;
+    th = false;
 }
 
 void
 Test::regStats()
 {
     PPredUnit::regStats();
+    nve
+        .name(name() + ".num_ve")
+        .desc("Num Voltage Emergencies")
+        ;
+    nth
+        .name(name() + ".num_tc")
+        .desc("Num Threshold Crossings")
+        ;
 }
 
 void
@@ -73,6 +86,28 @@ Test::tick(void)
 {
   DPRINTF(TestPowerPred, "Test::lookup()\n");
   get_analog_stats();
+  if (supply_voltage >= emergency) {
+    ve = false;
+  }
+  if (supply_voltage >= threshold) {
+    th = false;
+  }
+  if (supply_voltage < emergency) {
+    if (!ve) {
+      num_ve++;
+    }
+    ve = true;
+  }
+  if (supply_voltage < threshold) {
+    if (!th) {
+      num_threshold++;
+    }
+    th = true;
+  }
+
+  // Assign Permanant stats:
+  nve = num_ve;
+  nth = num_threshold;
   return;
 }
 
