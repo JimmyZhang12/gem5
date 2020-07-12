@@ -80,11 +80,14 @@ class DecorOnly : public PPredUnit
     void tick(void);
 
   protected:
+    /** Throttle after DeCoR rollback */
+    bool throttle_on_restore;
 
   private:
     enum state_t {
       NORMAL=1,
       EMERGENCY,
+      THROTTLE
     };
 
     state_t state;

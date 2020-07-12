@@ -58,7 +58,8 @@
 #include "sim/stat_control.hh"
 
 DecorOnly::DecorOnly(const Params *params)
-    : PPredUnit(params)
+    : PPredUnit(params),
+    throttle_on_restore(params->throttle_on_restore)
 {
     DPRINTF(DecorOnlyPowerPred, "DecorOnly::DecorOnly()\n");
     e_count = 0;
@@ -108,6 +109,23 @@ DecorOnly::tick(void)
       next_state = EMERGENCY;
       if (e_count > emergency_duration &&
          supply_voltage > emergency) {
+        if (throttle_on_restore) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = NORMAL;
+        }
+      }
+      break;
+    }
+    case THROTTLE : {
+      // Throttle On Restore
+      next_state = THROTTLE;
+      if (supply_voltage < emergency) {
+        num_ve++;
+        next_state = EMERGENCY;
+      }
+      if (t_count > 20) {
         next_state = NORMAL;
       }
       break;
@@ -130,9 +148,17 @@ DecorOnly::tick(void)
       break;
     }
     case EMERGENCY : {
+      t_count = 0;
       e_count+=1;
       clkThrottle();
       setStall();
+      break;
+    }
+    case THROTTLE : {
+      t_count+=1;
+      e_count = 0;
+      clkThrottle();
+      unsetStall();
     }
     default : {
       // Nothing

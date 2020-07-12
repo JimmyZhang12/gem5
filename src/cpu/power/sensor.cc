@@ -63,7 +63,8 @@ Sensor::Sensor(const Params *params)
     threshold(params->threshold),
     hysteresis(params->hysteresis),
     latency(params->latency),
-    throttle_duration(params->duration)
+    throttle_duration(params->duration),
+    throttle_on_restore(params->throttle_on_restore)
 {
     DPRINTF(SensorPowerPred, "Sensor::Sensor()\n");
     d_count = 0;
@@ -168,7 +169,12 @@ Sensor::tick(void)
       }
       if (e_count > emergency_duration &&
          supply_voltage > emergency + hysteresis) {
-        next_state = NORMAL;
+        if (throttle_on_restore) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = NORMAL;
+        }
       }
       break;
     }
@@ -213,17 +219,26 @@ Sensor::tick(void)
     }
     case DELAY : {
       d_count+=1;
+      t_count = 0;
+      e_count = 0;
       clkRestore();
+      unsetStall();
       break;
     }
     case EMERGENCY : {
       e_count+=1;
+      d_count = 0;
+      t_count = 0;
       clkThrottle();
       setStall();
+      break;
     }
     case THROTTLE : {
       t_count+=1;
+      d_count = 0;
+      e_count = 0;
       takeAction(action);
+      unsetStall();
       break;
     }
     default : {

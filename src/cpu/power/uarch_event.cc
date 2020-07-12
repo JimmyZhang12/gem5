@@ -68,6 +68,7 @@ uArchEventPredictor::uArchEventPredictor(const Params *params)
     t_count = 0;
     e_count = 0;
     throttle_duration = params->duration;
+    throttle_on_restore = params->throttle_on_restore;
     hysteresis = params->hysteresis;
     total_misspred = 0;
     total_preds = 0;
@@ -157,7 +158,12 @@ uArchEventPredictor::tick(void)
       }
       if (e_count > emergency_duration &&
          supply_voltage > emergency + hysteresis) {
-        next_state = NORMAL;
+        if (throttle_on_restore) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = NORMAL;
+        }
       }
       break;
     }
@@ -191,13 +197,16 @@ uArchEventPredictor::tick(void)
     }
     case EMERGENCY : {
       e_count += 1;
+      t_count = 0;
       clkThrottle();
       setStall();
       break;
     }
     case THROTTLE : {
       t_count += 1;
+      e_count = 0;
       clkThrottle();
+      unsetStall();
       break;
     }
     default : {

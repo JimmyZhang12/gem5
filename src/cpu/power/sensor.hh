@@ -80,11 +80,25 @@ class Sensor : public PPredUnit
     void tick(void);
 
   protected:
+    /** Threshold to cross */
     double threshold;
+
+    /** Hysteresis level */
     double hysteresis;
+
+    /** # Cycles delay in sensor action; TODO: verify */
     unsigned int latency;
+
+    /** # Cycles to throttle */
     unsigned int throttle_duration;
+
+    /** Throttle after DeCoR rollback */
+    bool throttle_on_restore;
+
+    /** Action to take */
     unsigned int action;
+
+    /** Number of Actions */
     unsigned int actions;
 
   private:

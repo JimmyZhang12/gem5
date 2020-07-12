@@ -90,9 +90,14 @@ class PerceptronPredictorUTA : public PPredUnit
     void tick(void);
 
   protected:
+    /** Hysteresis level */
     double hysteresis;
-    unsigned int latency;
+
+    /** # Cycles to throttle */
     unsigned int throttle_duration;
+
+    /** Throttle after DeCoR rollback */
+    bool throttle_on_restore;
 
   private:
     enum state_t {

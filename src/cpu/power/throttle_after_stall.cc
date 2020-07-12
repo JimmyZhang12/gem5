@@ -60,12 +60,11 @@
 
 ThrottleAfterStall::ThrottleAfterStall(const Params *params)
     : PPredUnit(params),
-    threshold(params->threshold),
-    throttle_duration(params->duration)
+    throttle_duration(params->duration),
+    throttle_on_restore(params->throttle_on_restore)
 {
     DPRINTF(ThrottleAfterStallPowerPred,
         "ThrottleAfterStall::ThrottleAfterStall()\n");
-    s_count = 0;
     t_count = 0;
     e_count = 0;
     state = NORMAL;
@@ -146,7 +145,12 @@ ThrottleAfterStall::tick(void)
       }
       if (e_count > emergency_duration &&
          supply_voltage > emergency) {
-        next_state = NORMAL;
+        if (throttle_on_restore) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = NORMAL;
+        }
       }
       break;
     }
@@ -170,8 +174,7 @@ ThrottleAfterStall::tick(void)
       if (supply_voltage < emergency){
         next_state = EMERGENCY;
       }
-      else if (supply_voltage >= threshold &&
-          t_count >= throttle_duration) {
+      else if (t_count >= throttle_duration) {
         next_state = NORMAL;
       }
       break;
@@ -189,23 +192,29 @@ ThrottleAfterStall::tick(void)
       // Restore Frequency
       t_count = 0;
       e_count = 0;
-      s_count = 0;
       clkRestore();
       unsetStall();
       break;
     }
     case EMERGENCY : {
       e_count+=1;
+      t_count = 0;
       clkThrottle();
       setStall();
+      break;
     }
     case CPU_STALL : {
-      s_count = 0;
+      e_count = 0;
+      t_count = 0;
       clkRestore();
+      unsetStall();
+      break;
     }
     case THROTTLE : {
       t_count+=1;
+      e_count = 0;
       clkThrottle();
+      unsetStall();
       break;
     }
     default : {

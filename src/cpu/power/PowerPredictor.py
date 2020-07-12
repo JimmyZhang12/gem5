@@ -118,6 +118,7 @@ class PerceptronPredictorUTA(PowerPredictor):
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 ## Perceptron Power Predictor
 #
@@ -127,13 +128,13 @@ class PerceptronPredictor(PowerPredictor):
     type = "PerceptronPredictor"
     cxx_class = "PerceptronPredictor"
     cxx_header = "cpu/power/perceptron_predictor.hh"
-
     events = Param.Unsigned(16, "Events in the EHR")
     training_output = Param.String("td.csv","CSV of output training data")
     model = Param.String("", "Boost trained Model")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 ## Perceptron Power Predictor
 #
@@ -143,12 +144,12 @@ class DNNPredictor(PowerPredictor):
     type = "DNNPredictor"
     cxx_class = "DNNPredictor"
     cxx_header = "cpu/power/dnn_predictor.hh"
-
     events = Param.Unsigned(16, "Events in the EHR")
     model = Param.String("", "Boost trained Model")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 ## Harvard Power Predictor
 #
@@ -159,12 +160,12 @@ class HarvardPowerPredictor(PowerPredictor):
     type = "HarvardPowerPredictor"
     cxx_class = "Harvard"
     cxx_header = "cpu/power/harvard.hh"
-
     table_size = Param.Unsigned(128, "Size of UArch Event Table")
     bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 ## uArch Event Power Predictor
 #
@@ -176,20 +177,17 @@ class uArchEventPredictor(PowerPredictor):
     type = "uArchEventPredictor"
     cxx_class = "uArchEventPredictor"
     cxx_header = "cpu/power/uarch_event.hh"
-    """ Stores the address of the last microarch event and the
-    instruction responsible for it """
-
     table_size = Param.Unsigned(128, "Size of UArch Event Table")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 
 class IdealSensor(PowerPredictor):
     type = "IdealSensor"
     cxx_class = "Sensor"
     cxx_header = "cpu/power/sensor.hh"
-
     threshold = Param.Float(0.975, "The Percentage of Supply Voltage " \
         "to trigger an emergency throttle")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
@@ -197,6 +195,7 @@ class IdealSensor(PowerPredictor):
     duration = Param.Unsigned(20, "The number of cycles to throttle for")
     latency = Param.Unsigned(0, "Latency before the throttling action " \
         "is taken")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 ## Dependency Analysis
 #
@@ -209,10 +208,10 @@ class DepAnalysis(PowerPredictor):
     type = "DepAnalysis"
     cxx_class = "DepAnalysis"
     cxx_header = "cpu/power/dependency_analysis.hh"
-
     threshold = Param.Unsigned(4, "Number of instructions waiting on stall for"
         " throttle")
     duration = Param.Unsigned(20, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 ## Dependency Analysis
 #
@@ -225,15 +224,18 @@ class ThrottleAfterStall(PowerPredictor):
     type = "ThrottleAfterStall"
     cxx_class = "ThrottleAfterStall"
     cxx_header = "cpu/power/throttle_after_stall.hh"
-
-    threshold = Param.Unsigned(4, "Number of instructions waiting on stall for"
-        " throttle")
     duration = Param.Unsigned(20, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
+## DecorOnly
+#
+# Reactive Mechanism; use only rollback to handle voltage emergencies.
+#
 class DecorOnly(PowerPredictor):
     type = "DecorOnly"
     cxx_class = "DecorOnly"
     cxx_header = "cpu/power/decor_only.hh"
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 class PPredStat(ClockedObject):
     type = "PPredStat"

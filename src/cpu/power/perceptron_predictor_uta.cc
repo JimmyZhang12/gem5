@@ -185,7 +185,12 @@ PerceptronPredictorUTA::tick(void)
       }
       if (e_count > emergency_duration &&
          supply_voltage > emergency + hysteresis) {
-        next_state = NORMAL;
+        if (throttle_on_restore) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = NORMAL;
+        }
       }
       break;
     }
@@ -220,13 +225,16 @@ PerceptronPredictorUTA::tick(void)
     }
     case EMERGENCY : {
       e_count += 1;
+      t_count = 0;
       clkThrottle();
       setStall();
       break;
     }
     case THROTTLE : {
       t_count += 1;
+      e_count = 0;
       clkThrottle();
+      unsetStall();
       break;
     }
     default : {

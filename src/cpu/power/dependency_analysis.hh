@@ -80,8 +80,14 @@ class DepAnalysis : public PPredUnit
     void tick(void);
 
   protected:
+    /** # Instructions pending to trigger throttle */
     double threshold;
+
+    /** # Cycles to throttle for */
     unsigned int throttle_duration;
+
+    /** Throttle after DeCoR Rollback */
+    bool throttle_on_restore;
 
   private:
     enum state_t {

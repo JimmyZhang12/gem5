@@ -67,6 +67,7 @@ Harvard::Harvard(const Params *params)
                   params->bloom_filter_size);
     history.resize(params->signature_length);
     throttle_duration = params->duration;
+    throttle_on_restore = params->throttle_on_restore;
     hysteresis = params->hysteresis;
     t_count = 0;
     e_count = 0;
@@ -158,7 +159,12 @@ Harvard::tick(void)
       }
       if (e_count > emergency_duration &&
          supply_voltage > emergency + hysteresis) {
-        next_state = NORMAL;
+        if (throttle_on_restore) {
+          next_state = THROTTLE;
+        }
+        else {
+          next_state = NORMAL;
+        }
       }
       break;
     }
@@ -191,14 +197,17 @@ Harvard::tick(void)
       break;
     }
     case EMERGENCY : {
-      e_count += cycle_period;
+      e_count += 1;
+      t_count = 0;
       clkThrottle();
       setStall();
       break;
     }
     case THROTTLE : {
-      t_count += cycle_period;
+      t_count += 1;
+      e_count = 0;
       clkThrottle();
+      unsetStall();
       break;
     }
     default : {

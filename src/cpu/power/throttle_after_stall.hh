@@ -80,8 +80,11 @@ class ThrottleAfterStall : public PPredUnit
     void tick(void);
 
   protected:
-    double threshold;
+    /** # Cycles to throttle for */
     unsigned int throttle_duration;
+
+    /** Throttle After DeCoR */
+    bool throttle_on_restore;
 
   private:
     enum state_t {
@@ -97,7 +100,6 @@ class ThrottleAfterStall : public PPredUnit
     // Counter for # Cycles to delay
     int t_count;
     int e_count;
-    int s_count; // Delay after stall terminates as a window to issue stall
     Stats::Scalar s;
     Stats::Scalar ns;
 
