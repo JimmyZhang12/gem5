@@ -465,6 +465,8 @@ class DefaultIEW
 
     /** Stat for total instrs ready in a period */
     Stats::Scalar instsReady;
+    Stats::Scalar instsReadyM;
+    unsigned int instsReadyMax;
 
     /** Stat for total number of executed instructions. */
     Stats::Scalar iewExecutedInsts;

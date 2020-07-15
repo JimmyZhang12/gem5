@@ -424,6 +424,8 @@ def dump(root=None, exit=False):
         if((options.power_profile_start != -1 and
             now >= options.power_profile_start) or
             runtime_begin_profile):
+            mcpat.set_flags(options.mcpat_use_fg_pg, \
+                options.mcpat_scale_factor)
             profiling = True
             numDump += 1
             if new_dump:

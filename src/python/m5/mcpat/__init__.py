@@ -44,10 +44,23 @@ from node import Node
 from device import Device
 from epoch import Epoch
 
+rolling_avg_len=4
+rolling_avg=True
+
+power_gating = False
+scale_factor = 1.0
 
 iter = 0
 mcpat_trees = []
 stat_trace=[]
+
+rolling_avg_p = [0]*rolling_avg_len
+
+def set_flags(pg=False, sf=1.0):
+  global power_gating
+  global scale_factor
+  power_gating = pg
+  scale_factor = sf
 
 def m5_to_mcpat(voltage, freq, temperature, device_type):
   from m5 import options
@@ -55,6 +68,13 @@ def m5_to_mcpat(voltage, freq, temperature, device_type):
   global iter
   global mcpat_trees
   global stat_trace
+  global rolling_avg_p
+  global rolling_avg
+  global rolling_avg_len
+  global scale_factor
+  global power_gating
+
+  idx = iter % rolling_avg_len
 
   iter += 1
   m5_stats_file = os.path.join(options.outdir, options.stats_file)
@@ -79,23 +99,43 @@ def m5_to_mcpat(voltage, freq, temperature, device_type):
   run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees = [parse_output(o_f)]
 
+  if(rolling_avg):
+    data = get_data("Processor", mcpat_trees)
+    rolling_avg_p[idx] = calc_total_power(data, power_gating, scale_factor)
+
 def dump():
   dump_stats(mcpat_trees)
 
-
 def get_last_p(voltage, power_gating=False, scale_factor=1.0):
+  global rolling_avg
+  global rolling_avg_p
+  global rolling_avg_len
   data = get_data("Processor", mcpat_trees)
+  if(rolling_avg):
+    return sum(rolling_avg_p)/rolling_avg_len
   return calc_total_power(data, power_gating, scale_factor)
 
 def get_last_r(voltage, power_gating=False, scale_factor=1.0):
+  global rolling_avg
+  global rolling_avg_p
+  global rolling_avg_len
   data = get_data("Processor", mcpat_trees)
+  if(rolling_avg):
+    power = sum(rolling_avg_p)/rolling_avg_len
+    return calc_req(power, voltage)
   power = calc_total_power(data, power_gating, scale_factor)
   return calc_req(power, voltage)
 
 def get_last_i(voltage, power_gating=False, scale_factor=1.0):
+  global rolling_avg
+  global rolling_avg_p
+  global rolling_avg_len
   data = get_data("Processor", mcpat_trees)
+  if(rolling_avg):
+    power = sum(rolling_avg_p)/rolling_avg_len
+    return power/voltage
   power = calc_total_power(data, power_gating, scale_factor)
-  return power/voltage;
+  return power/voltage
 
 def get_runtime_dynamic(path):
   #print(path)

@@ -227,6 +227,9 @@ DefaultIEW<Impl>::regStats()
     instsReady
         .name(name() + ".totalInstsReady")
         .desc("Total Instrucitons Ready");
+    instsReadyM
+        .name(name() + ".instsReadyMax")
+        .desc("Max Instrucitons Ready");
 
     branchMispredicts = predictedTakenIncorrect + predictedNotTakenIncorrect;
 
@@ -1544,7 +1547,12 @@ DefaultIEW<Impl>::tick()
     //std::cout << float_insts << " ";
     //std::cout << mem_insts << " ";
     //std::cout << simd_insts << " " << instrs << "\n";
-
+    if ((int)instsReadyM.value() == 0) {
+      instsReadyMax = 0;
+    }
+    instsReadyMax = std::max((unsigned int)instQueue.getNumReadyInstr(),
+        instsReadyMax);
+    instsReadyM = instsReadyMax;
     instsReady += instQueue.getNumReadyInstr();
 
     // Free function units marked as being freed this cycle.
