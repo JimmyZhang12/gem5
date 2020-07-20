@@ -114,6 +114,14 @@ PPredUnit::regStats()
         .name(name() + ".stall")
         .desc("PPred Issue a stall?")
         ;
+    stat_decode_idle
+        .name(name() + ".decode_idle")
+        .desc("Decode Idle")
+        ;
+    stat_insts_available
+        .name(name() + ".insts_available")
+        .desc("Instructions Available")
+        ;
     sv
         .name(name() + ".supply_voltage")
         .desc("Supply Voltage")
@@ -253,9 +261,11 @@ PPredUnit::historySetPC(const uint64_t pc) {
 void
 PPredUnit::setNumInstrsPending(const uint64_t inst) {
   pendingInstructions = inst;
+  stat_insts_available = pendingInstructions;
 }
 
 void
 PPredUnit::setCPUStalled(const bool stalled) {
   cpuStalled = stalled;
+  stat_decode_idle = cpuStalled;
 }

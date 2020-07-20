@@ -162,7 +162,6 @@ DepAnalysis::tick(void)
         next_state = EMERGENCY;
       }
       else if (!cpuStalled) {
-        // CPU is no longer stalled; transition to throttle window:
         next_state = CPU_STALL_1;
       }
       break;
@@ -178,6 +177,10 @@ DepAnalysis::tick(void)
         // THROTTLE
         next_state = THROTTLE;
         total_pred_action++;
+      }
+      else if (cpuStalled) {
+        next_state = CPU_STALL_0;
+        total_pred_inaction++;
       }
       else if (s_count > 10) {
         // If in 10 cycles after the stall resolves there is not > threshold

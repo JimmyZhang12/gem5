@@ -1284,22 +1284,27 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             if (fetchStatus[tid] == IcacheWaitResponse)
                 ++icacheStallCycles;
+                //powerPred->setCPUStalled(true);
             else if (fetchStatus[tid] == ItlbWait)
                 ++fetchTlbCycles;
+                //powerPred->setCPUStalled(true);
             else
                 ++fetchMiscStallCycles;
+                //powerPred->setCPUStalled(true);
             return;
         } else if ((checkInterrupt(thisPC.instAddr()) && !delayedCommit[tid])) {
             // Stall CPU if an interrupt is posted and we're not issuing
             // an delayed commit micro-op currently (delayed commit instructions
             // are not interruptable by interrupts, only faults)
             ++fetchMiscStallCycles;
+            //powerPred->setCPUStalled(true);
             DPRINTF(Fetch, "[tid:%i] Fetch is stalled!\n", tid);
             return;
         }
     } else {
         if (fetchStatus[tid] == Idle) {
             ++fetchIdleCycles;
+            //powerPred->setCPUStalled(false);
             DPRINTF(Fetch, "[tid:%i] Fetch is idle!\n", tid);
         }
 
@@ -1308,6 +1313,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     }
 
     ++fetchCycles;
+    //powerPred->setCPUStalled(false);
 
     TheISA::PCState nextPC = thisPC;
 

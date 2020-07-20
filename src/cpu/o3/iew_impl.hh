@@ -1555,6 +1555,10 @@ DefaultIEW<Impl>::tick()
     instsReadyM = instsReadyMax;
     instsReady += instQueue.getNumReadyInstr();
 
+    // Set the Instructions Pending in the ppred unit
+    //powerPred->setNumInstrsPending(
+    //    (unsigned int)instQueue.getNumReadyInstr());
+
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 

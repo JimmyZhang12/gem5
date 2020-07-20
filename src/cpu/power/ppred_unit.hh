@@ -109,12 +109,14 @@ class PPredUnit : public ClockedObject
     }
 
     /**
+     * setNumInstrsPending
      * Used by the IEW or IQ to set the number of instructions that can be
      * executed.
      */
     void setNumInstrsPending(const uint64_t inst);
 
     /**
+     * setCPUStalled
      * Set by the CPU if it is stalled.
      */
     void setCPUStalled(const bool stalled);
@@ -124,6 +126,8 @@ class PPredUnit : public ClockedObject
     Stats::Scalar stat_ticks;
     Stats::Scalar stat_ttn;
     Stats::Scalar stat_stall;
+    Stats::Scalar stat_insts_available;
+    Stats::Scalar stat_decode_idle;
 
     Stats::Scalar sv;
     Stats::Scalar svdv;

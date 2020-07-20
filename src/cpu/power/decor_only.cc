@@ -59,7 +59,8 @@
 
 DecorOnly::DecorOnly(const Params *params)
     : PPredUnit(params),
-    throttle_on_restore(params->throttle_on_restore)
+    throttle_on_restore(params->throttle_on_restore),
+    throttle_duration(params->duration)
 {
     DPRINTF(DecorOnlyPowerPred, "DecorOnly::DecorOnly()\n");
     e_count = 0;
@@ -125,7 +126,7 @@ DecorOnly::tick(void)
         num_ve++;
         next_state = EMERGENCY;
       }
-      if (t_count > 20) {
+      if (t_count > throttle_duration) {
         next_state = NORMAL;
       }
       break;

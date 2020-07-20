@@ -236,6 +236,7 @@ class DecorOnly(PowerPredictor):
     cxx_class = "DecorOnly"
     cxx_header = "cpu/power/decor_only.hh"
     throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
+    duration = Param.Unsigned(20, "The number of cycles to throttle for")
 
 class PPredStat(ClockedObject):
     type = "PPredStat"

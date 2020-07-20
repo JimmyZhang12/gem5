@@ -46,6 +46,7 @@
 #include <queue>
 
 #include "base/statistics.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/timebuf.hh"
 
 struct DerivO3CPUParams;
@@ -210,6 +211,9 @@ class DefaultDecode
     // Interfaces to objects outside of decode.
     /** CPU interface. */
     O3CPU *cpu;
+
+    /** Power Prediction Unit */
+    PPredUnit *powerPred;
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;

@@ -237,7 +237,8 @@ Sensor::tick(void)
       t_count+=1;
       d_count = 0;
       e_count = 0;
-      takeAction(action);
+      clkThrottle();
+      //takeAction(action);
       unsetStall();
       break;
     }

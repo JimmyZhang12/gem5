@@ -82,6 +82,7 @@ class DecorOnly : public PPredUnit
   protected:
     /** Throttle after DeCoR rollback */
     bool throttle_on_restore;
+    unsigned int throttle_duration;
 
   private:
     enum state_t {

@@ -61,6 +61,7 @@ using std::list;
 template<class Impl>
 DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
+      powerPred(params->powerPred),
       renameToDecodeDelay(params->renameToDecodeDelay),
       iewToDecodeDelay(params->iewToDecodeDelay),
       commitToDecodeDelay(params->commitToDecodeDelay),
@@ -656,6 +657,8 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
                 " early.\n",tid);
         // Should I change the status to idle?
         ++decodeIdleCycles;
+        powerPred->setCPUStalled(true);
+        powerPred->setNumInstrsPending(0);
         return;
     } else if (decodeStatus[tid] == Unblocking) {
         DPRINTF(Decode, "[tid:%i] Unblocking, removing insts from skid "
@@ -664,10 +667,13 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
     } else if (decodeStatus[tid] == Running) {
         ++decodeRunCycles;
     }
+    powerPred->setCPUStalled(false);
 
     std::queue<DynInstPtr>
         &insts_to_decode = decodeStatus[tid] == Unblocking ?
         skidBuffer[tid] : insts[tid];
+
+    powerPred->setNumInstrsPending(insts_to_decode.size());
 
     DPRINTF(Decode, "[tid:%i] Sending instruction to rename.\n",tid);
 

@@ -174,6 +174,9 @@ ThrottleAfterStall::tick(void)
       if (supply_voltage < emergency){
         next_state = EMERGENCY;
       }
+      //else if (cpuStalled) {
+      //  next_state = CPU_STALL;
+      //}
       else if (t_count >= throttle_duration) {
         next_state = NORMAL;
       }
