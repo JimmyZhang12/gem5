@@ -134,7 +134,7 @@ class Info
     /**
      * Visitor entry for outputing statistics data
      */
-    virtual void visit(Output &visitor) = 0;
+    virtual std::string visit(Output &visitor) = 0;
 
     /**
      * Checks if the first stat's name is alphabetically less than the second.

@@ -61,20 +61,21 @@ struct Output
 {
     virtual ~Output() {}
 
-    virtual void begin() = 0;
-    virtual void end() = 0;
+    virtual std::string begin() = 0;
+    virtual std::string end() = 0;
     virtual bool valid() const = 0;
 
     virtual void beginGroup(const char *name) = 0;
     virtual void endGroup() = 0;
 
-    virtual void visit(const ScalarInfo &info) = 0;
-    virtual void visit(const VectorInfo &info) = 0;
-    virtual void visit(const DistInfo &info) = 0;
-    virtual void visit(const VectorDistInfo &info) = 0;
-    virtual void visit(const Vector2dInfo &info) = 0;
-    virtual void visit(const FormulaInfo &info) = 0;
-    virtual void visit(const SparseHistInfo &info) = 0; // Sparse histogram
+    virtual std::string visit(const ScalarInfo &info) = 0;
+    virtual std::string visit(const VectorInfo &info) = 0;
+    virtual std::string visit(const DistInfo &info) = 0;
+    virtual std::string visit(const VectorDistInfo &info) = 0;
+    virtual std::string visit(const Vector2dInfo &info) = 0;
+    virtual std::string visit(const FormulaInfo &info) = 0;
+    virtual std::string
+    visit(const SparseHistInfo &info) = 0; // Sparse histogram
 };
 
 } // namespace Stats
