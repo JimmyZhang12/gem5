@@ -101,23 +101,22 @@ Text::Text()
 {
 }
 
-Text::Text(bool file_enable)
-    : mystream(false), enable(file_enable),stream(NULL), descriptions(false)
+Text::Text(bool enable=true)
+    : mystream(false), enable(enable), stream(NULL), descriptions(false)
 {
 }
 
-Text::Text(std::ostream &stream)
-    : mystream(false),enable(true), stream(NULL), descriptions(false)
+Text::Text(std::ostream &stream, bool enable=true)
+    : mystream(false), enable(enable), stream(NULL), descriptions(false)
 {
     open(stream);
 }
 
-Text::Text(const std::string &file)
-    : mystream(false),enable(true), stream(NULL), descriptions(false)
+Text::Text(const std::string &file, bool enable=true)
+    : mystream(false), enable(enable), stream(NULL), descriptions(false)
 {
     open(file);
 }
-
 
 Text::~Text()
 {
@@ -807,9 +806,9 @@ Text::visit(const SparseHistInfo &info)
 }
 
 Output *
-initText(const string &filename, bool desc, bool file_enable)
+initText(const string &filename, bool desc, bool enable=true)
 {
-    static Text text(file_enable);
+    static Text text(enable);
     static bool connected = false;
 
     if (!connected) {

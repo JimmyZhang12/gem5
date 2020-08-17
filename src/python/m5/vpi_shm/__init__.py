@@ -39,7 +39,8 @@ import _m5.vpi_shm as vpi
 
 thread = None
 
-valid_pdn_types = ["HARVARD", "ARM", "INTEL_M", "INTEL_DT"]
+valid_pdn_types = ["HARVARD", "HARVARD_M", "HARVARD_L",
+                   "HARVARD_D", "ARM", "INTEL_M", "INTEL_DT"]
 
 def initialize(name):
   from m5 import options

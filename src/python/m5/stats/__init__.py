@@ -447,6 +447,9 @@ def dump(root=None, exit=False):
                     _dump_to_visitor(output, root=root)
                     stat_strings.append(output.end())
 
+            #print("".join(stat_strings))
+            #sys.exit(1)
+
             # Initialilze the Verilog Sim:
             power = 0
             resistance = 0
@@ -516,8 +519,6 @@ def dump(root=None, exit=False):
                 mcpat.m5_to_mcpat(stat_strings,\
                     options.stats_read_from_file, mp_v, mp_f, \
                     380.0, options.mcpat_device_type)
-            print("".join(stat_strings))
-            sys.exit(1)
 
             max_dump = options.power_profile_duration
             max_instr = options.power_profile_instrs

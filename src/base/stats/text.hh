@@ -71,9 +71,9 @@ class Text : public Output
 
   public:
     Text();
-    Text(bool file_enable);
-    Text(std::ostream &stream);
-    Text(const std::string &file);
+    Text(bool enable);
+    Text(std::ostream &stream, bool enable);
+    Text(const std::string &file, bool enable);
     ~Text();
 
     void open(std::ostream &stream);
@@ -101,7 +101,7 @@ class Text : public Output
 
 std::string ValueToString(Result value, int precision);
 
-Output *initText(const std::string &filename, bool desc);
+Output *initText(const std::string &filename, bool desc, bool enable);
 
 } // namespace Stats
 
