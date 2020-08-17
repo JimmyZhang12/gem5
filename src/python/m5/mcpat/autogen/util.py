@@ -37,55 +37,89 @@ from file_read_backwards import FileReadBackwards
 from collections import defaultdict
 from functools import reduce
 
+initial = True
+config = defaultdict(lambda: "0")
 
-def build_gem5_stat_dict(file):
+def build_gem5_stat_dict(file, stat_list=[], read_from_file=True):
   """ Build a dict of stats from the Gem5 stats.txt """
   stats = defaultdict(lambda: [0] * 64)
-  with FileReadBackwards(file, encoding="utf-8") as sf:
-    for line in sf:
-      if line.strip() == "":
-        continue
-      elif "End Simulation Statistics" in line:
-        stats = defaultdict(lambda: [0] * 64)
-      elif "Begin Simulation Statistics" in line:
-        return stats
-      else:
-        stat = []
-        sstr = re.sub('\s+', ' ', line).strip().split("#")[0].strip()
-        if ('-----' in sstr):
+  if read_from_file:
+    with FileReadBackwards(file, encoding="utf-8") as sf:
+      for line in sf:
+        if line.strip() == "":
           continue
-        elif (sstr == ''):
-          continue
-        elif ('|' in sstr):
-          # Ruby Stats
-          l = []
-          for i in sstr.split('|')[1:]:
-            l.append(i.strip().split(' '))
-          stat.append("ruby_multi")
-          stat.append(l)
+        elif "End Simulation Statistics" in line:
+          stats = defaultdict(lambda: [0] * 64)
+        elif "Begin Simulation Statistics" in line:
+          return stats
         else:
-          stat.append("single")
-          stat.append(sstr.split(' ')[1])
-        stats[sstr.split(' ')[0]] = stat
+          stat = []
+          sstr = re.sub('\s+', ' ', line).strip().split("#")[0].strip()
+          if ('-----' in sstr):
+            continue
+          elif (sstr == ''):
+            continue
+          elif ('|' in sstr):
+            # Ruby Stats
+            l = []
+            for i in sstr.split('|')[1:]:
+              l.append(i.strip().split(' '))
+            stat.append("ruby_multi")
+            stat.append(l)
+          else:
+            stat.append("single")
+            stat.append(sstr.split(' ')[1])
+          stats[sstr.split(' ')[0]] = stat
+  else:
+    for sl in stat_list[::-1]:
+      for line in sl.split("\n"):
+        if line.strip() == "":
+          continue
+        elif "End Simulation Statistics" in line:
+          stats = defaultdict(lambda: [0] * 64)
+        elif "Begin Simulation Statistics" in line:
+          return stats
+        else:
+          stat = []
+          sstr = re.sub('\s+', ' ', line).strip().split("#")[0].strip()
+          if ('-----' in sstr):
+            continue
+          elif (sstr == ''):
+            continue
+          elif ('|' in sstr):
+            # Ruby Stats
+            l = []
+            for i in sstr.split('|')[1:]:
+              l.append(i.strip().split(' '))
+            stat.append("ruby_multi")
+            stat.append(l)
+          else:
+            stat.append("single")
+            stat.append(sstr.split(' ')[1])
+          stats[sstr.split(' ')[0]] = stat
   return stats
 
 
 def build_gem5_config_dict(file):
+  global config
+  global initial
   """ Build a dict of system parameters from the Gem5 config.ini """
-  config = defaultdict(lambda: "0")
-  hierarchy = ""
-  with open(file, "r") as cf:
-    lines = cf.readlines()
-    for line in lines:
-      cstr = re.sub('\s+', ' ', line).strip()
-      if (cstr == ''):
-        continue
-      if ("[" in cstr and "]" in cstr):
-        hierarchy = cstr.replace("[", "").replace("]", "") + "."
-        continue
-      else:
-        #print(hierarchy, cstr)
-        config[hierarchy + cstr.split('=')[0]] = cstr.split('=')[1].strip()
+  if initial:
+    config = defaultdict(lambda: "0")
+    hierarchy = ""
+    with open(file, "r") as cf:
+      lines = cf.readlines()
+      for line in lines:
+        cstr = re.sub('\s+', ' ', line).strip()
+        if (cstr == ''):
+          continue
+        if ("[" in cstr and "]" in cstr):
+          hierarchy = cstr.replace("[", "").replace("]", "") + "."
+          continue
+        else:
+          #print(hierarchy, cstr)
+          config[hierarchy + cstr.split('=')[0]] = cstr.split('=')[1].strip()
+    initial = False
   return config
 
 

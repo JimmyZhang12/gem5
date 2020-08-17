@@ -175,6 +175,13 @@ def parse_options():
     option("--mcpat_save_space", action="store_true", default=False,
         help="Do not keep mcpat output files")
 
+    # Stat CTRL Optons
+    group("stat control")
+    option("--stats_read_from_file", action="store_true", default=False,
+        help="If set, then mcpat and power profiling is disabled")
+    option("--stats_disable_file_io", action="store_true", default=False,
+        help="If set Use McPAT Fine Grained Power Gating")
+
     # NCVerilog options:
     group("ncverilog options")
     option("--ncverilog_enable", action="store_true", default=False,

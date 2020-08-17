@@ -139,6 +139,7 @@ def _url_factory(schemes, enable=True):
 
 @_url_factory([ None, "", "text", "file", ])
 def _textFactory(fn, desc=True):
+    from m5 import options
     """Output stats in text format.
 
     Text stat files contain one stat per line with an optional
@@ -153,7 +154,7 @@ def _textFactory(fn, desc=True):
 
     """
 
-    return _m5.stats.initText(fn, desc)
+    return _m5.stats.initText(fn, desc, not options.stats_disable_file_io)
 
 @_url_factory([ "h5", ], enable=hasattr(_m5.stats, "initHDF5"))
 def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):
@@ -332,16 +333,19 @@ def prepare():
     # New stats
     _visit_stats(lambda g, s: s.prepare())
 
+stat_strings = []
 def _dump_to_visitor(visitor, root=None):
+    global stat_strings
     # Legacy stats
     if root is None:
         for stat in stats_list:
-            stat.visit(visitor)
+            stat_strings.append(stat.visit(visitor))
 
     # New stats
     def dump_group(group):
+        global stat_strings
         for stat in group.getStats():
-            stat.visit(visitor)
+            stat_strings.append(stat.visit(visitor))
 
         for n, g in group.getStatGroups().items():
             visitor.beginGroup(n)
@@ -412,6 +416,8 @@ def dump(root=None, exit=False):
     global profiling
     global lv
     assert lastDump <= now
+    global stat_strings
+    stat_strings = []
     new_dump = lastDump != now
     lastDump = now
 
@@ -437,9 +443,9 @@ def dump(root=None, exit=False):
 
             for output in outputList:
                 if output.valid():
-                    output.begin()
+                    stat_strings.append(output.begin())
                     _dump_to_visitor(output, root=root)
-                    output.end()
+                    stat_strings.append(output.end())
 
             # Initialilze the Verilog Sim:
             power = 0
@@ -453,7 +459,8 @@ def dump(root=None, exit=False):
             if(options.ncverilog_enable):
                 if init_ncsim:
                     # Run an Initial McPAT stats run with 1.0v
-                    mcpat.m5_to_mcpat(mp_v, mp_f, \
+                    mcpat.m5_to_mcpat(stat_strings,\
+                        options.stats_read_from_file, mp_v, mp_f, \
                         380.0, options.mcpat_device_type)
                     resistance = mcpat.get_last_r(mp_v, \
                         options.mcpat_use_fg_pg, \
@@ -475,7 +482,8 @@ def dump(root=None, exit=False):
                     init_ncsim = False
                 else:
                     if options.ncverilog_feedback:
-                      mcpat.m5_to_mcpat(lv, mp_f, \
+                      mcpat.m5_to_mcpat(stat_strings,\
+                          options.stats_read_from_file, lv, mp_f, \
                           380.0, options.mcpat_device_type)
                       resistance = mcpat.get_last_r(lv, \
                           options.mcpat_use_fg_pg, \
@@ -487,7 +495,8 @@ def dump(root=None, exit=False):
                           options.mcpat_use_fg_pg, \
                           options.mcpat_scale_factor)
                     else:
-                      mcpat.m5_to_mcpat(mp_v, mp_f, \
+                      mcpat.m5_to_mcpat(stat_strings,\
+                          options.stats_read_from_file, mp_v, mp_f, \
                           380.0, options.mcpat_device_type)
                       resistance = mcpat.get_last_r(mp_v, \
                           options.mcpat_use_fg_pg, \
@@ -504,8 +513,11 @@ def dump(root=None, exit=False):
                     lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
             else:
-                mcpat.m5_to_mcpat(mp_v, mp_f, \
+                mcpat.m5_to_mcpat(stat_strings,\
+                    options.stats_read_from_file, mp_v, mp_f, \
                     380.0, options.mcpat_device_type)
+            print("".join(stat_strings))
+            sys.exit(1)
 
             max_dump = options.power_profile_duration
             max_instr = options.power_profile_instrs

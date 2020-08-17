@@ -62,7 +62,8 @@ def set_flags(pg=False, sf=1.0):
   power_gating = pg
   scale_factor = sf
 
-def m5_to_mcpat(voltage, freq, temperature, device_type):
+def m5_to_mcpat(stat_list, read_from_file,
+                voltage, freq, temperature, device_type):
   from m5 import options
 
   global iter
@@ -94,7 +95,8 @@ def m5_to_mcpat(voltage, freq, temperature, device_type):
     i_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".xml")
     o_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".out")
     e_f = os.path.join(mcpat_output_path,"mp_"+str(iter)+".err")
-  generate_xml(m5_stats_file, m5_config_file, i_f, voltage=voltage, \
+  generate_xml(m5_stats_file, m5_config_file, i_f, stat_list, \
+              read_from_file, voltage=voltage, \
               frequency=freq, temperature=temperature, device_type=device_type)
   run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees = [parse_output(o_f)]
