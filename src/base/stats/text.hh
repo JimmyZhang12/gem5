@@ -57,6 +57,7 @@ class Text : public Output
 {
   protected:
     bool mystream;
+    bool enable;
     std::ostream *stream;
 
     // Object/group path
@@ -70,6 +71,7 @@ class Text : public Output
 
   public:
     Text();
+    Text(bool file_enable);
     Text(std::ostream &stream);
     Text(const std::string &file);
     ~Text();
@@ -79,13 +81,13 @@ class Text : public Output
     std::string statName(const std::string &name) const;
 
     // Implement Visit
-    void visit(const ScalarInfo &info) override;
-    void visit(const VectorInfo &info) override;
-    void visit(const DistInfo &info) override;
-    void visit(const VectorDistInfo &info) override;
-    void visit(const Vector2dInfo &info) override;
-    void visit(const FormulaInfo &info) override;
-    void visit(const SparseHistInfo &info) override;
+    std::string visit(const ScalarInfo &info) override;
+    std::string visit(const VectorInfo &info) override;
+    std::string visit(const DistInfo &info) override;
+    std::string visit(const VectorDistInfo &info) override;
+    std::string visit(const Vector2dInfo &info) override;
+    std::string visit(const FormulaInfo &info) override;
+    std::string visit(const SparseHistInfo &info) override;
 
     // Group handling
     void beginGroup(const char *name) override;
@@ -93,8 +95,8 @@ class Text : public Output
 
     // Implement Output
     bool valid() const override;
-    void begin() override;
-    void end() override;
+    std::string begin() override;
+    std::string end() override;
 };
 
 std::string ValueToString(Result value, int precision);
