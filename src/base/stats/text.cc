@@ -159,6 +159,7 @@ Text::valid() const
 std::string
 Text::begin()
 {
+    if (enable)
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
     return "\n---------- Begin Simulation Statistics ----------\n";
 }
@@ -166,6 +167,7 @@ Text::begin()
 std::string
 Text::end()
 {
+    if (enable)
     ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();
     return "\n---------- End Simulation Statistics   ----------\n";
@@ -242,7 +244,8 @@ struct ScalarPrint
     Result cdf;
 
     void update(Result val, Result total);
-    std::string operator()(ostream &stream, bool oneLine = false) const;
+    std::string operator()
+        (ostream &stream, bool enable,bool oneLine = false) const;
 };
 
 void
@@ -256,7 +259,7 @@ ScalarPrint::update(Result val, Result total)
 }
 
 std::string
-ScalarPrint::operator()(ostream &stream, bool oneLine) const
+ScalarPrint::operator()(ostream &stream, bool oneLine, bool enable) const
 {
     if ((flags.isSet(nozero) && (!oneLine) && value == 0.0) ||
         (flags.isSet(nonan) && std::isnan(value)))
@@ -273,21 +276,21 @@ ScalarPrint::operator()(ostream &stream, bool oneLine) const
         ccprintf(cdfstr, "%.2f%%", cdf * 100.0);
 
     if (oneLine) {
-        ccprintf(stream, " |%12s %10s %10s",
+        if (enable) ccprintf(stream, " |%12s %10s %10s",
                  ValueToString(value, precision), pdfstr.str(), cdfstr.str());
         stats_str = csprintf(" |%12s %10s %10s",
                  ValueToString(value, precision), pdfstr.str(), cdfstr.str());
     } else {
-        ccprintf(stream, "%-40s %12s %10s %10s", name,
+        if (enable) ccprintf(stream, "%-40s %12s %10s %10s", name,
                  ValueToString(value, precision), pdfstr.str(), cdfstr.str());
         stats_str = csprintf("%-40s %12s %10s %10s", name,
                  ValueToString(value, precision), pdfstr.str(), cdfstr.str());
         if (descriptions) {
             if (!desc.empty())
-                ccprintf(stream, " # %s", desc);
+                if (enable) ccprintf(stream, " # %s", desc);
                 stats_str.append(csprintf(" # %s", desc));
         }
-        stream << endl;
+        if (enable) stream << endl;
         stats_str.append(csprintf("\n"));
     }
     return stats_str;
@@ -307,11 +310,11 @@ struct VectorPrint
     Result total;
     bool forceSubnames;
 
-    std::string operator()(ostream &stream) const;
+    std::string operator()(ostream &stream, bool enable) const;
 };
 
 std::string
-VectorPrint::operator()(std::ostream &stream) const
+VectorPrint::operator()(std::ostream &stream, bool enable) const
 {
     size_type _size = vec.size();
     Result _total = 0.0;
@@ -343,13 +346,13 @@ VectorPrint::operator()(std::ostream &stream) const
         if (forceSubnames)
             print.name = base + (havesub ? subnames[0] : std::to_string(0));
         print.value = vec[0];
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
         return stats_str;
     }
 
     if ((!flags.isSet(nozero)) || (total != 0)) {
         if (flags.isSet(oneline)) {
-            ccprintf(stream, "%-40s", name);
+            if (enable) ccprintf(stream, "%-40s", name);
             stats_str.append(csprintf("%-40s", name));
             print.flags = print.flags & (~nozero);
         }
@@ -362,16 +365,16 @@ VectorPrint::operator()(std::ostream &stream) const
             print.desc = subdescs.empty() ? desc : subdescs[i];
 
             print.update(vec[i], _total);
-            stats_str.append(print(stream, flags.isSet(oneline)));
+            stats_str.append(print(stream,enable,flags.isSet(oneline)));
         }
 
         if (flags.isSet(oneline)) {
             if (descriptions) {
                 if (!desc.empty())
-                    ccprintf(stream, " # %s", desc);
+                    if (enable) ccprintf(stream, " # %s", desc);
                     stats_str.append(csprintf(" # %s", desc));
             }
-            stream << endl;
+            if (enable) stream << endl;
             stats_str.append("\n");
         }
     }
@@ -382,7 +385,7 @@ VectorPrint::operator()(std::ostream &stream) const
         print.name = base + "total";
         print.desc = desc;
         print.value = total;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
     return stats_str;
 }
@@ -401,7 +404,7 @@ struct DistPrint
     DistPrint(const Text *text, const DistInfo &info);
     DistPrint(const Text *text, const VectorDistInfo &info, int i);
     void init(const Text *text, const Info &info);
-    std::string operator()(ostream &stream) const;
+    std::string operator()(ostream &stream, bool enable) const;
 };
 
 DistPrint::DistPrint(const Text *text, const DistInfo &info)
@@ -435,7 +438,7 @@ DistPrint::init(const Text *text, const Info &info)
 }
 
 std::string
-DistPrint::operator()(ostream &stream) const
+DistPrint::operator()(ostream &stream, bool enable) const
 {
     if (flags.isSet(nozero) && data.samples == 0) return "";
     string base = name + separatorString;
@@ -453,29 +456,29 @@ DistPrint::operator()(ostream &stream) const
     if (flags.isSet(oneline)) {
         print.name = base + "bucket_size";
         print.value = data.bucket_size;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
 
         print.name = base + "min_bucket";
         print.value = data.min;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
 
         print.name = base + "max_bucket";
         print.value = data.max;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
 
     print.name = base + "samples";
     print.value = data.samples;
-    stats_str.append(print(stream));
+    stats_str.append(print(stream,enable));
 
     print.name = base + "mean";
     print.value = data.samples ? data.sum / data.samples : NAN;
-    stats_str.append(print(stream));
+    stats_str.append(print(stream,enable));
 
     if (data.type == Hist) {
         print.name = base + "gmean";
         print.value = data.samples ? exp(data.logs / data.samples) : NAN;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
 
     Result stdev = NAN;
@@ -484,7 +487,7 @@ DistPrint::operator()(ostream &stream) const
                      (data.samples * (data.samples - 1.0)));
     print.name = base + "stdev";
     print.value = stdev;
-    stats_str.append(print(stream));
+    stats_str.append(print(stream,enable));
 
     if (data.type == Deviation)
         return stats_str;
@@ -507,11 +510,11 @@ DistPrint::operator()(ostream &stream) const
     if (data.type == Dist && data.underflow != NAN) {
         print.name = base + "underflows";
         print.update(data.underflow, total);
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
 
     if (flags.isSet(oneline)) {
-        ccprintf(stream, "%-40s", name);
+        if (enable) ccprintf(stream, "%-40s", name);
         stats_str.append(csprintf("%-40s", name));
     }
 
@@ -527,23 +530,23 @@ DistPrint::operator()(ostream &stream) const
 
         print.name = namestr.str();
         print.update(data.cvec[i], total);
-        stats_str.append(print(stream, flags.isSet(oneline)));
+        stats_str.append(print(stream,enable, flags.isSet(oneline)));
     }
 
     if (flags.isSet(oneline)) {
         if (descriptions) {
             if (!desc.empty())
-                ccprintf(stream, " # %s", desc);
+                if (enable) ccprintf(stream, " # %s", desc);
                 stats_str.append(csprintf(" # %s", desc));
         }
-        stream << endl;
+        if (enable) stream << endl;
         stats_str.append("\n");
     }
 
     if (data.type == Dist && data.overflow != NAN) {
         print.name = base + "overflows";
         print.update(data.overflow, total);
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
 
     print.pdf = NAN;
@@ -552,18 +555,18 @@ DistPrint::operator()(ostream &stream) const
     if (data.type == Dist && data.min_val != NAN) {
         print.name = base + "min_value";
         print.value = data.min_val;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
 
     if (data.type == Dist && data.max_val != NAN) {
         print.name = base + "max_value";
         print.value = data.max_val;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
 
     print.name = base + "total";
     print.value = total;
-    stats_str.append(print(stream));
+    stats_str.append(print(stream,enable));
     return stats_str;
 }
 
@@ -583,7 +586,7 @@ Text::visit(const ScalarInfo &info)
     print.pdf = NAN;
     print.cdf = NAN;
 
-    return print(*stream);
+    return print(*stream,enable);
 }
 
 std::string
@@ -623,7 +626,7 @@ Text::visit(const VectorInfo &info)
         }
     }
 
-    return print(*stream);
+    return print(*stream,enable);
 }
 
 std::string
@@ -677,7 +680,7 @@ Text::visit(const Vector2dInfo &info)
         print.desc = info.desc;
         print.vec = yvec;
         print.total = total;
-        stats_str.append(print(*stream));
+        stats_str.append(print(*stream,enable));
     }
 
     // Create a subname for printing the total
@@ -690,7 +693,7 @@ Text::visit(const Vector2dInfo &info)
         print.desc = info.desc;
         print.vec = VResult(1, info.total());
         print.flags = print.flags & ~total;
-        stats_str.append(print(*stream));
+        stats_str.append(print(*stream,enable));
     }
     return stats_str;
 }
@@ -702,7 +705,7 @@ Text::visit(const DistInfo &info)
         return "";
 
     DistPrint print(this, info);
-    return print(*stream);
+    return print(*stream,enable);
 }
 
 std::string
@@ -713,7 +716,7 @@ Text::visit(const VectorDistInfo &info)
     string stats_str;
     for (off_type i = 0; i < info.size(); ++i) {
         DistPrint print(this, info, i);
-        stats_str.append(print(*stream));
+        stats_str.append(print(*stream,enable));
     }
     return stats_str;
 }
@@ -741,7 +744,7 @@ struct SparseHistPrint
 
     SparseHistPrint(const Text *text, const SparseHistInfo &info);
     void init(const Text *text, const Info &info);
-    std::string operator()(ostream &stream) const;
+    std::string operator()(ostream &stream, bool enable) const;
 };
 
 /* Call initialization function */
@@ -765,7 +768,7 @@ SparseHistPrint::init(const Text *text, const Info &info)
 
 /* Grab data from map and write to output stream */
 std::string
-SparseHistPrint::operator()(ostream &stream) const
+SparseHistPrint::operator()(ostream &stream, bool enable) const
 {
     string base = name + separatorString;
 
@@ -780,7 +783,7 @@ SparseHistPrint::operator()(ostream &stream) const
 
     print.name = base + "samples";
     print.value = data.samples;
-    stats_str.append(print(stream));
+    stats_str.append(print(stream,enable));
 
     MCounter::const_iterator it;
     for (it = data.cmap.begin(); it != data.cmap.end(); it++) {
@@ -790,7 +793,7 @@ SparseHistPrint::operator()(ostream &stream) const
         namestr <<(*it).first;
         print.name = namestr.str();
         print.value = (*it).second;
-        stats_str.append(print(stream));
+        stats_str.append(print(stream,enable));
     }
     return stats_str;
 }
@@ -802,7 +805,7 @@ Text::visit(const SparseHistInfo &info)
         return "";
 
     SparseHistPrint print(this, info);
-    return print(*stream);
+    return print(*stream,enable);
 }
 
 Output *
