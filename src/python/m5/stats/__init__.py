@@ -154,7 +154,8 @@ def _textFactory(fn, desc=True):
 
     """
 
-    return _m5.stats.initText(fn, desc, not options.stats_disable_file_io)
+    return _m5.stats.initText(fn, desc, not options.stats_disable_file_io,
+                              options.write_stripped_stats)
 
 @_url_factory([ "h5", ], enable=hasattr(_m5.stats, "initHDF5"))
 def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):

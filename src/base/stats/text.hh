@@ -62,6 +62,8 @@ class Text : public Output
 
     // Object/group path
     std::stack<std::string> path;
+    bool stripped_stats;
+
 
   protected:
     bool noOutput(const Info &info);
@@ -71,9 +73,9 @@ class Text : public Output
 
   public:
     Text();
-    Text(bool enable);
-    Text(std::ostream &stream, bool enable);
-    Text(const std::string &file, bool enable);
+    Text(bool enable, bool stripped_stats);
+    Text(std::ostream &stream, bool enable, bool stripped_stats);
+    Text(const std::string &file, bool enable, bool stripped_stats);
     ~Text();
 
     void open(std::ostream &stream);
@@ -101,7 +103,8 @@ class Text : public Output
 
 std::string ValueToString(Result value, int precision);
 
-Output *initText(const std::string &filename, bool desc, bool enable);
+Output *initText
+(const std::string &filename, bool desc, bool enable, bool stripped_stats);
 
 } // namespace Stats
 
