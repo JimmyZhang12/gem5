@@ -163,7 +163,7 @@ Text::valid() const
 std::string
 Text::begin()
 {
-    std::cout<<"this is enable "<<enable<<std::endl;
+    // std::cout<<"this is enable "<<enable<<std::endl;
     if (enable && !stripped_stats)
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
     return "\n---------- Begin Simulation Statistics ----------\n";
@@ -172,7 +172,7 @@ Text::begin()
 std::string
 Text::end()
 {
-    std::cout<<"this is enable "<<enable<<std::endl;
+    // std::cout<<"this is enable "<<enable<<std::endl;
     if (enable && !stripped_stats)
     ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();
@@ -268,7 +268,7 @@ ScalarPrint::update(Result val, Result total)
 std::string ScalarPrint::operator()
 (ostream &stream,bool enable,bool stripped_stats,bool oneLine) const
 {
-    std::cout<<"this is enable in scalar "<<enable<<std::endl;
+    // std::cout<<"this is enable in scalar "<<enable<<std::endl;
     if ((flags.isSet(nozero) && (!oneLine) && value == 0.0) ||
         (flags.isSet(nonan) && std::isnan(value)))
         return "";
@@ -356,7 +356,7 @@ std::string VectorPrint::operator()
     size_type _size = vec.size();
     Result _total = 0.0;
 
-    std::cout<<"this is enable in vector "<<enable<<std::endl;
+    // std::cout<<"this is enable in vector "<<enable<<std::endl;
 
     if (flags.isSet(pdf | cdf)) {
         for (off_type i = 0; i < _size; ++i) {
@@ -643,7 +643,7 @@ Text::visit(const ScalarInfo &info)
     print.precision = info.precision;
     print.pdf = NAN;
     print.cdf = NAN;
-    std::cout<<"this is enable in scalar visit "<<enable<<std::endl;
+    // std::cout<<"this is enable in scalar visit "<<enable<<std::endl;
 
     return print(*stream,enable, stripped_stats);
 }
@@ -656,7 +656,7 @@ Text::visit(const VectorInfo &info)
 
     size_type size = info.size();
     VectorPrint print;
-    std::cout<<"this is enable in vector visit "<<enable<<std::endl;
+    // std::cout<<"this is enable in vector visit "<<enable<<std::endl;
 
     print.name = statName(info.name);
     print.separatorString = info.separatorString;
@@ -694,7 +694,7 @@ Text::visit(const Vector2dInfo &info)
 {
     if (noOutput(info))
         return "";
-    std::cout<<"this is enable in vector 2d visit "<<enable<<std::endl;
+    // std::cout<<"this is enable in vector 2d visit "<<enable<<std::endl;
 
     string stats_str;
     bool havesub = false;
@@ -764,7 +764,7 @@ Text::visit(const DistInfo &info)
 {
     if (noOutput(info))
         return "";
-    std::cout<<"this is enable in dist visit "<<enable<<std::endl;
+    // std::cout<<"this is enable in dist visit "<<enable<<std::endl;
 
     DistPrint print(this, info);
     return print(*stream,enable, stripped_stats);
@@ -775,7 +775,7 @@ Text::visit(const VectorDistInfo &info)
 {
     if (noOutput(info))
         return "";
-    std::cout<<"this is enable in vecotrdist visit "<<enable<<std::endl;
+    // std::cout<<"this is enable in vecotrdist visit "<<enable<<std::endl;
 
     string stats_str;
     for (off_type i = 0; i < info.size(); ++i) {
@@ -868,7 +868,7 @@ Text::visit(const SparseHistInfo &info)
 {
     if (noOutput(info))
         return "";
-    std::cout<<"this is enable in sparse visit "<<enable<<std::endl;
+    // std::cout<<"this is enable in sparse visit "<<enable<<std::endl;
 
     SparseHistPrint print(this, info);
     return print(*stream,enable, stripped_stats);
