@@ -39,8 +39,8 @@
  *
  * Authors: Andrew Smith
  */
-//no decor no throttle
 
+//no decor yes throttle
 
 #include "cpu/power/harvard.hh"
 
@@ -57,18 +57,15 @@
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Harvard::Harvard(const Params *params): PPredUnit(params)
+Harvard::Harvard(const Params *params)
+    : PPredUnit(params)
 {
     DPRINTF(HarvardPowerPred,
             "Harvard::Harvard()\n");
     state = NORMAL;
     next_state = NORMAL;
-    //cam + bloom
-    //table.resize(params->table_size, params->signature_length, 3, params->bloom_filter_size);
-    
-    //cam only
-    table.resize(params->table_size, params->signature_length);
-
+    table.resize(params->table_size, params->signature_length, 3,
+                  params->bloom_filter_size);
     history.resize(params->signature_length);
     throttle_duration = params->duration;
     throttle_on_restore = params->throttle_on_restore;
@@ -80,11 +77,6 @@ Harvard::Harvard(const Params *params): PPredUnit(params)
     total_preds = 0;
     total_pred_action = 0;
     total_pred_inaction = 0;
-
-    test_counter = 0;
-    entry_length = params->signature_length;
-    table_length = params->table_size;
-    table_dump = table.getTable();
 }
 
 void
@@ -125,46 +117,15 @@ Harvard::regStats()
         .desc("Misprediction Rate")
         .precision(6)
         ;
-    counter
-        .name(name() + ".counter")
-        .desc("Simple tick counter")
-        ;
-    table_entry_insert_Stats
-        .init(entry_length)
-        .name(name() + ".inserted_New_Entry")
-        .desc("the current history")
-        ;
-    table_dump_Stats
-        .init(entry_length * table_length)
-        .name(name() + ".table_dump")
-        .desc("HARVARD cam table")
-        ;
-
-    last_find_index_Stats
-        .name(name() + ".last_find_index")
-        .desc("Last found index in pred table")
-        ;
-    last_insert_index_Stats
-        .name(name() + ".last_insert_index")
-        .desc("Last insert index in pred table")
-        ;
-    hr_anchorPC
-        .name(name() + ".anchorPC")
-        .desc("Anchor pc of Hist Reg")
-        ;
-
-  }
+}
 
 void
 Harvard::tick(void)
 {
   DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
   get_analog_stats();
+
   table.tick();
-  
-  //stats
-  test_counter++;
-  //this->history.add_event(PPred::DUMMY_EVENT);
 
   // Transition Logic
   switch(state) {
@@ -172,45 +133,37 @@ Harvard::tick(void)
       next_state = NORMAL;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        num_ve++;
         table.insert(this->history.get_entry());
       }
       // If hr updated:
       if (hr_updated) {
         if (table.find(this->history.get_entry())) {
           total_pred_action++;
-          //next_state = THROTTLE;
-          next_state = NORMAL;
+          next_state = THROTTLE;
         }
         else {
           total_pred_inaction++;
         }
         hr_updated = false;
         total_preds++;
-      }  
+      }
       break;
     }
     case EMERGENCY : {
       // DECOR Rollback
       next_state = EMERGENCY;
-      //if (e_count == 0) {
-      //  num_ve++;
-      //}
+      if (e_count == 0) {
+        num_ve++;
+      }
       if (t_count == 0) {
         total_misspred++;
       }
-      // if (e_count > emergency_duration &&
-      //    supply_voltage > emergency + hysteresis) {
-      //   if (throttle_on_restore) {
-      //     next_state = THROTTLE;
-      //   }
-      //   else {
-      //     next_state = NORMAL;
-      //   }
-      // }
-      if (supply_voltage > emergency + hysteresis){
-        next_state = NORMAL;
+      
+      if (supply_voltage > emergency + hysteresis) {
+          next_state = NORMAL;
+        
       }
+      
       break;
     }
     case THROTTLE : {
@@ -218,7 +171,6 @@ Harvard::tick(void)
       next_state = THROTTLE;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        entry_vector = this->history.get_entry().get_history();
         table.insert(this->history.get_entry());
       }
       else if (t_count > throttle_duration &&
@@ -245,10 +197,9 @@ Harvard::tick(void)
     case EMERGENCY : {
       e_count += 1;
       t_count = 0;
-      // clkThrottle();
-      // setStall();
+      clkThrottle();
+      //setStall();
       clkRestore();
-      unsetStall();
       break;
     }
     case THROTTLE : {
@@ -275,40 +226,15 @@ Harvard::tick(void)
   tpred = total_preds;
   taction = total_pred_action;
   tiaction = total_pred_inaction;
-
   if (total_preds != 0) {
     mp_rate = (double)total_misspred/(double)total_preds;
   }
-
-  //cycle counter
-  counter = test_counter;
-  //insertion index stat
-  last_insert_index_Stats = table.last_insert_index;
-  //predictino hit index stat
-  last_find_index_Stats = table.last_find_index;
-
-
-  //history register stat
-  entry_vector = this->history.get_entry().get_history();
-  for(int e=0; e < entry_vector.size(); e++){
-    table_entry_insert_Stats[e] = entry_vector[e];
-  }
-  //table_dump stat
-  table_dump = table.getTable();
-  for(int ind=0; ind < table_dump.size(); ind++){
-    entry_vector = table_dump[ind].get_history();
-    for(int e=0; e < entry_vector.size(); e++){
-      table_dump_Stats[ind*entry_vector.size() + e] = entry_vector[e];
-    }
-  }
-  //anchor pc of history register
-  hr_anchorPC = this->history.get_pc();
-
   return;
 }
 
 Harvard*
-HarvardPowerPredictorParams::create(){
+HarvardPowerPredictorParams::create()
+{
   return new Harvard(this);
 }
 

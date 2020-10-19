@@ -268,6 +268,7 @@ DefaultCommit<Impl>::regStats()
         .desc("Class of committed instruction")
         .flags(total | pdf | dist)
         ;
+
     statCommittedInstType.ysubnames(Enums::OpClassStrings);
 
     commitEligibleSamples

@@ -50,6 +50,7 @@
 #include "arch/generic/tlb.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/lsq_unit.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/utils.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "mem/port.hh"
@@ -689,6 +690,7 @@ class LSQ
         {
             flags.set(Flag::Complete);
         }
+
     };
 
     class SingleDataRequest : public LSQRequest
@@ -742,6 +744,9 @@ class LSQ
         virtual void handleIprWrite(ThreadContext *thread, PacketPtr pkt);
         virtual Cycles handleIprRead(ThreadContext *thread, PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
+
+        /** PPredUnit. */
+        PPredUnit *powerPred;
     };
 
     class SplitDataRequest : public LSQRequest
@@ -1120,6 +1125,10 @@ class LSQ
 
     /** Number of Threads. */
     ThreadID numThreads;
+
+  private:
+    PPredUnit *powerPred;
+
 };
 
 template <class Impl>

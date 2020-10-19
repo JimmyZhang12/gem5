@@ -155,6 +155,7 @@ public:
    */
   bool find(uint64_t pc, std::vector<event_t> history);
   bool find(const Entry& obj);
+  int64_t last_find_index;
 
   /**
    * Insert an Entry based on LRU Replacement Policy
@@ -164,6 +165,8 @@ public:
    */
   bool insert(uint64_t pc, std::vector<event_t> history);
   bool insert(const Entry& obj);
+  int64_t last_insert_index;
+
 
   /**
    * Ticks the event history table for the LRU Policy
@@ -171,6 +174,10 @@ public:
   void tick(void);
 
   void print();
+
+  std::vector<Entry> getTable();
+
+
 };
 
 class TableBloom {

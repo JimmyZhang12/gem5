@@ -185,6 +185,7 @@ void
 InstructionQueue<Impl>::regStats()
 {
     using namespace Stats;
+
     iqInstsAdded
         .name(name() + ".iqInstsAdded")
         .desc("Number of instructions added to the IQ (excludes non-spec)")
@@ -257,6 +258,7 @@ InstructionQueue<Impl>::regStats()
         queueResDist.subname(i, opClassStrings[i]);
     }
 */
+
     numIssuedDist
         .init(0,totalWidth,1)
         .name(name() + ".issued_per_cycle")
@@ -273,6 +275,7 @@ InstructionQueue<Impl>::regStats()
     for (int i=0; i < (Num_OpClasses + 2); ++i) {
         dist_unissued.subname(i, unissued_names[i]);
     }
+
 */
     statIssuedInstType
         .init(numThreads,Enums::Num_OpClass)
@@ -298,6 +301,7 @@ InstructionQueue<Impl>::regStats()
         subname << opClassStrings[i] << "_delay";
         issueDelayDist.subname(i, subname.str());
     }
+
 */
     issueRate
         .name(name() + ".rate")
@@ -394,6 +398,7 @@ InstructionQueue<Impl>::regStats()
         .name(name() + ".vec_alu_accesses")
         .desc("Number of vector alu accesses")
         .flags(total);
+
 
 }
 

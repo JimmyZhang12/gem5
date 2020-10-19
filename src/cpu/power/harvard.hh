@@ -53,6 +53,7 @@
 #include "cpu/power/history_register.hh"
 #include "cpu/power/ppred_unit.hh"
 #include "cpu/power/prediction_table.hh"
+#include "cpu/power/event_type.hh"
 #include "cpu/static_inst.hh"
 #include "params/HarvardPowerPredictor.hh"
 #include "sim/probe/pmu.hh"
@@ -95,7 +96,7 @@ class Harvard : public PPredUnit
       EMERGENCY
     };
 
-    PPred::TableBloom table;
+    PPred::Table table;
 
     state_t state;
     state_t next_state;
@@ -119,6 +120,27 @@ class Harvard : public PPredUnit
     Stats::Scalar taction;
     Stats::Scalar tiaction;
     Stats::Scalar mp_rate;
+
+    //jimmy stats
+    uint64_t test_counter;
+    Stats::Scalar counter;
+
+    uint64_t entry_length;
+    uint64_t table_length;
+
+    Stats::Scalar hr_anchorPC;
+    std::vector<PPred::event_t> entry_vector;
+    Stats::Vector table_entry_insert_Stats;
+
+    std::vector<PPred::Entry> table_dump;
+    Stats::Vector table_dump_Stats;
+
+    Stats::Scalar last_insert_index_Stats;
+    Stats::Scalar last_find_index_Stats;
+
+
+
+
 };
 
 #endif // __CPU_PRED_HARVARD_HH__

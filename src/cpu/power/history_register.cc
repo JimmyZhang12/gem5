@@ -150,17 +150,17 @@ Array2D PPred::HistoryRegister::get_array2d(size_t events,
  */
 bool PPred::HistoryRegister::add_event(PPred::event_t event) {
   // First check if the event isnt already in the HR for the same PC
-  for (size_t i = 0; i < signature.size(); i++) {
-    if (pc[i] != inst_pc) {
-      // Not in the most recent set of PCs, any other match would
-      // be from a previous time frame
-      break;
-    }
-    if (signature[i] == event && pc[i] == inst_pc) {
-      // Event & PC value are a duplicate
-      return false;
-    }
-  }
+  // for (size_t i = 0; i < signature.size(); i++) {
+  //   if (pc[i] != inst_pc) {
+  //     // Not in the most recent set of PCs, any other match would
+  //     // be from a previous time frame
+  //     break;
+  //   }
+  //   if (signature[i] == event && pc[i] == inst_pc) {
+  //     // Event & PC value are a duplicate
+  //     return false;
+  //   }
+  // }
 
   // shift all the vector elements:
   for (int i = (int)signature.size() - 2; i >= 0; i--) {

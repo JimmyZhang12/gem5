@@ -72,6 +72,7 @@ PPred::Entry::operator==(const PPred::Entry& obj) {
 
 bool
 PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
+  last_updated = 0;
   return this->anchor_pc == pc && this->history == history;
 }
 
@@ -123,13 +124,18 @@ PPred::Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
 
 bool
 PPred::Table::find(const PPred::Entry& obj) {
-  for (auto it = this->prediction_table.begin();
-      it != this->prediction_table.end(); it++) {
+  last_find_index = -1;
+
+  int count = 0;
+  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {
     if (*it == obj) {
+      last_find_index = count;
+
       it->access();
       matches++;
       return true;
     }
+    count++;
   }
   misses++;
   return false;
@@ -156,10 +162,13 @@ PPred::Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {
 
 bool
 PPred::Table::insert(const Entry& obj) {
+  last_insert_index = -1;
+
   insertions++;
   uint64_t max_time = 0;
   size_t idx = 0;
   if (Table::find(obj)) {
+    last_insert_index = last_find_index;
     return true;
   }
   for (size_t i = 0; i < prediction_table.size(); i++) {
@@ -168,6 +177,7 @@ PPred::Table::insert(const Entry& obj) {
       idx = i;
     }
   }
+  last_insert_index = idx;
   prediction_table[idx] = obj;
   prediction_table[idx].access();
   return true;
@@ -189,6 +199,12 @@ PPred::Table::print() {
     it->print();
   }
 }
+
+std::vector<PPred::Entry>
+PPred::Table::getTable(){
+  return prediction_table;
+}
+
 
 PPred::TableBloom::TableBloom(uint64_t table_size,
                               uint64_t history_length,

@@ -57,6 +57,10 @@
 #include "debug/Writeback.hh"
 #include "params/DerivO3CPU.hh"
 
+#include "cpu/power/ppred_unit.hh"
+#include "cpu/power/event_type.hh"
+
+
 using namespace std;
 
 template <class Impl>
@@ -73,7 +77,9 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
       maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params->numThreads,
                   params->smtLSQThreshold)),
       dcachePort(this, cpu_ptr),
-      numThreads(params->numThreads)
+      numThreads(params->numThreads),
+      /** PPredUnit. */
+      powerPred(nullptr)
 {
     assert(numThreads > 0 && numThreads <= Impl::MaxThreads);
 
@@ -107,6 +113,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
         thread[tid].init(cpu, iew_ptr, params, this, tid);
         thread[tid].setDcachePort(&dcachePort);
     }
+    powerPred = params->powerPred;
 }
 
 
@@ -120,7 +127,12 @@ LSQ<Impl>::name() const
 template<class Impl>
 void
 LSQ<Impl>::regStats()
-{
+{   
+    //numDCacheMisses
+    //   .name(name() + ".numDCacheMisses")
+    //  .desc("Number of DCachee Misses")
+    //    .prereq(numDCacheMisses);
+
     //Initialize LSQs
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         thread[tid].regStats();
@@ -1059,7 +1071,8 @@ LSQ<Impl>::SplitDataRequest::buildPackets()
             ptrdiff_t offset = r->getVaddr() - base_address;
             if (isLoad()) {
                 pkt->dataStatic(_inst->memData + offset);
-            } else {
+            }
+            else {
                 uint8_t* req_data = new uint8_t[r->getSize()];
                 std::memcpy(req_data,
                         _inst->memData + offset,
@@ -1149,7 +1162,19 @@ template<class Impl>
 bool
 LSQ<Impl>::SingleDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
 {
-    return ( (LSQRequest::_requests[0]->getPaddr() & blockMask) == blockAddr);
+
+    bool isHit = (LSQRequest::_requests[0]->
+        getPaddr() & blockMask) == blockAddr;
+
+    if(!isHit)
+    {
+        invalid spacing after if/while/for
+        if (powerPred) {
+            powerPred->historyInsert(PPred::DCACHE_MISS);
+        }
+    }
+
+    return (isHit);
 }
 
 /**

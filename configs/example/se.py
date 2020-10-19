@@ -348,7 +348,7 @@ for i in range(np):
                     emergency_duration=100,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=128,
+                    table_size=64,
                     hysteresis=0.005,
                     duration=8)
         elif options.power_pred_type == "HarvardPowerPredictor":
@@ -362,10 +362,10 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
-                    signature_length=4,
+                    signature_length=12,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=128,
+                    table_size=32,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
                     duration=8)

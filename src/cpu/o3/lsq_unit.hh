@@ -62,6 +62,10 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
+
+#include "cpu/power/ppred_unit.hh"
+
+
 struct DerivO3CPUParams;
 #include "base/circular_queue.hh"
 
