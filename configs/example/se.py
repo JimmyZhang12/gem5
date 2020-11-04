@@ -365,7 +365,7 @@ for i in range(np):
                     signature_length=12,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=32,
+                    table_size=16,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
                     duration=8)

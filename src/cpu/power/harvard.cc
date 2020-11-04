@@ -162,10 +162,8 @@ Harvard::tick(void)
   get_analog_stats();
   table.tick();
   
-  //stats
   test_counter++;
-  //this->history.add_event(PPred::DUMMY_EVENT);
-
+  new_insert = false;
   // Transition Logic
   switch(state) {
     case NORMAL : {
@@ -173,14 +171,13 @@ Harvard::tick(void)
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
         num_ve++;
+        new_insert = true;
         table.insert(this->history.get_entry());
       }
       // If hr updated:
       if (hr_updated) {
         if (table.find(this->history.get_entry())) {
           total_pred_action++;
-          //next_state = THROTTLE;
-          next_state = NORMAL;
         }
         else {
           total_pred_inaction++;
@@ -199,6 +196,15 @@ Harvard::tick(void)
       if (t_count == 0) {
         total_misspred++;
       }
+      if (hr_updated) {
+        if (table.find(this->history.get_entry()))
+          total_pred_action++;
+        else 
+          total_pred_inaction++;
+        
+        hr_updated = false;
+        total_preds++;
+      } 
       // if (e_count > emergency_duration &&
       //    supply_voltage > emergency + hysteresis) {
       //   if (throttle_on_restore) {
@@ -282,18 +288,28 @@ Harvard::tick(void)
 
   //cycle counter
   counter = test_counter;
+
   //insertion index stat
-  last_insert_index_Stats = table.last_insert_index;
+  last_insert_index_prev_Stats = last_insert_index;
+  if (new_insert)
+    last_insert_index = table.last_insert_index;
+  else
+    last_insert_index = -1;
+  last_insert_index_Stats = last_insert_index;
+
   //predictino hit index stat
   last_find_index_Stats = table.last_find_index;
 
-
   //history register stat
+  for(int e=0; e < entry_vector.size(); e++){
+    table_entry_insert_prev_Stats[e] = entry_vector[e];
+  }
   entry_vector = this->history.get_entry().get_history();
   for(int e=0; e < entry_vector.size(); e++){
     table_entry_insert_Stats[e] = entry_vector[e];
   }
-  //table_dump stat
+
+  //table dump stat
   table_dump = table.getTable();
   for(int ind=0; ind < table_dump.size(); ind++){
     entry_vector = table_dump[ind].get_history();
@@ -301,6 +317,7 @@ Harvard::tick(void)
       table_dump_Stats[ind*entry_vector.size() + e] = entry_vector[e];
     }
   }
+
   //anchor pc of history register
   hr_anchorPC = this->history.get_pc();
 

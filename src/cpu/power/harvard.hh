@@ -129,13 +129,19 @@ class Harvard : public PPredUnit
     uint64_t table_length;
 
     Stats::Scalar hr_anchorPC;
+
     std::vector<PPred::event_t> entry_vector;
     Stats::Vector table_entry_insert_Stats;
+    Stats::Vector table_entry_insert_prev_Stats;
 
     std::vector<PPred::Entry> table_dump;
     Stats::Vector table_dump_Stats;
 
+    bool new_insert;
+    int64_t last_insert_index;
     Stats::Scalar last_insert_index_Stats;
+    Stats::Scalar last_insert_index_prev_Stats;
+
     Stats::Scalar last_find_index_Stats;
 
 

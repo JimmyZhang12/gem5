@@ -544,6 +544,10 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
     load_fault = inst->initiateAcc();
 
     if (load_fault == NoFault && !inst->readMemAccPredicate()) {
+        if (powerPred) {
+            powerPred->historyInsert(PPred::LOAD_EX);
+        }
+
         assert(inst->readPredicate());
         inst->setExecuted();
         inst->completeAcc(nullptr);
@@ -558,6 +562,11 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
     if (load_fault != NoFault && inst->translationCompleted() &&
         inst->savedReq->isPartialFault() && !inst->savedReq->isComplete()) {
         assert(inst->savedReq->isSplit());
+
+        if (powerPred) {
+            powerPred->historyInsert(PPred::LOAD_BLOCK);
+        }
+
         // If we have a partial fault where the mem access is not complete yet
         // then the cache must have been blocked. This load will be re-executed
         // when the cache gets unblocked. We will handle the fault when the
