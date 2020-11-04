@@ -1166,13 +1166,12 @@ LSQ<Impl>::SingleDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
     bool isHit = (LSQRequest::_requests[0]->
         getPaddr() & blockMask) == blockAddr;
 
-    if(!isHit)
-    {
-        invalid spacing after if/while/for
-        if (powerPred) {
-            powerPred->historyInsert(PPred::DCACHE_MISS);
-        }
-    }
+    // if(!isHit)
+    // {
+    //     if (powerPred) {
+    //         powerPred->historyInsert(PPred::DCACHE_MISS);
+    //     }
+    // }
 
     return (isHit);
 }

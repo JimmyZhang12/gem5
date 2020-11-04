@@ -62,8 +62,8 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
-
 #include "cpu/power/ppred_unit.hh"
+#include "cpu/power/event_type.hh"
 
 
 struct DerivO3CPUParams;
@@ -407,6 +407,8 @@ class LSQUnit
 
     /** Pointer to the dcache port.  Used only for sending. */
     MasterPort *dcachePort;
+
+    PPredUnit *powerPred;
 
     /** Particularisation of the LSQSenderState to the LQ. */
     class LQSenderState : public LSQSenderState
@@ -867,8 +869,12 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
     }
     req->buildPackets();
     req->sendPacketToCache();
-    if (!req->isSent())
+    if (!req->isSent()){
         iewStage->blockMemInst(load_inst);
+        if (powerPred) {
+            powerPred->historyInsert(PPred::LOAD_BLOCK);
+        }
+    }
 
     return NoFault;
 }

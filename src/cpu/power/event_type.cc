@@ -13,7 +13,7 @@ std::map<int, std::string> PPred::event_t_name = {
   {COMMIT_BLOCK, "COMMIT_BLOCK"},
   {IQ_FULL,      "IQ_FULL"},
   {LSQ_FULL,     "LSQ_FULL"},
-  {DCACHE_BLOCK, "DCACHE_BLOCK"},
-  {DCACHE_MISS,  "DCACHE_MISS"},
+  {LOAD_EX,      "LOAD_EX"},
+  {LOAD_BLOCK,   "LOAD_BLOCK"},
   {DUMMY_EVENT,  "DUMMY_EVENT"}
 };

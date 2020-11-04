@@ -58,8 +58,8 @@ typedef enum : int {
   COMMIT_BLOCK=7,
   IQ_FULL=8,
   LSQ_FULL=9,
-  DCACHE_BLOCK=10,
-  DCACHE_MISS=11,
+  LOAD_EX=10,
+  LOAD_BLOCK=11,
   DUMMY_EVENT=12
 } event_t;
 
