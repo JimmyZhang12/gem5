@@ -130,6 +130,8 @@ class PPredUnit : public ClockedObject
     Stats::Scalar stat_decode_idle;
 
     Stats::Scalar sv;
+    Stats::Scalar sv_p;
+
     Stats::Scalar svdv;
     Stats::Scalar sc;
     Stats::Scalar rtc;

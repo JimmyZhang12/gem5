@@ -84,7 +84,9 @@ Harvard::Harvard(const Params *params): PPredUnit(params)
     test_counter = 0;
     entry_length = params->signature_length;
     table_length = params->table_size;
-    table_dump = table.getTable();
+    //table_dump = table.getTable();
+    last_insert_index_prev_Stats = -1;
+    
 }
 
 void
@@ -134,12 +136,16 @@ Harvard::regStats()
         .name(name() + ".inserted_New_Entry")
         .desc("the current history")
         ;
-    table_dump_Stats
-        .init(entry_length * table_length)
-        .name(name() + ".table_dump")
-        .desc("HARVARD cam table")
+    table_entry_insert_prev_Stats
+        .init(entry_length)
+        .name(name() + ".inserted_New_Entry_prev")
+        .desc("the previous cycle history")
         ;
-
+    // table_dump_Stats
+    //     .init(entry_length * table_length)
+    //     .name(name() + ".table_dump")
+    //     .desc("HARVARD cam table")
+    //     ;
     last_find_index_Stats
         .name(name() + ".last_find_index")
         .desc("Last found index in pred table")
@@ -148,11 +154,15 @@ Harvard::regStats()
         .name(name() + ".last_insert_index")
         .desc("Last insert index in pred table")
         ;
+    last_insert_index_prev_Stats
+        .name(name() + ".last_insert_index_prev")
+        .desc("prev cycle insert index in pred table")
+        ;
     hr_anchorPC
         .name(name() + ".anchorPC")
         .desc("Anchor pc of Hist Reg")
         ;
-
+        
   }
 
 void
@@ -224,7 +234,6 @@ Harvard::tick(void)
       next_state = THROTTLE;
       if (supply_voltage < emergency) {
         next_state = EMERGENCY;
-        entry_vector = this->history.get_entry().get_history();
         table.insert(this->history.get_entry());
       }
       else if (t_count > throttle_duration &&
@@ -309,14 +318,14 @@ Harvard::tick(void)
     table_entry_insert_Stats[e] = entry_vector[e];
   }
 
-  //table dump stat
-  table_dump = table.getTable();
-  for(int ind=0; ind < table_dump.size(); ind++){
-    entry_vector = table_dump[ind].get_history();
-    for(int e=0; e < entry_vector.size(); e++){
-      table_dump_Stats[ind*entry_vector.size() + e] = entry_vector[e];
-    }
-  }
+  // //table dump stat
+  // table_dump = table.getTable();
+  // for(int ind=0; ind < table_dump.size(); ind++){
+  //   table_vector = table_dump[ind].get_history();
+  //   for(int e=0; e < table_vector.size(); e++){
+  //     table_dump_Stats[ind*table_vector.size() + e] = table_vector[e];
+  //   }
+  // }
 
   //anchor pc of history register
   hr_anchorPC = this->history.get_pc();

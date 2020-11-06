@@ -60,7 +60,9 @@ typedef enum : int {
   LSQ_FULL=9,
   LOAD_EX=10,
   LOAD_BLOCK=11,
-  DUMMY_EVENT=12
+  LOAD_CFETCH=12,
+  DUMMY_EVENT=13,
+  DUMMY_EVENT2=14
 } event_t;
 
 

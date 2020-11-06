@@ -15,5 +15,8 @@ std::map<int, std::string> PPred::event_t_name = {
   {LSQ_FULL,     "LSQ_FULL"},
   {LOAD_EX,      "LOAD_EX"},
   {LOAD_BLOCK,   "LOAD_BLOCK"},
-  {DUMMY_EVENT,  "DUMMY_EVENT"}
+  {LOAD_CFETCH,  "LOAD_CFETCH"},
+  {DUMMY_EVENT,  "DUMMY_EVENT"},
+  {DUMMY_EVENT2, "DUMMY_EVENT2"}
+
 };

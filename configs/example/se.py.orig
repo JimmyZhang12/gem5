@@ -123,7 +123,6 @@ def get_processes(options):
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
-Options.addO3CPUOptions(parser)
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
@@ -194,10 +193,9 @@ system.clk_domain = SrcClockDomain(clock =  options.sys_clock,
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs
-system.cpu_clk_domain = [SrcClockDomain(clock = options.sys_clock,
+system.cpu_clk_domain = SrcClockDomain(clock = options.sys_clock,
                                        voltage_domain =
                                        system.cpu_voltage_domain)
-                                       for i in range(np)]
 
 # If elastic tracing is enabled, then configure the cpu and attach the elastic
 # trace probe
@@ -206,8 +204,8 @@ if options.elastic_trace_en:
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.
-for cpu, clk in zip(system.cpu, system.cpu_clk_domain):
-    cpu.clk_domain = clk
+for cpu in system.cpu:
+    cpu.clk_domain = system.cpu_clk_domain
 
 if ObjectList.is_kvm_cpu(CPUClass) or ObjectList.is_kvm_cpu(FutureClass):
     if buildEnv['TARGET_ISA'] == 'x86':
@@ -224,15 +222,6 @@ if options.simpoint_profile:
         fatal("SimPoint/BPProbe should be done with an atomic cpu")
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
-
-# Clock for dumping stats
-system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
-                                   voltage_domain = system.voltage_domain)
-system.ppred_stat = PPredStat( \
-    cycle_period = options.power_pred_cpu_cycles, \
-    frequency = options.power_pred_cpu_freq, \
-    ncores = np)
-system.ppred_stat.clk_domain = system.ppred_stat_clk
 
 for i in range(np):
     if options.smt:
@@ -255,30 +244,10 @@ for i in range(np):
     if options.power_pred_type:
         powerPredClass = ObjectList.power_pred_list.get(\
             options.power_pred_type)
-        if options.power_pred_type == "Test":
+        if options.power_pred_type == "TestPowerPredictor":
             ncb = math.floor(math.log(options.power_pred_table_size, 2))
             system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    threshold=options.power_pred_voltage_threshold,
-                    emergency=options.power_pred_voltage_emergency)
-        elif options.power_pred_type == "SimplePowerPredictor":
-            ncb = math.floor(math.log(options.power_pred_table_size, 2))
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    # Specific
+                powerPredClass(period=options.power_profile_interval,
                     num_entries=options.power_pred_table_size,
                     num_correlation_bits=ncb,
                     pc_start=options.power_pred_pc_start,
@@ -289,15 +258,7 @@ for i in range(np):
             ncb = math.floor(math.log(options.power_pred_table_size, 2)/
                 (options.power_pred_history_size+1))
             system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    # Specific
+                powerPredClass(period=options.power_profile_interval,
                     num_entries=options.power_pred_table_size,
                     nbits_pc=ncb,
                     history_size=options.power_pred_history_size,
@@ -305,6 +266,8 @@ for i in range(np):
                     error_array_size=100,
                     confidence_level=0.075,
                     limit=5.0)
+<<<<<<< Updated upstream
+=======
         elif options.power_pred_type == "IdealSensor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -362,10 +325,10 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
-                    signature_length=40,
+                    signature_length=12,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=16,
+                    table_size=32,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
                     duration=8)
@@ -448,42 +411,10 @@ for i in range(np):
                     table_size=2048,
                     hysteresis=0.005,
                     duration=50)
+>>>>>>> Stashed changes
         system.cpu[i].powerPred.clk_domain = \
-            system.cpu_clk_domain[i]
-        # Give core a reference to the global stat dump
-        system.cpu[i].ppred_stat = system.ppred_stat
+            system.cpu_clk_domain
 
-    # Configure CPU Parameters:
-    system.cpu[i].fetchWidth = options.cpu_superscalar_width
-    system.cpu[i].decodeWidth = options.cpu_superscalar_width
-    system.cpu[i].renameWidth = options.cpu_superscalar_width
-    system.cpu[i].dispatchWidth = options.cpu_superscalar_width
-    system.cpu[i].issueWidth = options.cpu_superscalar_width
-    system.cpu[i].wbWidth = options.cpu_superscalar_width
-    system.cpu[i].commitWidth = options.cpu_superscalar_width
-    system.cpu[i].squashWidth = options.cpu_superscalar_width
-    # Fetch
-    system.cpu[i].fetchBufferSize = options.cpu_fetch_buffer_size
-    system.cpu[i].fetchQueueSize = options.cpu_fetch_q_size
-    # LSQ
-    system.cpu[i].LQEntries = options.cpu_lq_size
-    system.cpu[i].SQEntries = options.cpu_sq_size
-    # ROB
-    system.cpu[i].numRobs = options.cpu_num_robs
-    system.cpu[i].numROBEntries = options.cpu_num_rob_entries
-    # Regfile
-    system.cpu[i].numPhysIntRegs = options.cpu_phys_int_regs
-    system.cpu[i].numPhysFloatRegs = options.cpu_phys_fp_regs
-    system.cpu[i].numPhysVecRegs = options.cpu_phys_vec_regs
-    system.cpu[i].numPhysVecPredRegs = options.cpu_phys_vec_pred_regs
-    # Instruction Queue
-    system.cpu[i].numIQEntries = options.cpu_num_iq_entries
-    # FU POOL
-    system.cpu[i].fuPool.FUList[0].count = options.cpu_intALUcount
-    system.cpu[i].fuPool.FUList[1].count = options.cpu_intMULDIVcount
-    system.cpu[i].fuPool.FUList[2].count = options.cpu_fpALUcount
-    system.cpu[i].fuPool.FUList[3].count = options.cpu_fpMULDIVcount
-    system.cpu[i].fuPool.FUList[5].count = options.cpu_simdcount
 
     if options.indirect_bp_type:
         indirectBPClass = \
@@ -491,7 +422,6 @@ for i in range(np):
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
     system.cpu[i].createThreads()
-
 
 if options.ruby:
     Ruby.create_system(options, False, system)
@@ -524,7 +454,7 @@ else:
     MemConfig.config_mem(options, system)
     config_filesystem(system, options)
 
-#m5.stats.periodicStatDump(options.power_profile_initial_stats_interval)
+m5.stats.periodicStatDump(options.power_profile_interval)
 """1 000 000 000 000"""
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

@@ -1136,6 +1136,7 @@ Fault
 LSQ<Impl>::read(LSQRequest* req, int load_idx)
 {
     ThreadID tid = cpu->contextToThread(req->request()->contextId());
+    //powerPred->historyInsert(PPred::DUMMY_EVENT);
 
     return thread.at(tid).read(req, load_idx);
 }

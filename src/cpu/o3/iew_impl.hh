@@ -965,6 +965,7 @@ DefaultIEW<Impl>::dispatch(ThreadID tid)
         // the rest of unblocking.
         dispatchInsts(tid);
 
+
         ++iewUnblockCycles;
 
         if (validInstsFromRename()) {
@@ -1230,6 +1231,10 @@ template <class Impl>
 void
 DefaultIEW<Impl>::executeInsts()
 {
+    if(powerPred){
+        //powerPred->historyInsert(PPred::EXECUTE_INSTR);
+    }
+
     wbNumInst = 0;
     wbCycle = 0;
 
@@ -1307,6 +1312,9 @@ DefaultIEW<Impl>::executeInsts()
             } else if (inst->isLoad()) {
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
+
+                powerPred->historyInsert(PPred::LOAD_EX);
+
                 fault = ldstQueue.executeLoad(inst);
 
                 if (inst->isTranslationDelayed() &&
@@ -1533,7 +1541,10 @@ DefaultIEW<Impl>::tick()
     wroteToTimeBuffer = false;
     updatedQueues = false;
 
+
     ldstQueue.tick();
+    
+
 
     sortInsts();
 

@@ -1,0 +1,707 @@
+[1mdiff --git a/build.sh b/build.sh[m
+[1mindex 43966ff7f..7fff61cfb 100755[m
+[1m--- a/build.sh[m
+[1m+++ b/build.sh[m
+[36m@@ -1,7 +1,7 @@[m
+ #!/bin/bash[m
+ [m
+ #scons -j32 ./build/X86/gem5.debug[m
+[31m-scons -j32 ./build/X86/gem5.opt[m
+[32m+[m[32mscons -j32 ./build/X86/gem5.fast[m
+ # scons -j32 ./build/X86/gem5.fast[m
+ #scons -j32 ./build/X86_MESI_Three_Level/gem5.debug RUBY=True PROTOCOL=MESI_Three_Level SLICC_HTML=True[m
+ #scons -j32 ./build/X86_MESI_Three_Level/gem5.opt RUBY=True PROTOCOL=MESI_Three_Level SLICC_HTML=True[m
+[1mdiff --git a/configs/example/se.py b/configs/example/se.py[m
+[1mindex 029a74409..2b19db34f 100644[m
+[1m--- a/configs/example/se.py[m
+[1m+++ b/configs/example/se.py[m
+[36m@@ -348,7 +348,7 @@[m [mfor i in range(np):[m
+                     emergency_duration=100,[m
+                     # Specific[m
+                     throttle_on_restore=False,[m
+[31m-                    table_size=128,[m
+[32m+[m[32m                    table_size=64,[m
+                     hysteresis=0.005,[m
+                     duration=8)[m
+         elif options.power_pred_type == "HarvardPowerPredictor":[m
+[36m@@ -362,10 +362,10 @@[m [mfor i in range(np):[m
+                     voltage_set=options.power_pred_voltage,[m
+                     emergency=options.power_pred_voltage_emergency,[m
+                     emergency_duration=100,[m
+[31m-                    signature_length=4,[m
+[32m+[m[32m                    signature_length=12,[m
+                     # Specific[m
+                     throttle_on_restore=False,[m
+[31m-                    table_size=128,[m
+[32m+[m[32m                    table_size=32,[m
+                     bloom_filter_size=2048,[m
+                     hysteresis=0.005,[m
+                     duration=8)[m
+[1mdiff --git a/src/cpu/o3/commit_impl.hh b/src/cpu/o3/commit_impl.hh[m
+[1mindex 724b8ac93..7d0002402 100644[m
+[1m--- a/src/cpu/o3/commit_impl.hh[m
+[1m+++ b/src/cpu/o3/commit_impl.hh[m
+[36m@@ -155,6 +155,7 @@[m [mvoid[m
+ DefaultCommit<Impl>::regStats()[m
+ {[m
+     using namespace Stats;[m
+[32m+[m[41m    [m
+     commitSquashedInsts[m
+         .name(name() + ".commitSquashedInsts")[m
+         .desc("The number of squashed insts skipped by commit")[m
+[36m@@ -274,6 +275,7 @@[m [mDefaultCommit<Impl>::regStats()[m
+         .name(name() + ".bw_lim_events")[m
+         .desc("number cycles where commit BW limit reached")[m
+         ;[m
+[32m+[m[41m    [m
+ }[m
+ [m
+ template <class Impl>[m
+[1mdiff --git a/src/cpu/o3/inst_queue_impl.hh b/src/cpu/o3/inst_queue_impl.hh[m
+[1mindex b6ee79d38..b4a93fff5 100644[m
+[1m--- a/src/cpu/o3/inst_queue_impl.hh[m
+[1m+++ b/src/cpu/o3/inst_queue_impl.hh[m
+[36m@@ -185,6 +185,7 @@[m [mvoid[m
+ InstructionQueue<Impl>::regStats()[m
+ {[m
+     using namespace Stats;[m
+[32m+[m
+     iqInstsAdded[m
+         .name(name() + ".iqInstsAdded")[m
+         .desc("Number of instructions added to the IQ (excludes non-spec)")[m
+[36m@@ -257,6 +258,7 @@[m [mInstructionQueue<Impl>::regStats()[m
+         queueResDist.subname(i, opClassStrings[i]);[m
+     }[m
+ */[m
+[32m+[m
+     numIssuedDist[m
+         .init(0,totalWidth,1)[m
+         .name(name() + ".issued_per_cycle")[m
+[36m@@ -273,6 +275,7 @@[m [mInstructionQueue<Impl>::regStats()[m
+     for (int i=0; i < (Num_OpClasses + 2); ++i) {[m
+         dist_unissued.subname(i, unissued_names[i]);[m
+     }[m
+[32m+[m
+ */[m
+     statIssuedInstType[m
+         .init(numThreads,Enums::Num_OpClass)[m
+[36m@@ -298,6 +301,7 @@[m [mInstructionQueue<Impl>::regStats()[m
+         subname << opClassStrings[i] << "_delay";[m
+         issueDelayDist.subname(i, subname.str());[m
+     }[m
+[32m+[m
+ */[m
+     issueRate[m
+         .name(name() + ".rate")[m
+[36m@@ -395,6 +399,7 @@[m [mInstructionQueue<Impl>::regStats()[m
+         .desc("Number of vector alu accesses")[m
+         .flags(total);[m
+ [m
+[32m+[m
+ }[m
+ [m
+ template <class Impl>[m
+[1mdiff --git a/src/cpu/o3/lsq.hh b/src/cpu/o3/lsq.hh[m
+[1mindex 6db005cb3..c8d13f35e 100644[m
+[1m--- a/src/cpu/o3/lsq.hh[m
+[1m+++ b/src/cpu/o3/lsq.hh[m
+[36m@@ -55,6 +55,10 @@[m
+ #include "mem/port.hh"[m
+ #include "sim/sim_object.hh"[m
+ [m
+[32m+[m[32m#include "cpu/power/ppred_unit.hh"[m
+[32m+[m
+[32m+[m
+[32m+[m
+ struct DerivO3CPUParams;[m
+ [m
+ template <class Impl>[m
+[36m@@ -689,6 +693,7 @@[m [mclass LSQ[m
+         {[m
+             flags.set(Flag::Complete);[m
+         }[m
+[32m+[m
+     };[m
+ [m
+     class SingleDataRequest : public LSQRequest[m
+[36m@@ -742,6 +747,10 @@[m [mclass LSQ[m
+         virtual void handleIprWrite(ThreadContext *thread, PacketPtr pkt);[m
+         virtual Cycles handleIprRead(ThreadContext *thread, PacketPtr pkt);[m
+         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);[m
+[32m+[m[41m        [m
+[32m+[m[41m        [m
+[32m+[m[32m        /** PPredUnit. */[m
+[32m+[m[32m        PPredUnit *powerPred;[m
+     };[m
+ [m
+     class SplitDataRequest : public LSQRequest[m
+[36m@@ -1120,6 +1129,10 @@[m [mclass LSQ[m
+ [m
+     /** Number of Threads. */[m
+     ThreadID numThreads;[m
+[32m+[m
+[32m+[m[32m  private:[m
+[32m+[m[32m    PPredUnit *powerPred;[m
+[32m+[m
+ };[m
+ [m
+ template <class Impl>[m
+[1mdiff --git a/src/cpu/o3/lsq_impl.hh b/src/cpu/o3/lsq_impl.hh[m
+[1mindex e85dcb96a..4de59952a 100644[m
+[1m--- a/src/cpu/o3/lsq_impl.hh[m
+[1m+++ b/src/cpu/o3/lsq_impl.hh[m
+[36m@@ -57,6 +57,10 @@[m
+ #include "debug/Writeback.hh"[m
+ #include "params/DerivO3CPU.hh"[m
+ [m
+[32m+[m[32m#include "cpu/power/ppred_unit.hh"[m
+[32m+[m[32m#include "cpu/power/event_type.hh"[m
+[32m+[m
+[32m+[m
+ using namespace std;[m
+ [m
+ template <class Impl>[m
+[36m@@ -73,7 +77,9 @@[m [mLSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)[m
+       maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params->numThreads,[m
+                   params->smtLSQThreshold)),[m
+       dcachePort(this, cpu_ptr),[m
+[31m-      numThreads(params->numThreads)[m
+[32m+[m[32m      numThreads(params->numThreads),[m
+[32m+[m[32m      /** PPredUnit. */[m
+[32m+[m[32m      powerPred(nullptr)[m
+ {[m
+     assert(numThreads > 0 && numThreads <= Impl::MaxThreads);[m
+ [m
+[36m@@ -107,6 +113,7 @@[m [mLSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)[m
+         thread[tid].init(cpu, iew_ptr, params, this, tid);[m
+         thread[tid].setDcachePort(&dcachePort);[m
+     }[m
+[32m+[m[32m    powerPred = params->powerPred;[m
+ }[m
+ [m
+ [m
+[36m@@ -120,7 +127,12 @@[m [mLSQ<Impl>::name() const[m
+ template<class Impl>[m
+ void[m
+ LSQ<Impl>::regStats()[m
+[31m-{[m
+[32m+[m[32m{[m[41m   [m
+[32m+[m[32m    //numDCacheMisses[m
+[32m+[m[32m    //   .name(name() + ".numDCacheMisses")[m
+[32m+[m[32m    //  .desc("Number of DCachee Misses")[m
+[32m+[m[32m    //    .prereq(numDCacheMisses);[m
+[32m+[m
+     //Initialize LSQs[m
+     for (ThreadID tid = 0; tid < numThreads; tid++) {[m
+         thread[tid].regStats();[m
+[36m@@ -1149,7 +1161,17 @@[m [mtemplate<class Impl>[m
+ bool[m
+ LSQ<Impl>::SingleDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)[m
+ {[m
+[31m-    return ( (LSQRequest::_requests[0]->getPaddr() & blockMask) == blockAddr);[m
+[32m+[m
+[32m+[m[32m    bool isHit = (LSQRequest::_requests[0]->getPaddr() & blockMask) == blockAddr;[m
+[32m+[m
+[32m+[m[32m    if(!isHit){[m
+[32m+[m[32m        //numDCacheMisses += 1;[m
+[32m+[m[32m        if (powerPred) {[m
+[32m+[m[32m            powerPred->historyInsert(PPred::DCACHE_MISS);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return (isHit);[m
+ }[m
+ [m
+ /**[m
+[1mdiff --git a/src/cpu/o3/lsq_unit.hh b/src/cpu/o3/lsq_unit.hh[m
+[1mindex e15d01b26..a58ef10b7 100644[m
+[1m--- a/src/cpu/o3/lsq_unit.hh[m
+[1m+++ b/src/cpu/o3/lsq_unit.hh[m
+[36m@@ -62,6 +62,10 @@[m
+ #include "mem/packet.hh"[m
+ #include "mem/port.hh"[m
+ [m
+[32m+[m
+[32m+[m[32m#include "cpu/power/ppred_unit.hh"[m
+[32m+[m
+[32m+[m
+ struct DerivO3CPUParams;[m
+ #include "base/circular_queue.hh"[m
+ [m
+[1mdiff --git a/src/cpu/power/event_type.cc b/src/cpu/power/event_type.cc[m
+[1mindex 57ba06712..d3c986420 100644[m
+[1m--- a/src/cpu/power/event_type.cc[m
+[1m+++ b/src/cpu/power/event_type.cc[m
+[36m@@ -12,5 +12,8 @@[m [mstd::map<int, std::string> PPred::event_t_name = {[m
+   {ICACHE_BLOCK, "ICACHE_BLOCK"},[m
+   {COMMIT_BLOCK, "COMMIT_BLOCK"},[m
+   {IQ_FULL,      "IQ_FULL"},[m
+[31m-  {LSQ_FULL,     "LSQ_FULL"}[m
+[32m+[m[32m  {LSQ_FULL,     "LSQ_FULL"},[m
+[32m+[m[32m  {DCACHE_BLOCK, "DCACHE_BLOCK"},[m
+[32m+[m[32m  {DCACHE_MISS,  "DCACHE_MISS"},[m
+[32m+[m[32m  {DUMMY_EVENT,  "DUMMY_EVENT"}[m
+ };[m
+[1mdiff --git a/src/cpu/power/event_type.hh b/src/cpu/power/event_type.hh[m
+[1mindex 16087b42e..e170a4d8f 100644[m
+[1m--- a/src/cpu/power/event_type.hh[m
+[1m+++ b/src/cpu/power/event_type.hh[m
+[36m@@ -50,14 +50,17 @@[m [mnamespace PPred {[m
+ [m
+ typedef enum : int {[m
+   BRANCH_T=1,[m
+[31m-  BRANCH_NT,[m
+[31m-  BRANCH_MP,[m
+[31m-  FETCH,[m
+[31m-  ICACHE_FETCH,[m
+[31m-  ICACHE_BLOCK,[m
+[31m-  COMMIT_BLOCK,[m
+[31m-  IQ_FULL,[m
+[31m-  LSQ_FULL[m
+[32m+[m[32m  BRANCH_NT=2,[m
+[32m+[m[32m  BRANCH_MP=3,[m
+[32m+[m[32m  FETCH=4,[m
+[32m+[m[32m  ICACHE_FETCH=5,[m
+[32m+[m[32m  ICACHE_BLOCK=6,[m
+[32m+[m[32m  COMMIT_BLOCK=7,[m
+[32m+[m[32m  IQ_FULL=8,[m
+[32m+[m[32m  LSQ_FULL=9,[m
+[32m+[m[32m  DCACHE_BLOCK=10,[m
+[32m+[m[32m  DCACHE_MISS=11,[m
+[32m+[m[32m  DUMMY_EVENT=12[m
+ } event_t;[m
+ [m
+ [m
+[1mdiff --git a/src/cpu/power/harvard.cc b/src/cpu/power/harvard.cc[m
+[1mindex 5acf84a53..935c4fda4 100644[m
+[1m--- a/src/cpu/power/harvard.cc[m
+[1m+++ b/src/cpu/power/harvard.cc[m
+[36m@@ -39,6 +39,7 @@[m
+  *[m
+  * Authors: Andrew Smith[m
+  */[m
+[32m+[m[32m//no decor no throttle[m
+ [m
+ [m
+ #include "cpu/power/harvard.hh"[m
+[36m@@ -56,15 +57,18 @@[m
+ #include "python/pybind11/vpi_shm.h"[m
+ #include "sim/stat_control.hh"[m
+ [m
+[31m-Harvard::Harvard(const Params *params)[m
+[31m-    : PPredUnit(params)[m
+[32m+[m[32mHarvard::Harvard(const Params *params): PPredUnit(params)[m
+ {[m
+     DPRINTF(HarvardPowerPred,[m
+             "Harvard::Harvard()\n");[m
+     state = NORMAL;[m
+     next_state = NORMAL;[m
+[31m-    table.resize(params->table_size, params->signature_length, 3,[m
+[31m-                  params->bloom_filter_size);[m
+[32m+[m[32m    //cam + bloom[m
+[32m+[m[32m    //table.resize(params->table_size, params->signature_length, 3, params->bloom_filter_size);[m
+[32m+[m[41m    [m
+[32m+[m[32m    //cam only[m
+[32m+[m[32m    table.resize(params->table_size, params->signature_length);[m
+[32m+[m
+     history.resize(params->signature_length);[m
+     throttle_duration = params->duration;[m
+     throttle_on_restore = params->throttle_on_restore;[m
+[36m@@ -76,6 +80,11 @@[m [mHarvard::Harvard(const Params *params)[m
+     total_preds = 0;[m
+     total_pred_action = 0;[m
+     total_pred_inaction = 0;[m
+[32m+[m
+[32m+[m[32m    test_counter = 0;[m
+[32m+[m[32m    entry_length = params->signature_length;[m
+[32m+[m[32m    table_length = params->table_size;[m
+[32m+[m[32m    table_dump = table.getTable();[m
+ }[m
+ [m
+ void[m
+[36m@@ -85,7 +94,7 @@[m [mHarvard::regStats()[m
+ [m
+     s[m
+         .name(name() + ".state")[m
+[31m-        .desc("Current State of the Predictor")[m
+[32m+[m[32m        .desc("Current State of the Predictor (STALLING OFF, THROTTLING ON)")[m
+         ;[m
+     ns[m
+         .name(name() + ".next_state")[m
+[36m@@ -116,15 +125,46 @@[m [mHarvard::regStats()[m
+         .desc("Misprediction Rate")[m
+         .precision(6)[m
+         ;[m
+[31m-}[m
+[32m+[m[32m    counter[m
+[32m+[m[32m        .name(name() + ".counter")[m
+[32m+[m[32m        .desc("Simple tick counter")[m
+[32m+[m[32m        ;[m
+[32m+[m[32m    table_entry_insert_Stats[m
+[32m+[m[32m        .init(entry_length)[m
+[32m+[m[32m        .name(name() + ".inserted_New_Entry")[m
+[32m+[m[32m        .desc("the current history")[m
+[32m+[m[32m        ;[m
+[32m+[m[32m    table_dump_Stats[m
+[32m+[m[32m        .init(entry_length * table_length)[m
+[32m+[m[32m        .name(name() + ".table_dump")[m
+[32m+[m[32m        .desc("HARVARD cam table")[m
+[32m+[m[32m        ;[m
+[32m+[m
+[32m+[m[32m    last_find_index_Stats[m
+[32m+[m[32m        .name(name() + ".last_find_index")[m
+[32m+[m[32m        .desc("Last found index in pred table")[m
+[32m+[m[32m        ;[m
+[32m+[m[32m    last_insert_index_Stats[m
+[32m+[m[32m        .name(name() + ".last_insert_index")[m
+[32m+[m[32m        .desc("Last insert index in pred table")[m
+[32m+[m[32m        ;[m
+[32m+[m[32m    hr_anchorPC[m
+[32m+[m[32m        .name(name() + ".anchorPC")[m
+[32m+[m[32m        .desc("Anchor pc of Hist Reg")[m
+[32m+[m[32m        ;[m
+[32m+[m
+[32m+[m[32m  }[m
+ [m
+ void[m
+ Harvard::tick(void)[m
+ {[m
+   DPRINTF(HarvardPowerPred, "Harvard::tick()\n");[m
+   get_analog_stats();[m
+[31m-[m
+   table.tick();[m
+[32m+[m[41m  [m
+[32m+[m[32m  //stats[m
+[32m+[m[32m  test_counter++;[m
+[32m+[m[32m  //this->history.add_event(PPred::DUMMY_EVENT);[m
+ [m
+   // Transition Logic[m
+   switch(state) {[m
+[36m@@ -132,39 +172,44 @@[m [mHarvard::tick(void)[m
+       next_state = NORMAL;[m
+       if (supply_voltage < emergency) {[m
+         next_state = EMERGENCY;[m
+[32m+[m[32m        num_ve++;[m
+         table.insert(this->history.get_entry());[m
+       }[m
+       // If hr updated:[m
+       if (hr_updated) {[m
+         if (table.find(this->history.get_entry())) {[m
+           total_pred_action++;[m
+[31m-          next_state = THROTTLE;[m
+[32m+[m[32m          //next_state = THROTTLE;[m
+[32m+[m[32m          next_state = NORMAL;[m
+         }[m
+         else {[m
+           total_pred_inaction++;[m
+         }[m
+         hr_updated = false;[m
+         total_preds++;[m
+[31m-      }[m
+[32m+[m[32m      }[m[41m  [m
+       break;[m
+     }[m
+     case EMERGENCY : {[m
+       // DECOR Rollback[m
+       next_state = EMERGENCY;[m
+[31m-      if (e_count == 0) {[m
+[31m-        num_ve++;[m
+[31m-      }[m
+[32m+[m[32m      //if (e_count == 0) {[m
+[32m+[m[32m      //  num_ve++;[m
+[32m+[m[32m      //}[m
+       if (t_count == 0) {[m
+         total_misspred++;[m
+       }[m
+[31m-      if (e_count > emergency_duration &&[m
+[31m-         supply_voltage > emergency + hysteresis) {[m
+[31m-        if (throttle_on_restore) {[m
+[31m-          next_state = THROTTLE;[m
+[31m-        }[m
+[31m-        else {[m
+[31m-          next_state = NORMAL;[m
+[31m-        }[m
+[32m+[m[32m      // if (e_count > emergency_duration &&[m
+[32m+[m[32m      //    supply_voltage > emergency + hysteresis) {[m
+[32m+[m[32m      //   if (throttle_on_restore) {[m
+[32m+[m[32m      //     next_state = THROTTLE;[m
+[32m+[m[32m      //   }[m
+[32m+[m[32m      //   else {[m
+[32m+[m[32m      //     next_state = NORMAL;[m
+[32m+[m[32m      //   }[m
+[32m+[m[32m      // }[m
+[32m+[m[32m      if (supply_voltage > emergency + hysteresis){[m
+[32m+[m[32m        next_state = NORMAL;[m
+       }[m
+       break;[m
+     }[m
+[36m@@ -173,6 +218,7 @@[m [mHarvard::tick(void)[m
+       next_state = THROTTLE;[m
+       if (supply_voltage < emergency) {[m
+         next_state = EMERGENCY;[m
+[32m+[m[32m        entry_vector = this->history.get_entry().get_history();[m
+         table.insert(this->history.get_entry());[m
+       }[m
+       else if (t_count > throttle_duration &&[m
+[36m@@ -199,8 +245,10 @@[m [mHarvard::tick(void)[m
+     case EMERGENCY : {[m
+       e_count += 1;[m
+       t_count = 0;[m
+[31m-      clkThrottle();[m
+[31m-      setStall();[m
+[32m+[m[32m      // clkThrottle();[m
+[32m+[m[32m      // setStall();[m
+[32m+[m[32m      clkRestore();[m
+[32m+[m[32m      unsetStall();[m
+       break;[m
+     }[m
+     case THROTTLE : {[m
+[36m@@ -227,15 +275,40 @@[m [mHarvard::tick(void)[m
+   tpred = total_preds;[m
+   taction = total_pred_action;[m
+   tiaction = total_pred_inaction;[m
+[32m+[m
+   if (total_preds != 0) {[m
+     mp_rate = (double)total_misspred/(double)total_preds;[m
+   }[m
+[32m+[m
+[32m+[m[32m  //cycle counter[m
+[32m+[m[32m  counter = test_counter;[m
+[32m+[m[32m  //insertion index stat[m
+[32m+[m[32m  last_insert_index_Stats = table.last_insert_index;[m
+[32m+[m[32m  //predictino hit index stat[m
+[32m+[m[32m  last_find_index_Stats = table.last_find_index;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m  //history register stat[m
+[32m+[m[32m  entry_vector = this->history.get_entry().get_history();[m
+[32m+[m[32m  for(int e=0; e < entry_vector.size(); e++){[m
+[32m+[m[32m    table_entry_insert_Stats[e] = entry_vector[e];[m
+[32m+[m[32m  }[m
+[32m+[m[32m  //table_dump stat[m
+[32m+[m[32m  table_dump = table.getTable();[m
+[32m+[m[32m  for(int ind=0; ind < table_dump.size(); ind++){[m
+[32m+[m[32m    entry_vector = table_dump[ind].get_history();[m
+[32m+[m[32m    for(int e=0; e < entry_vector.size(); e++){[m
+[32m+[m[32m      table_dump_Stats[ind*entry_vector.size() + e] = entry_vector[e];[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m[32m  //anchor pc of history register[m
+[32m+[m[32m  hr_anchorPC = this->history.get_pc();[m
+[32m+[m
+   return;[m
+ }[m
+ [m
+ Harvard*[m
+[31m-HarvardPowerPredictorParams::create()[m
+[31m-{[m
+[32m+[m[32mHarvardPowerPredictorParams::create(){[m
+   return new Harvard(this);[m
+ }[m
+ [m
+[1mdiff --git a/src/cpu/power/harvard.hh b/src/cpu/power/harvard.hh[m
+[1mindex e8023f275..dc9d68040 100644[m
+[1m--- a/src/cpu/power/harvard.hh[m
+[1m+++ b/src/cpu/power/harvard.hh[m
+[36m@@ -53,6 +53,7 @@[m
+ #include "cpu/power/history_register.hh"[m
+ #include "cpu/power/ppred_unit.hh"[m
+ #include "cpu/power/prediction_table.hh"[m
+[32m+[m[32m#include "cpu/power/event_type.hh"[m
+ #include "cpu/static_inst.hh"[m
+ #include "params/HarvardPowerPredictor.hh"[m
+ #include "sim/probe/pmu.hh"[m
+[36m@@ -95,7 +96,7 @@[m [mclass Harvard : public PPredUnit[m
+       EMERGENCY[m
+     };[m
+ [m
+[31m-    PPred::TableBloom table;[m
+[32m+[m[32m    PPred::Table table;[m
+ [m
+     state_t state;[m
+     state_t next_state;[m
+[36m@@ -119,6 +120,27 @@[m [mclass Harvard : public PPredUnit[m
+     Stats::Scalar taction;[m
+     Stats::Scalar tiaction;[m
+     Stats::Scalar mp_rate;[m
+[32m+[m
+[32m+[m[32m    //jimmy stats[m
+[32m+[m[32m    uint64_t test_counter;[m
+[32m+[m[32m    Stats::Scalar counter;[m
+[32m+[m
+[32m+[m[32m    uint64_t entry_length;[m
+[32m+[m[32m    uint64_t table_length;[m
+[32m+[m
+[32m+[m[32m    Stats::Scalar hr_anchorPC;[m
+[32m+[m[32m    std::vector<PPred::event_t> entry_vector;[m
+[32m+[m[32m    Stats::Vector table_entry_insert_Stats;[m
+[32m+[m
+[32m+[m[32m    std::vector<PPred::Entry> table_dump;[m
+[32m+[m[32m    Stats::Vector table_dump_Stats;[m
+[32m+[m
+[32m+[m[32m    Stats::Scalar last_insert_index_Stats;[m
+[32m+[m[32m    Stats::Scalar last_find_index_Stats;[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+ };[m
+ [m
+ #endif // __CPU_PRED_HARVARD_HH__[m
+[1mdiff --git a/src/cpu/power/history_register.cc b/src/cpu/power/history_register.cc[m
+[1mindex bc631916c..f14c0e054 100644[m
+[1m--- a/src/cpu/power/history_register.cc[m
+[1m+++ b/src/cpu/power/history_register.cc[m
+[36m@@ -150,17 +150,17 @@[m [mArray2D PPred::HistoryRegister::get_array2d(size_t events,[m
+  */[m
+ bool PPred::HistoryRegister::add_event(PPred::event_t event) {[m
+   // First check if the event isnt already in the HR for the same PC[m
+[31m-  for (size_t i = 0; i < signature.size(); i++) {[m
+[31m-    if (pc[i] != inst_pc) {[m
+[31m-      // Not in the most recent set of PCs, any other match would[m
+[31m-      // be from a previous time frame[m
+[31m-      break;[m
+[31m-    }[m
+[31m-    if (signature[i] == event && pc[i] == inst_pc) {[m
+[31m-      // Event & PC value are a duplicate[m
+[31m-      return false;[m
+[31m-    }[m
+[31m-  }[m
+[32m+[m[32m  // for (size_t i = 0; i < signature.size(); i++) {[m
+[32m+[m[32m  //   if (pc[i] != inst_pc) {[m
+[32m+[m[32m  //     // Not in the most recent set of PCs, any other match would[m
+[32m+[m[32m  //     // be from a previous time frame[m
+[32m+[m[32m  //     break;[m
+[32m+[m[32m  //   }[m
+[32m+[m[32m  //   if (signature[i] == event && pc[i] == inst_pc) {[m
+[32m+[m[32m  //     // Event & PC value are a duplicate[m
+[32m+[m[32m  //     return false;[m
+[32m+[m[32m  //   }[m
+[32m+[m[32m  // }[m
+ [m
+   // shift all the vector elements:[m
+   for (int i = (int)signature.size() - 2; i >= 0; i--) {[m
+[1mdiff --git a/src/cpu/power/prediction_table.cc b/src/cpu/power/prediction_table.cc[m
+[1mindex ecacf8aff..b262ba2f3 100644[m
+[1m--- a/src/cpu/power/prediction_table.cc[m
+[1m+++ b/src/cpu/power/prediction_table.cc[m
+[36m@@ -72,6 +72,7 @@[m [mPPred::Entry::operator==(const PPred::Entry& obj) {[m
+ [m
+ bool[m
+ PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {[m
+[32m+[m[32m  last_updated = 0;[m
+   return this->anchor_pc == pc && this->history == history;[m
+ }[m
+ [m
+[36m@@ -123,13 +124,18 @@[m [mPPred::Table::find(uint64_t pc, std::vector<PPred::event_t> history) {[m
+ [m
+ bool[m
+ PPred::Table::find(const PPred::Entry& obj) {[m
+[31m-  for (auto it = this->prediction_table.begin();[m
+[31m-      it != this->prediction_table.end(); it++) {[m
+[32m+[m[32m  last_find_index = -1;[m
+[32m+[m
+[32m+[m[32m  int count = 0;[m
+[32m+[m[32m  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {[m
+     if (*it == obj) {[m
+[32m+[m[32m      last_find_index = count;[m
+[32m+[m
+       it->access();[m
+       matches++;[m
+       return true;[m
+     }[m
+[32m+[m[32m    count++;[m
+   }[m
+   misses++;[m
+   return false;[m
+[36m@@ -156,10 +162,13 @@[m [mPPred::Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {[m
+ [m
+ bool[m
+ PPred::Table::insert(const Entry& obj) {[m
+[32m+[m[32m  last_insert_index = -1;[m
+[32m+[m
+   insertions++;[m
+   uint64_t max_time = 0;[m
+   size_t idx = 0;[m
+   if (Table::find(obj)) {[m
+[32m+[m[32m    last_insert_index = last_find_index;[m
+     return true;[m
+   }[m
+   for (size_t i = 0; i < prediction_table.size(); i++) {[m
+[36m@@ -168,6 +177,7 @@[m [mPPred::Table::insert(const Entry& obj) {[m
+       idx = i;[m
+     }[m
+   }[m
+[32m+[m[32m  last_insert_index = idx;[m
+   prediction_table[idx] = obj;[m
+   prediction_table[idx].access();[m
+   return true;[m
+[36m@@ -190,6 +200,12 @@[m [mPPred::Table::print() {[m
+   }[m
+ }[m
+ [m
+[32m+[m[32mstd::vector<PPred::Entry>[m
+[32m+[m[32mPPred::Table::getTable(){[m
+[32m+[m[32m  return prediction_table;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m
+ PPred::TableBloom::TableBloom(uint64_t table_size,[m
+                               uint64_t history_length,[m
+                               uint64_t n,[m
+[1mdiff --git a/src/cpu/power/prediction_table.hh b/src/cpu/power/prediction_table.hh[m
+[1mindex 9c0df239d..9ec6b1c64 100644[m
+[1m--- a/src/cpu/power/prediction_table.hh[m
+[1m+++ b/src/cpu/power/prediction_table.hh[m
+[36m@@ -155,6 +155,7 @@[m [mpublic:[m
+    */[m
+   bool find(uint64_t pc, std::vector<event_t> history);[m
+   bool find(const Entry& obj);[m
+[32m+[m[32m  int64_t last_find_index;[m
+ [m
+   /**[m
+    * Insert an Entry based on LRU Replacement Policy[m
+[36m@@ -164,6 +165,8 @@[m [mpublic:[m
+    */[m
+   bool insert(uint64_t pc, std::vector<event_t> history);[m
+   bool insert(const Entry& obj);[m
+[32m+[m[32m  int64_t last_insert_index;[m
+[32m+[m
+ [m
+   /**[m
+    * Ticks the event history table for the LRU Policy[m
+[36m@@ -171,6 +174,10 @@[m [mpublic:[m
+   void tick(void);[m
+ [m
+   void print();[m
+[32m+[m
+[32m+[m[32m  std::vector<Entry> getTable();[m
+[32m+[m
+[32m+[m
+ };[m
+ [m
+ class TableBloom {[m
+[1mdiff --git a/src/mem/dram_ctrl.cc b/src/mem/dram_ctrl.cc[m
+[1mindex 896247edc..fe5344115 100644[m
+[1m--- a/src/mem/dram_ctrl.cc[m
+[1m+++ b/src/mem/dram_ctrl.cc[m
+[36m@@ -2504,7 +2504,10 @@[m [mDRAMCtrl::DRAMStats::regStats()[m
+     using namespace Stats;[m
+ [m
+     assert(dram._system);[m
+[31m-    const auto max_masters = dram._system->maxMasters();[m
+[32m+[m[32m    //compiler complains of unused variable max_masters when disabling stats- JZ 10/12[m
+[32m+[m[32m    __attribute__((unused)) const auto max_masters = dram._system->maxMasters();[m
+[32m+[m[32m    //const auto max_masters = dram._system->maxMasters();[m
+[32m+[m[41m    [m
+ [m
+     perBankRdBursts.init(dram.banksPerRank * dram.ranksPerChannel);[m
+     perBankWrBursts.init(dram.banksPerRank * dram.ranksPerChannel);[m
+[36m@@ -2635,6 +2638,7 @@[m [mDRAMCtrl::DRAMStats::regStats()[m
+     masterWriteRate = masterWriteBytes / simSeconds;[m
+     masterReadAvgLat = masterReadTotalLat / masterReadAccesses;[m
+     masterWriteAvgLat = masterWriteTotalLat / masterWriteAccesses;[m
+[32m+[m[41m    [m
+ }[m
+ [m
+ void[m

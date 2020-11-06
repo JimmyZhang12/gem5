@@ -127,6 +127,11 @@ PPredUnit::regStats()
         .desc("Supply Voltage")
         .precision(6)
         ;
+    sv_p
+        .name(name() + ".supply_voltage_prev")
+        .desc("Supply Voltage_prev")
+        .precision(6)
+        ;
     svdv
         .name(name() + ".supply_voltage_dv")
         .desc("Change in Supply Voltage")
@@ -236,7 +241,9 @@ PPredUnit::get_analog_stats() {
       total_core_runtime_current_prev;
   pct_total_runtime_current = core_runtime_current\
       /total_core_runtime_current;
+
   sv = supply_voltage;
+  sv_p = supply_voltage_prev;
   svdv = supply_voltage_dv;
   sc = supply_current;
   rtc = core_runtime_current;

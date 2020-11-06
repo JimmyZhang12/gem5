@@ -626,6 +626,8 @@ template <class Impl>
 Fault
 LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
 {
+
+
     LQEntry& load_req = loadQueue[load_idx];
     const DynInstPtr& load_inst = load_req.instruction();
 
@@ -846,7 +848,8 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
     // If there's no forwarding case, then go access memory
     DPRINTF(LSQUnit, "Doing memory access for inst [sn:%lli] PC %s\n",
             load_inst->seqNum, load_inst->pcState());
-
+    if (powerPred) 
+      powerPred->historyInsert(PPred::LOAD_CFETCH);
     // Allocate memory if this is the first time a load is issued.
     if (!load_inst->memData) {
         load_inst->memData = new uint8_t[req->mainRequest()->getSize()];

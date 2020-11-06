@@ -168,6 +168,7 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     depCheckShift = params->LSQDepCheckShift;
     checkLoads = params->LSQCheckLoads;
     needsTSO = params->needsTSO;
+    powerPred = params->powerPred;
 
     resetState();
 }
@@ -532,6 +533,7 @@ template <class Impl>
 Fault
 LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
 {
+
     using namespace TheISA;
     // Execute a specific load.
     Fault load_fault = NoFault;
@@ -544,9 +546,9 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
     load_fault = inst->initiateAcc();
 
     if (load_fault == NoFault && !inst->readMemAccPredicate()) {
-        if (powerPred) {
-            powerPred->historyInsert(PPred::LOAD_EX);
-        }
+        // if (powerPred) {
+        //     powerPred->historyInsert(PPred::DUMMY_EVENT);
+        // }
 
         assert(inst->readPredicate());
         inst->setExecuted();
