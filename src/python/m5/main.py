@@ -178,9 +178,11 @@ def parse_options():
     # Stat CTRL Optons
     group("stat control")
     option("--stats_read_from_file", action="store_true", default=False,
-        help="If set, then mcpat and power profiling is disabled")
+        help="If set then we read stats from the stats.txt")
     option("--stats_disable_file_io", action="store_true", default=False,
-        help="If set Use McPAT Fine Grained Power Gating")
+        help="If set, then data is not written to stats file")
+    option("--write_stripped_stats", action="store_true", default=False,
+    help="grep powerPred\|totalInstsReady\|icacheStallCycles\|instsReadyMax")
 
     # NCVerilog options:
     group("ncverilog options")
