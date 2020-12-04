@@ -131,16 +131,16 @@ Harvard::regStats()
         .name(name() + ".counter")
         .desc("Simple tick counter")
         ;
-    table_entry_insert_Stats
-        .init(entry_length)
-        .name(name() + ".inserted_New_Entry")
-        .desc("the current history")
-        ;
-    table_entry_insert_prev_Stats
-        .init(entry_length)
-        .name(name() + ".inserted_New_Entry_prev")
-        .desc("the previous cycle history")
-        ;
+    // table_entry_insert_Stats
+    //     .init(entry_length)
+    //     .name(name() + ".inserted_New_Entry")
+    //     .desc("the current history")
+    //     ;
+    // table_entry_insert_prev_Stats
+    //     .init(entry_length)
+    //     .name(name() + ".inserted_New_Entry_prev")
+    //     .desc("the previous cycle history")
+    //     ;
     // table_dump_Stats
     //     .init(entry_length * table_length)
     //     .name(name() + ".table_dump")
@@ -162,6 +162,16 @@ Harvard::regStats()
         .name(name() + ".anchorPC")
         .desc("Anchor pc of Hist Reg")
         ;
+    new_events_Stats
+        .init(entry_length)
+        .name(name() + ".new_events")
+        .desc("events that occured this cycle")
+        ;
+    new_events_prev_Stats
+        .init(entry_length)
+        .name(name() + ".new_events_prev")
+        .desc("events that occured prev cycle")
+        ;
         
   }
 
@@ -170,6 +180,17 @@ Harvard::tick(void)
 {
   DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
   get_analog_stats();
+
+  //new events 
+  for(int i=0; i < new_events.size(); i++){
+    new_events_prev_Stats[i] = new_events[i];
+  }
+  new_events = this->history.get_new_events();
+  for(int i=0; i < new_events.size(); i++){
+    new_events_Stats[i] = new_events[i];
+  }
+  this->history.clear_new_events();
+
   table.tick();
   
   test_counter++;
@@ -310,13 +331,13 @@ Harvard::tick(void)
   last_find_index_Stats = table.last_find_index;
 
   //history register stat
-  for(int e=0; e < entry_vector.size(); e++){
-    table_entry_insert_prev_Stats[e] = entry_vector[e];
-  }
-  entry_vector = this->history.get_entry().get_history();
-  for(int e=0; e < entry_vector.size(); e++){
-    table_entry_insert_Stats[e] = entry_vector[e];
-  }
+  // for(int e=0; e < entry_vector.size(); e++){
+  //   table_entry_insert_prev_Stats[e] = entry_vector[e];
+  // }
+  // entry_vector = this->history.get_entry().get_history();
+  // for(int e=0; e < entry_vector.size(); e++){
+  //   table_entry_insert_Stats[e] = entry_vector[e];
+  // }
 
   // //table dump stat
   // table_dump = table.getTable();

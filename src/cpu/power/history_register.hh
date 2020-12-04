@@ -65,6 +65,8 @@ class HistoryRegister {
    */
   std::vector<event_t> signature;
 
+  std::vector<event_t> new_events;
+
   /**
    * PC of last event
    */
@@ -74,6 +76,7 @@ class HistoryRegister {
    * PC of tick
    */
   uint64_t inst_pc;
+
 
 public:
   /**
@@ -89,7 +92,14 @@ public:
   void resize(size_t len = 4) {
     signature.resize(len);
     pc.resize(len);
+    new_events.resize(len);
   }
+
+  /**
+   * clear newly added events from new events vector
+   */
+  void clear_new_events();
+
 
   /**
    * Convert the History Register to an Event type
@@ -176,7 +186,10 @@ public:
   std::vector<event_t> get_signature() const {
     return signature;
   }
-
+ std::vector<event_t> get_new_events() const {
+    return new_events;
+  }
+  
   /**
    * get_pc
    * Return the PC value
@@ -185,6 +198,8 @@ public:
   uint64_t get_pc() const {
     return pc[0];
   }
+
+
 };
 
 } // namespace PPred

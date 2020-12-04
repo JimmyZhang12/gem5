@@ -130,10 +130,10 @@ class Harvard : public PPredUnit
 
     Stats::Scalar hr_anchorPC;
 
-    std::vector<PPred::event_t> entry_vector;
+    //std::vector<PPred::event_t> entry_vector;
     //std::vector<PPred::event_t> table_vector;
-    Stats::Vector table_entry_insert_Stats;
-    Stats::Vector table_entry_insert_prev_Stats;
+    // Stats::Vector table_entry_insert_Stats;
+    // Stats::Vector table_entry_insert_prev_Stats;
 
     // std::vector<PPred::Entry> table_dump;
     // Stats::Vector table_dump_Stats;
@@ -145,9 +145,10 @@ class Harvard : public PPredUnit
 
     Stats::Scalar last_find_index_Stats;
 
-
-
-
+    //new events
+    std::vector<PPred::event_t> new_events;
+    Stats::Vector new_events_Stats;
+    Stats::Vector new_events_prev_Stats;
 
 
 };

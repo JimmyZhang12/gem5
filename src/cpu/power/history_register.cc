@@ -61,6 +61,8 @@
 PPred::HistoryRegister::HistoryRegister(size_t len) {
   this->signature.resize(len, BRANCH_T);
   this->pc.resize(len, 0);
+
+  this->new_events.resize(len, BRANCH_T);
 }
 
 /**
@@ -165,11 +167,13 @@ bool PPred::HistoryRegister::add_event(PPred::event_t event) {
   // shift all the vector elements:
   for (int i = (int)signature.size() - 2; i >= 0; i--) {
     this->signature[i+1] = this->signature[i];
+    this->new_events[i+1] = this->new_events[i];
   }
   for (int i = (int)pc.size() - 2; i >= 0; i--) {
     this->pc[i+1] = this->pc[i];
   }
   this->signature[0] = event;
+  this->new_events[0] = event;
   this->pc[0] = this->inst_pc;
   // Print Vector & PC
   DPRINTF(HistoryRegister, "[ HistoryRegister ] add_event(): PC %d; " \
@@ -187,4 +191,10 @@ bool PPred::HistoryRegister::add_event(PPred::event_t event) {
  */
 void PPred::HistoryRegister::set_pc(uint64_t pc) {
   this->inst_pc = pc;
+}
+
+void PPred::HistoryRegister::clear_new_events(){
+ for (int i = (int)new_events.size() - 1; i >= 0; i--) {
+    this->new_events[i] = DUMMY_EVENT;
+  }
 }
