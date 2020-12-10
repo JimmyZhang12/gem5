@@ -636,9 +636,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     if (cacheBlocked) {
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
                 tid);
-        if (powerPred) {
-            powerPred->historyInsert(PPred::ICACHE_BLOCK);
-        }
+
         return false;
     } else if (checkInterrupt(pc) && !delayedCommit[tid]) {
         // Hold off fetch from getting new instructions when:
@@ -647,9 +645,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         // fetch is switched out.
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, interrupt pending\n",
                 tid);
-        if (powerPred) {
-            powerPred->historyInsert(PPred::ICACHE_BLOCK);
-        }
+
         return false;
     }
 
@@ -1284,9 +1280,17 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             if (fetchStatus[tid] == IcacheWaitResponse)
                 ++icacheStallCycles;
+                
+                if (powerPred) {
+                    powerPred->historyInsert(PPred::ICACHE_STALL);
+                }
                 //powerPred->setCPUStalled(true);
             else if (fetchStatus[tid] == ItlbWait)
                 ++fetchTlbCycles;
+
+                if (powerPred) {
+                    powerPred->historyInsert(PPred::TLB_STALL);
+                }
                 //powerPred->setCPUStalled(true);
             else
                 ++fetchMiscStallCycles;

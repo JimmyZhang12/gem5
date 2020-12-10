@@ -874,9 +874,9 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
     req->sendPacketToCache();
     if (!req->isSent()){
         iewStage->blockMemInst(load_inst);
-        if (powerPred) {
-            powerPred->historyInsert(PPred::LOAD_BLOCK);
-        }
+        // if (powerPred) {
+        //     powerPred->historyInsert(PPred::LOAD_BLOCK);
+        // }
     }
 
     return NoFault;

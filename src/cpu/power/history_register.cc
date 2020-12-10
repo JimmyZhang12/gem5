@@ -195,6 +195,6 @@ void PPred::HistoryRegister::set_pc(uint64_t pc) {
 
 void PPred::HistoryRegister::clear_new_events(){
  for (int i = (int)new_events.size() - 1; i >= 0; i--) {
-    this->new_events[i] = DUMMY_EVENT;
+    this->new_events[i] = EMPTY_EVENT;
   }
 }

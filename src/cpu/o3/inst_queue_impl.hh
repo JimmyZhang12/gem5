@@ -913,6 +913,11 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             }
 
             issuing_inst->setIssued();
+
+            if (powerPred) {
+                powerPred->historyInsert(PPred::INSTR_ISSUE);
+            }
+            
             ++total_issued;
 
 #if TRACING_ON

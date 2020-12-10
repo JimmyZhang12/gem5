@@ -1175,7 +1175,11 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
         // instruction.
         if (add_to_iq) {
             instQueue.insert(inst);
+            if(powerPred){
+                powerPred->historyInsert(PPred::INSTR_DISPATCH);
+            }
         }
+        
 
         insts_to_dispatch.pop();
 
@@ -1232,7 +1236,7 @@ void
 DefaultIEW<Impl>::executeInsts()
 {
     if(powerPred){
-        //powerPred->historyInsert(PPred::EXECUTE_INSTR);
+        powerPred->historyInsert(PPred::INSTR_EXECUTE);
     }
 
     wbNumInst = 0;

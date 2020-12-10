@@ -487,6 +487,11 @@ LSQUnit<Impl>::checkViolations(typename LoadQueue::iterator& loadIt,
 
                         ++lsqMemOrderViolation;
 
+                        if (powerPred) {
+                            powerPred->historyInsert(PPred::MEM_MP);
+                        }
+
+
                         return std::make_shared<GenericISA::M5PanicFault>(
                             "Detected fault with inst [sn:%lli] and "
                             "[sn:%lli] at address %#x\n",
@@ -513,6 +518,10 @@ LSQUnit<Impl>::checkViolations(typename LoadQueue::iterator& loadIt,
                 memDepViolator = ld_inst;
 
                 ++lsqMemOrderViolation;
+
+                if (powerPred) {
+                    powerPred->historyInsert(PPred::MEM_MP);
+                }
 
                 return std::make_shared<GenericISA::M5PanicFault>(
                     "Detected fault with "
@@ -565,9 +574,9 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
         inst->savedReq->isPartialFault() && !inst->savedReq->isComplete()) {
         assert(inst->savedReq->isSplit());
 
-        if (powerPred) {
-            powerPred->historyInsert(PPred::LOAD_BLOCK);
-        }
+        // if (powerPred) {
+        //     powerPred->historyInsert(PPred::LOAD_BLOCK);
+        // }
 
         // If we have a partial fault where the mem access is not complete yet
         // then the cache must have been blocked. This load will be re-executed
@@ -619,6 +628,10 @@ LSQUnit<Impl>::executeStore(const DynInstPtr &store_inst)
 
     DPRINTF(LSQUnit, "Executing store PC %s [sn:%lli]\n",
             store_inst->pcState(), store_inst->seqNum);
+
+    if (powerPred) {
+            powerPred->historyInsert(PPred::STORE_EXECUTE);
+    }
 
     assert(!store_inst->isSquashed());
 
@@ -791,7 +804,9 @@ LSQUnit<Impl>::writebackStores()
             }
         }
         req->buildPackets();
-
+        if (powerPred) {
+            powerPred->historyInsert(PPred::STORE_WB);
+        }
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%s "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
                 storeWBIt.idx(), inst->pcState(),
@@ -989,7 +1004,9 @@ LSQUnit<Impl>::writeback(const DynInstPtr &inst, PacketPtr pkt)
                     "due to pending fault.\n", inst->seqNum);
         }
     }
-
+    if (powerPred) {
+        powerPred->historyInsert(PPred::LOAD_WB);
+    }
     // Need to insert instruction into queue to commit
     iewStage->instToCommit(inst);
 

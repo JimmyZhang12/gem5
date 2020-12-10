@@ -1053,6 +1053,9 @@ DefaultCommit<Impl>::commitInsts()
             bool commit_success = commitHead(head_inst, num_committed);
 
             if (commit_success) {
+                if (powerPred) {
+                    powerPred->historyInsert(PPred::INSTR_COMMIT);
+                }
                 ++num_committed;
                 statCommittedInstType[tid][head_inst->opClass()]++;
                 ppCommit->notify(head_inst);
