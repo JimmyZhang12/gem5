@@ -45,6 +45,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import spec06_benchmarks
 import optparse
 import sys
 import os
@@ -125,6 +126,7 @@ Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
 Options.addO3CPUOptions(parser)
 
+
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
 
@@ -137,34 +139,36 @@ if args:
 multiprocesses = []
 numThreads = 1
 
-if options.bench:
-    apps = options.bench.split("-")
-    if len(apps) != options.num_cpus:
-        print("number of benchmarks not equal to set num_cpus!")
-        sys.exit(1)
+# if options.bench:
+#     apps = options.bench.split("-")
+#     if len(apps) != options.num_cpus:
+#         print("number of benchmarks not equal to set num_cpus!")
+#         sys.exit(1)
 
-    for app in apps:
-        try:
-            if buildEnv['TARGET_ISA'] == 'alpha':
-                exec("workload = %s('alpha', 'tru64', '%s')" % (
-                        app, options.spec_input))
-            elif buildEnv['TARGET_ISA'] == 'arm':
-                exec("workload = %s('arm_%s', 'linux', '%s')" % (
-                        app, options.arm_iset, options.spec_input))
-            else:
-                exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
-                        app, options.spec_input))
-            multiprocesses.append(workload.makeProcess())
-        except:
-            print("Unable to find workload for %s: %s" %
-                  (buildEnv['TARGET_ISA'], app),
-                  file=sys.stderr)
-            sys.exit(1)
-elif options.cmd:
-    multiprocesses, numThreads = get_processes(options)
-else:
-    print("No workload specified. Exiting!\n", file=sys.stderr)
-    sys.exit(1)
+#     for app in apps:
+#         try:
+#             if buildEnv['TARGET_ISA'] == 'alpha':
+#                 exec("workload = %s('alpha', 'tru64', '%s')" % (
+#                         app, options.spec_input))
+#             elif buildEnv['TARGET_ISA'] == 'arm':
+#                 exec("workload = %s('arm_%s', 'linux', '%s')" % (
+#                         app, options.arm_iset, options.spec_input))
+#             else:
+#                 exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
+#                         app, options.spec_input))
+#             multiprocesses.append(workload.makeProcess())
+#         except:
+#             print("Unable to find workload for %s: %s" %
+#                   (buildEnv['TARGET_ISA'], app),
+#                   file=sys.stderr)
+#             sys.exit(1)
+# elif options.cmd:
+#     multiprocesses, numThreads = get_processes(options)
+# else:
+#     print("No workload specified. Exiting!\n", file=sys.stderr)
+#     sys.exit(1)
+
+
 
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
@@ -219,11 +223,11 @@ if ObjectList.is_kvm_cpu(CPUClass) or ObjectList.is_kvm_cpu(FutureClass):
         fatal("KvmCPU can only be used in SE mode with x86")
 
 # Sanity check
-if options.simpoint_profile:
-    if not ObjectList.is_noncaching_cpu(CPUClass):
-        fatal("SimPoint/BPProbe should be done with an atomic cpu")
-    if np > 1:
-        fatal("SimPoint generation not supported with more than one CPUs")
+# if options.simpoint_profile:
+#     if not ObjectList.is_noncaching_cpu(CPUClass):
+#         fatal("SimPoint/BPProbe should be done with an atomic cpu")
+#     if np > 1:
+#         fatal("SimPoint generation not supported with more than one CPUs")
 
 # Clock for dumping stats
 system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
@@ -234,19 +238,25 @@ system.ppred_stat = PPredStat( \
     ncores = np)
 system.ppred_stat.clk_domain = system.ppred_stat_clk
 
+
+process = spec06_benchmarks.bzip2
+
+
 for i in range(np):
-    if options.smt:
-        system.cpu[i].workload = multiprocesses
-    elif len(multiprocesses) == 1:
-        system.cpu[i].workload = multiprocesses[0]
-    else:
-        system.cpu[i].workload = multiprocesses[i]
+    # if options.smt:
+    #     system.cpu[i].workload = multiprocesses
+    # elif len(multiprocesses) == 1:
+    #     system.cpu[i].workload = multiprocesses[0]
+    # else:
+    #     system.cpu[i].workload = multiprocesses[i]
 
-    if options.simpoint_profile:
-        system.cpu[i].addSimPointProbe(options.simpoint_interval)
+    # if options.simpoint_profile:
+    #     system.cpu[i].addSimPointProbe(options.simpoint_interval)
 
-    if options.checker:
-        system.cpu[i].addCheckerCpu()
+    # if options.checker:
+    #     system.cpu[i].addCheckerCpu()
+
+    system.cpu[i].workload = process 
 
     if options.bp_type:
         bpClass = ObjectList.bp_list.get(options.bp_type)
@@ -525,6 +535,7 @@ else:
     config_filesystem(system, options)
 
 #m5.stats.periodicStatDump(options.power_profile_initial_stats_interval)
-"""1 000 000 000 000"""
 root = Root(full_system = False, system = system)
+print("running : Simulation.run()")
+
 Simulation.run(options, root, system, FutureClass)
