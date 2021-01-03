@@ -120,15 +120,30 @@ def parse_output(output_file):
 
   """ Returns an Epochs """
   with open(output_file, "r") as of:
+
+    #print("Jimmy:     **************mcpat/util.py 124 parse*******************")
+
     lines = of.readlines()
+    #print(lines)
+
     lines = strip_header(lines)
     lines = strip_space(lines)
+    #print(lines)
+
     temp = split_list(lines)
+    #print(temp)
+
     dev_list = to_devices(temp)
     epoch = Epoch(dev_list)
+
+
+    #print("Jimmy:     **************mcpat/util.py 124 parse*******************")
+
     return epoch
 
+#first time running mcpat?
 first_time = True
+
 def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
   global first_time
   from m5 import options
@@ -136,6 +151,8 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
                                    options.mcpat_testname)
   mcpat_exe = os.path.join(options.mcpat_path, "mcpat")
   mcpat_serial = os.path.join(mcpat_output_path, "mcpat_serial.txt")
+
+  #if first time first generate a checkpoint before mcpat calculation
   if(first_time):
     mcpat = [mcpat_exe,
       "-i",
@@ -145,15 +162,26 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
       "--serial_create=true",
       "--serial_file="+mcpat_serial]
     first_time = False
-  else:
-    mcpat = [mcpat_exe,
-      "-i",
-      xml,
-      "-p",
-      "5",
-      "--serial_restore=true",
-      "--serial_file="+mcpat_serial]
-  #print(" ".join(mcpat))
+    with open(ofile, "w") as ostd, open(errfile, "w") as oerr:
+      p = subprocess.Popen(mcpat, stdout=ostd, stderr=oerr)
+      p.wait()
+  
+  mcpat = [mcpat_exe,
+    "-i",
+    xml,
+    "-p",
+    "5",
+    "--serial_restore=true",
+    "--serial_file="+mcpat_serial]
+
+  # print("Jimmy: **************mcpat/util.py 177*******************")
+  # print(mcpat_output_path)
+  # print(mcpat_exe)
+  # print(mcpat_serial)
+  # print("first_time: ", first_time)
+  # print("command: ", mcpat)
+  # print("Jimmy: **************mcpat/util.py 177*******************")
+
   with open(ofile, "w") as ostd, open(errfile, "w") as oerr:
     p = subprocess.Popen(mcpat, stdout=ostd, stderr=oerr)
     p.wait()

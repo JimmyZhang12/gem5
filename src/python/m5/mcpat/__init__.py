@@ -98,8 +98,15 @@ def m5_to_mcpat(stat_list, read_from_file,
   generate_xml(m5_stats_file, m5_config_file, i_f, stat_list, \
               read_from_file, voltage=voltage, \
               frequency=freq, temperature=temperature, device_type=device_type)
+
+  
+  
   run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees = [parse_output(o_f)]
+
+  #print("Jimmy: **************mcpat/__init.py 107 mcpat_trees*******************")
+  #print(mcpat_trees)
+  #print("Jimmy: **************mcpat/__init.py 107 mcpat_trees*******************")
 
   if(rolling_avg):
     data = get_data("Processor", mcpat_trees)
