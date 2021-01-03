@@ -39,6 +39,11 @@ from device import Device
 
 class Epoch(object):
   def __init__(self, device_list = []):
+
+    # print("Jimmy: **************mcpat/epoch.py 43 __init__*******************")
+    # print(device_list)
+    # print("Jimmy: **************mcpat/epoch.py 43 __init__*******************")
+
     if len(device_list) != 0:
       self.dev_tree = self.build(device_list)
     else:

@@ -177,6 +177,13 @@ def simulate(*args, **kwargs):
     if _drain_manager.isDrained():
         _drain_manager.resume()
 
+    # print("Jimmy: **************simumlate.py 180*******************")
+    # for arg in args:
+    #     print("arg through *argv:", arg)
+    # for key, value in kwargs.items():
+    #     print("{0} = {1}".format(key, value))
+    # print("Jimmy: **************simumlate.py 180*******************")
+
     return _m5.event.simulate(*args, **kwargs)
 
 def drain():
