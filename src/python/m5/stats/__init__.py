@@ -396,6 +396,14 @@ def get_voltage():
     return lastVoltage
 
 def get_profiling():
+    from m5 import options
+    now = m5.curTick()
+    global runtime_begin_profile
+
+    runtime_begin_profile = \
+        (options.power_profile_start != -1 and now >= options.power_profile_start) \
+        or runtime_begin_profile
+
     return runtime_begin_profile
 
 def setCommittedInstr(num):
@@ -428,41 +436,81 @@ def dump(root=None, exit=False):
         return
 
     if(options.mcpat_enable):
-        if((options.power_profile_start != -1 and
-            now >= options.power_profile_start) or
-            runtime_begin_profile):
-            mcpat.set_flags(options.mcpat_use_fg_pg, \
-                options.mcpat_scale_factor)
-            profiling = True
-            numDump += 1
-            if new_dump:
-                _m5.stats.processDumpQueue()
-                sim_root = Root.getInstance()
-                if sim_root:
-                    sim_root.preDumpStats();
-                prepare()
 
-            for output in outputList:
-                if output.valid():
-                    stat_strings.append(output.begin())
-                    _dump_to_visitor(output, root=root)
-                    stat_strings.append(output.end())
+        # print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
+        # print("options.power_profile_start: ", options.power_profile_start)
+        # print("now: ", now)
+        # print("runtime_begin_profile: ", runtime_begin_profile)
+        # print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
 
-            #print("".join(stat_strings))
-            #sys.exit(1)
+        mcpat.set_flags(options.mcpat_use_fg_pg, \
+            options.mcpat_scale_factor)
+        profiling = True
+        numDump += 1
+        if new_dump:
+            _m5.stats.processDumpQueue()
+            sim_root = Root.getInstance()
+            if sim_root:
+                sim_root.preDumpStats()
+            prepare()
 
-            # Initialilze the Verilog Sim:
-            power = 0
-            resistance = 0
-            voltage = 0
-            current = 0
-            mp_v = vpi_shm.mp_get_voltage_set()
-            mp_f = []
-            for i in range(vpi_shm.mp_get_ncores()):
-              mp_f.append(vpi_shm.mp_get_freq(i))
-            if(options.ncverilog_enable):
-                if init_ncsim:
-                    # Run an Initial McPAT stats run with 1.0v
+        for output in outputList:
+            if output.valid():
+                stat_strings.append(output.begin())
+                _dump_to_visitor(output, root=root)
+                stat_strings.append(output.end())
+
+        #print("".join(stat_strings))
+        #sys.exit(1)
+
+        # Initialilze the Verilog Sim:
+        power = 0
+        resistance = 0
+        voltage = 0
+        current = 0
+        mp_v = vpi_shm.mp_get_voltage_set()
+        mp_f = []
+        for i in range(vpi_shm.mp_get_ncores()):
+            mp_f.append(vpi_shm.mp_get_freq(i))
+        if(options.ncverilog_enable):
+            if init_ncsim:
+                # Run an Initial McPAT stats run with 1.0v
+                mcpat.m5_to_mcpat(stat_strings,\
+                    options.stats_read_from_file, mp_v, mp_f, \
+                    380.0, options.mcpat_device_type)
+                resistance = mcpat.get_last_r(mp_v, \
+                    options.mcpat_use_fg_pg, \
+                    options.mcpat_scale_factor)
+                current = mcpat.get_last_i(mp_v, \
+                    options.mcpat_use_fg_pg, \
+                    options.mcpat_scale_factor)
+                power = mcpat.get_last_p(mp_v, \
+                    options.mcpat_use_fg_pg, \
+                    options.mcpat_scale_factor)
+                # Run Init and warmup PowerSupply
+                vpi_shm.initialize(options.mcpat_testname)
+                for i in range(int(options.ncverilog_warmup)):
+                    vpi_shm.set_driver_signals(current, 0)
+                    lv = vpi_shm.get_voltage()
+                    lastVoltage=lv
+                    lastCurrent=vpi_shm.get_current()
+                    vpi_shm.ack_supply()
+                init_ncsim = False
+            else:
+                if options.ncverilog_feedback:
+                    mcpat.m5_to_mcpat(stat_strings,\
+                        options.stats_read_from_file, lv, mp_f, \
+                        380.0, options.mcpat_device_type)
+                    resistance = mcpat.get_last_r(lv, \
+                        options.mcpat_use_fg_pg, \
+                        options.mcpat_scale_factor)
+                    current = mcpat.get_last_i(lv, \
+                        options.mcpat_use_fg_pg, \
+                        options.mcpat_scale_factor)
+                    power = mcpat.get_last_p(lv, \
+                        options.mcpat_use_fg_pg, \
+                        options.mcpat_scale_factor)
+                else:
                     mcpat.m5_to_mcpat(stat_strings,\
                         options.stats_read_from_file, mp_v, mp_f, \
                         380.0, options.mcpat_device_type)
@@ -475,67 +523,35 @@ def dump(root=None, exit=False):
                     power = mcpat.get_last_p(mp_v, \
                         options.mcpat_use_fg_pg, \
                         options.mcpat_scale_factor)
-                    # Run Init and warmup PowerSupply
-                    vpi_shm.initialize(options.mcpat_testname)
-                    for i in range(int(options.ncverilog_warmup)):
-                        vpi_shm.set_driver_signals(current, 0)
-                        lv = vpi_shm.get_voltage()
-                        lastVoltage=lv
-                        lastCurrent=vpi_shm.get_current()
-                        vpi_shm.ack_supply()
-                    init_ncsim = False
-                else:
-                    if options.ncverilog_feedback:
-                      mcpat.m5_to_mcpat(stat_strings,\
-                          options.stats_read_from_file, lv, mp_f, \
-                          380.0, options.mcpat_device_type)
-                      resistance = mcpat.get_last_r(lv, \
-                          options.mcpat_use_fg_pg, \
-                          options.mcpat_scale_factor)
-                      current = mcpat.get_last_i(lv, \
-                          options.mcpat_use_fg_pg, \
-                          options.mcpat_scale_factor)
-                      power = mcpat.get_last_p(lv, \
-                          options.mcpat_use_fg_pg, \
-                          options.mcpat_scale_factor)
-                    else:
-                      mcpat.m5_to_mcpat(stat_strings,\
-                          options.stats_read_from_file, mp_v, mp_f, \
-                          380.0, options.mcpat_device_type)
-                      resistance = mcpat.get_last_r(mp_v, \
-                          options.mcpat_use_fg_pg, \
-                          options.mcpat_scale_factor)
-                      current = mcpat.get_last_i(mp_v, \
-                          options.mcpat_use_fg_pg, \
-                          options.mcpat_scale_factor)
-                      power = mcpat.get_last_p(mp_v, \
-                          options.mcpat_use_fg_pg, \
-                          options.mcpat_scale_factor)
-                    vpi_shm.set_driver_signals(current, 0)
-                    lv = vpi_shm.get_voltage()
-                    lastVoltage=lv
-                    lastCurrent=vpi_shm.get_current()
-                    vpi_shm.ack_supply()
-            else:
-                mcpat.m5_to_mcpat(stat_strings,\
-                    options.stats_read_from_file, mp_v, mp_f, \
-                    380.0, options.mcpat_device_type)
+                vpi_shm.set_driver_signals(current, 0)
+                lv = vpi_shm.get_voltage()
+                lastVoltage=lv
+                lastCurrent=vpi_shm.get_current()
+                vpi_shm.ack_supply()
+        else:
+            mcpat.m5_to_mcpat(stat_strings,\
+                options.stats_read_from_file, mp_v, mp_f, \
+                380.0, options.mcpat_device_type)
 
-            max_dump = options.power_profile_duration
-            max_instr = options.power_profile_instrs
-            if(numDump == max_dump or exit or committedInstrs >= max_instr):
-                mcpat.dump()
-                runtime_begin_profile = False
-                print("Ending after "+str(numDump)+
-                      " datapoints")
-                # Clean up simulation:
-                if(options.ncverilog_enable):
-                    current = mcpat.get_last_i(mp_v)
-                    vpi_shm.set_driver_signals(current, 1)
-                    lastVoltage=vpi_shm.get_voltage()
-                    lastCurrent=vpi_shm.get_current()
-                    vpi_shm.ack_supply()
-                sys.exit()
+        max_dump = options.power_profile_duration
+        max_instr = options.power_profile_instrs
+
+        if(numDump % 100 == 0):
+            print("src/python/m5/stats/__init.py__ 535: numDump = ", numDump)
+
+        if(numDump == max_dump or exit or committedInstrs >= max_instr):
+            mcpat.dump()
+            runtime_begin_profile = False
+            print("src/python/m5/stats/__init.py__ 540: Ending after "+str(numDump)+
+                    " datapoints")
+            # Clean up simulation:
+            if(options.ncverilog_enable):
+                current = mcpat.get_last_i(mp_v)
+                vpi_shm.set_driver_signals(current, 1)
+                lastVoltage=vpi_shm.get_voltage()
+                lastCurrent=vpi_shm.get_current()
+                vpi_shm.ack_supply()
+            sys.exit()
     else:
         if new_dump:
             _m5.stats.processDumpQueue()

@@ -362,7 +362,7 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
-                    signature_length=100,
+                    signature_length=25,
                     # Specific
                     throttle_on_restore=False,
                     table_size=16,

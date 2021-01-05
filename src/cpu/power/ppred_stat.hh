@@ -44,6 +44,7 @@
 #include "cpu/power/history_register.hh"
 #include "cpu/static_inst.hh"
 #include "debug/PowerPred.hh"
+#include "debug/Debug.hh"
 #include "params/PPredStat.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/clocked_object.hh"
@@ -93,6 +94,9 @@ class PPredStat : public ClockedObject
 
     /** Flag to signal the PPred testing can begin */
     bool begin;
+
+    /**which sim tick to start profiling or ROI (-1)*/
+    unsigned int power_profile_start;
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

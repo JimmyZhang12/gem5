@@ -48,6 +48,8 @@ DebugFlag('PerceptronUTAPowerPred')
 DebugFlag('DNNPowerPred')
 DebugFlag('ThrottleAfterStallPowerPred')
 DebugFlag('DepAnalysisPowerPred')
+DebugFlag('Debug')
+
 Source('ppred_unit.cc')
 Source('test.cc')
 Source('simple_history.cc')

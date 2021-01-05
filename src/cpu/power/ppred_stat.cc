@@ -38,6 +38,7 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/PPredStat.hh"
+#include "debug/Debug.hh"
 
 PPredStat::PPredStat(const Params *params)
   : ClockedObject(params),
@@ -66,22 +67,27 @@ PPredStat::PPredStat(const Params *params)
 void
 PPredStat::tick(void)
 {
-  if (Stats::pythonGetProfiling()) {
+  if(Stats::pythonGetProfiling()){
+    
     if (first_time) {
       Stats::reset();
       first_time = false;
     }
+
     else {
       Stats::dump();
       Stats::reset();
       begin = true;
     }
   }
+  
+
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
         clockEdge(Cycles(cycles)));
     schedule(tickEvent, clockEdge(Cycles(cycles)));
   }
+
 }
 
 
