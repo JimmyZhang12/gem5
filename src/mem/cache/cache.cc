@@ -228,6 +228,7 @@ Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
             allocateWriteBuffer(wbPkt, forward_time);
         }
         writebacks.pop_front();
+        
     }
 }
 

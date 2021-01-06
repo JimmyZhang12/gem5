@@ -2102,7 +2102,9 @@ BaseCache::CacheStats::regStats()
         demandMisses.subname(i, system->getMasterName(i));
     }
 
-    overallMisses.flags(total | nozero | nonan);
+    //overallMisses.flags(total | nozero | nonan);
+    overallMisses.flags(total);
+
     overallMisses = demandMisses + SUM_NON_DEMAND(misses);
     for (int i = 0; i < max_masters; i++) {
         overallMisses.subname(i, system->getMasterName(i));
@@ -2228,7 +2230,6 @@ BaseCache::CacheStats::regStats()
     for (int i = 0; i < max_masters; i++) {
         overallMshrUncacheable.subname(i, system->getMasterName(i));
     }
-
 
     overallMshrUncacheableLatency.flags(total | nozero | nonan);
     overallMshrUncacheableLatency =

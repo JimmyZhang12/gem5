@@ -182,7 +182,7 @@ def parse_options():
     option("--stats_disable_file_io", action="store_true", default=False,
         help="If set, then data is not written to stats file")
     option("--write_stripped_stats", action="store_true", default=False,
-    help="grep powerPred\|totalInstsReady\|icacheStallCycles\|instsReadyMax")
+        help="auto strip stats as per settings in src/base/text.cc")
 
     # NCVerilog options:
     group("ncverilog options")
