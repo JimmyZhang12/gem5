@@ -1378,6 +1378,15 @@ DefaultIEW<Impl>::executeInsts()
             }
 
             inst->setExecuted();
+        
+            if (powerPred) {
+                if (inst->isControl()){
+                    if (inst->readPredTaken()) 
+                        powerPred->historyInsert(PPred::BRANCH_T);
+                    else 
+                        powerPred->historyInsert(PPred::BRANCH_NT);
+                }
+            }
 
             instToCommit(inst);
         }

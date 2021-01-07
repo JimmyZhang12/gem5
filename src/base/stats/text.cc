@@ -274,12 +274,8 @@ std::string ScalarPrint::operator()
         return "";
     //if (flags.isSet(nonan) && std::isnan(value))
     //    return;
-    bool search = \
-    name.find("powerPred")!=std::string::npos || \
-    name.find("overall_misses::total")!=std::string::npos || \
-    name.find("system.cpu.iew.branchMispredicts")!=std::string::npos || \
-    name.find("system.cpu.iew.memOrderViolationEvents")!=std::string::npos || \
-    name.find("system.cpu.iew.exec_branches");
+    bool search = notStripped(name);
+
 
     std::string stats_str;
     stringstream pdfstr, cdfstr;
@@ -391,11 +387,7 @@ std::string VectorPrint::operator()
         return stats_str;
     }
 
-    bool search = \
-    name.find("powerPred")!=std::string::npos || \
-    name.find("totalInstsReady")!=std::string::npos || \
-    name.find("icacheStallCycles")!=std::string::npos || \
-    name.find("instsReadyMax")!=std::string::npos;
+    bool search = notStripped(name);
 
     if ((!flags.isSet(nozero)) || (total != 0)) {
         if (flags.isSet(oneline)) {
@@ -564,13 +556,7 @@ DistPrint::operator()(ostream &stream, bool enable,bool stripped_stats) const
         stats_str.append(print(stream,enable, stripped_stats));
     }
 
-    bool search = \
-    name.find("powerPred")!=std::string::npos || \
-    name.find("totalInstsReady")!=std::string::npos || \
-    name.find("icacheStallCycles")!=std::string::npos || \
-    name.find("instsReadyMax")!=std::string::npos || \
-    name.find("miss")!=std::string::npos || \
-    name.find("Simulation")!=std::string::npos;
+    bool search = notStripped(name);
 
     if (flags.isSet(oneline)) {
         if (enable && (!stripped_stats || search))
@@ -891,5 +877,18 @@ Output * initText
 
     return &text;
 }
+
+bool
+notStripped(string name){
+    bool strip = 
+        name.find("powerPred")!=std::string::npos || 
+        name.find("system.cpu.iew.intInstsReady")!=std::string::npos || 
+        name.find("system.cpu.iew.memOrderViolationEvents")!=std::string::npos || 
+        name.find("system.cpu.iew.exec_branches")!=std::string::npos || 
+        name.find("system.cpu.iew.branchMispredicts")!=std::string::npos || 
+        name.find("overall_misses::total")!=std::string::npos;
+    return strip;
+}
+
 
 } // namespace Stats

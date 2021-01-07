@@ -99,12 +99,17 @@ class Text : public Output
     bool valid() const override;
     std::string begin() override;
     std::string end() override;
+
+    //write_stripped_stats check
 };
 
 std::string ValueToString(Result value, int precision);
 
 Output *initText
 (const std::string &filename, bool desc, bool enable, bool stripped_stats);
+
+bool notStripped(std::string name);
+
 
 } // namespace Stats
 
