@@ -437,11 +437,11 @@ def dump(root=None, exit=False):
 
     if(options.mcpat_enable):
 
-        # print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
-        # print("options.power_profile_start: ", options.power_profile_start)
-        # print("now: ", now)
-        # print("runtime_begin_profile: ", runtime_begin_profile)
-        # print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
+        print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
+        print("options.power_profile_start: ", options.power_profile_start)
+        print("now: ", now)
+        print("runtime_begin_profile: ", runtime_begin_profile)
+        print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
 
         mcpat.set_flags(options.mcpat_use_fg_pg, \
             options.mcpat_scale_factor)

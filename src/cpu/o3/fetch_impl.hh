@@ -1087,15 +1087,10 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
                               fromCommit->commitInfo[tid].pc,
                               fromCommit->commitInfo[tid].branchTaken,
                               tid);
-            if (powerPred) {
-                powerPred->historyInsert(PPred::BRANCH_MP);
-            }
+
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
-            if (powerPred) {
-                powerPred->historyInsert(PPred::BRANCH_MP);
-            }
         }
 
         return true;
@@ -1116,15 +1111,11 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
                               fromDecode->decodeInfo[tid].nextPC,
                               fromDecode->decodeInfo[tid].branchTaken,
                               tid);
-            if (powerPred) {
-                powerPred->historyInsert(PPred::BRANCH_MP);
-            }
+
         } else {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               tid);
-            if (powerPred) {
-                powerPred->historyInsert(PPred::BRANCH_MP);
-            }
+
         }
 
         if (fetchStatus[tid] != Squashing) {

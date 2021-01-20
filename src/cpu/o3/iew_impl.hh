@@ -1412,6 +1412,11 @@ DefaultIEW<Impl>::executeInsts()
             bool loadNotExecuted = !inst->isExecuted() && inst->isLoad();
 
             if (inst->mispredicted() && !loadNotExecuted) {
+                
+                if (powerPred)
+                    powerPred->historyInsert(PPred::BRANCH_MP);
+
+
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
