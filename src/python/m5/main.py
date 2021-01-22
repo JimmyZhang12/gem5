@@ -212,6 +212,17 @@ def parse_options():
     group("Power Supply Options")
     option("--power-supply-type", type='str', default="HARVARD",
         help="Power Supply Type")
+    option("--pdn_L", type='float', default="0",
+        help="PDN inductance")
+    option("--pdn_C", type='float', default="0",
+        help="PDN capacitance")
+    option("--pdn_R", type='float', default="0",
+        help="PDN resistance")
+    option("--pdn_VDC", type='float', default="0",
+        help="voltage from package")
+    option("--pdn_CLK", type='float', default="0",
+        help="pdn sample rate")
+
 
     # Help options
     group("Help Options")

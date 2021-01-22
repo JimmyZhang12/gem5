@@ -67,7 +67,9 @@ PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/pcie.py')
 PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/system.py')
 PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/tlb.py')
 PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/util.py')
-#PySource('m5.power_supply', 'm5/power_supply/__init__.py')
+
+PySource('m5.power_supply', 'm5/power_supply/__init__.py')
+
 PySource('m5.util', 'm5/util/__init__.py')
 PySource('m5.util', 'm5/util/attrdict.py')
 PySource('m5.util', 'm5/util/code_formatter.py')

@@ -53,10 +53,12 @@ from m5.params import isNullPointer
 from m5.util import attrdict, fatal
 import m5.mcpat as mcpat
 import m5.vpi_shm as vpi_shm
+import m5.power_supply as power_supply
 
 # Stat exports
 from _m5.stats import schedStatEvent as schedEvent
 from _m5.stats import periodicStatDump
+
 
 outputList = []
 
@@ -411,6 +413,8 @@ def setCommittedInstr(num):
     committedInstrs = num
 
 def dump(root=None, exit=False):
+    import time
+    begin = time.time()
     '''Dump all statistics data to the registered outputs'''
     from m5 import options
 
@@ -436,12 +440,13 @@ def dump(root=None, exit=False):
         return
 
     if(options.mcpat_enable):
+        # print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
+        # print("options.power_profile_start: ", options.power_profile_start)
+        # print("now: ", now)
+        # print("runtime_begin_profile: ", runtime_begin_profile)
+        # print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
 
-        print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
-        print("options.power_profile_start: ", options.power_profile_start)
-        print("now: ", now)
-        print("runtime_begin_profile: ", runtime_begin_profile)
-        print("Jimmy********************python/m5/stats/__init.py__ 432 dump()**********************")
+        # power_supply.test()
 
         mcpat.set_flags(options.mcpat_use_fg_pg, \
             options.mcpat_scale_factor)
@@ -472,6 +477,10 @@ def dump(root=None, exit=False):
         mp_f = []
         for i in range(vpi_shm.mp_get_ncores()):
             mp_f.append(vpi_shm.mp_get_freq(i))
+
+        end = time.time()
+        print("time-0", end-begin)
+
         if(options.ncverilog_enable):
             if init_ncsim:
                 # Run an Initial McPAT stats run with 1.0v
@@ -487,16 +496,22 @@ def dump(root=None, exit=False):
                 power = mcpat.get_last_p(mp_v, \
                     options.mcpat_use_fg_pg, \
                     options.mcpat_scale_factor)
+
+                power_supply.init_PDN(options.pdn_L, \
+                    options.pdn_C, options.pdn_R, \
+                    options.pdn_VDC, options.pdn_CLK)
+
                 # Run Init and warmup PowerSupply
-                vpi_shm.initialize(options.mcpat_testname)
-                for i in range(int(options.ncverilog_warmup)):
-                    vpi_shm.set_driver_signals(current, 0)
-                    lv = vpi_shm.get_voltage()
-                    lastVoltage=lv
-                    lastCurrent=vpi_shm.get_current()
-                    vpi_shm.ack_supply()
+                # vpi_shm.initialize(options.mcpat_testname)
+                # for i in range(int(options.ncverilog_warmup)):
+                #     vpi_shm.set_driver_signals(current, 0)
+                #     lv = vpi_shm.get_voltage()
+                #     lastVoltage=lv
+                #     lastCurrent=vpi_shm.get_current()
+                #     vpi_shm.ack_supply()
                 init_ncsim = False
             else:
+                begin = time.time()
                 if options.ncverilog_feedback:
                     mcpat.m5_to_mcpat(stat_strings,\
                         options.stats_read_from_file, lv, mp_f, \
@@ -523,18 +538,28 @@ def dump(root=None, exit=False):
                     power = mcpat.get_last_p(mp_v, \
                         options.mcpat_use_fg_pg, \
                         options.mcpat_scale_factor)
-                vpi_shm.set_driver_signals(current, 0)
-                lv = vpi_shm.get_voltage()
-                lastVoltage=lv
-                lastCurrent=vpi_shm.get_current()
-                vpi_shm.ack_supply()
+
+                # vpi_shm.set_driver_signals(current, 0)
+                # lv = vpi_shm.get_voltage()
+                # lastVoltage=lv
+                # lastCurrent=vpi_shm.get_current()
+                # vpi_shm.ack_supply()
+
+                lastVoltage = power_supply.get_volt(current)
+                lastCurrent = current
+
+                end = time.time()
+                print("time-1", end-begin)
+
         else:
             mcpat.m5_to_mcpat(stat_strings,\
                 options.stats_read_from_file, mp_v, mp_f, \
                 380.0, options.mcpat_device_type)
 
+        begin = time.time()
         max_dump = options.power_profile_duration
         max_instr = options.power_profile_instrs
+
 
         if(numDump % 100 == 0):
             print("src/python/m5/stats/__init.py__ 535: numDump = ", numDump)
@@ -547,17 +572,17 @@ def dump(root=None, exit=False):
             # Clean up simulation:
             if(options.ncverilog_enable):
                 current = mcpat.get_last_i(mp_v)
-                vpi_shm.set_driver_signals(current, 1)
-                lastVoltage=vpi_shm.get_voltage()
-                lastCurrent=vpi_shm.get_current()
-                vpi_shm.ack_supply()
+                # vpi_shm.set_driver_signals(current, 1)
+                # lastVoltage=vpi_shm.get_voltage()
+                # lastCurrent=vpi_shm.get_current()
+                # vpi_shm.ack_supply()
             sys.exit()
     else:
         if new_dump:
             _m5.stats.processDumpQueue()
             sim_root = Root.getInstance()
             if sim_root:
-                sim_root.preDumpStats();
+                sim_root.preDumpStats()
             prepare()
 
         for output in outputList:
@@ -565,6 +590,9 @@ def dump(root=None, exit=False):
                 output.begin()
                 _dump_to_visitor(output, root=root)
                 output.end()
+
+        end = time.time()
+    print("time-2", end-begin)
 
 def reset():
     '''Reset all statistics to the base state'''

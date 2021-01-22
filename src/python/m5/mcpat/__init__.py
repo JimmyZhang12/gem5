@@ -65,6 +65,9 @@ def set_flags(pg=False, sf=1.0):
 def m5_to_mcpat(stat_list, read_from_file,
                 voltage, freq, temperature, device_type):
   from m5 import options
+  import time
+
+  start = time.time()
 
   global iter
   global mcpat_trees
@@ -99,14 +102,23 @@ def m5_to_mcpat(stat_list, read_from_file,
               read_from_file, voltage=voltage, \
               frequency=freq, temperature=temperature, device_type=device_type)
 
-  
-  
+
+  end = time.time()
+  print("time1", end - start)
+
+  start = time.time()
+
   run_mcpat(i_f, "5", "1", o_f, e_f)
+
+  end = time.time()
+  print("time2", end - start)
+
+
+  start = time.time()
   mcpat_trees = [parse_output(o_f)]
 
-  #print("Jimmy: **************mcpat/__init.py 107 mcpat_trees*******************")
-  #print(mcpat_trees)
-  #print("Jimmy: **************mcpat/__init.py 107 mcpat_trees*******************")
+  end = time.time()
+  print("time3", end - start)
 
   if(rolling_avg):
     data = get_data("Processor", mcpat_trees)
