@@ -54,6 +54,7 @@ from m5.util import attrdict, fatal
 import m5.mcpat as mcpat
 import m5.vpi_shm as vpi_shm
 import m5.power_supply as power_supply
+import m5.mcpat_internal as mcpat_internal
 
 # Stat exports
 from _m5.stats import schedStatEvent as schedEvent
@@ -446,6 +447,7 @@ def dump(root=None, exit=False):
 
         # power_supply.test()
 
+
         mcpat.set_flags(options.mcpat_use_fg_pg, \
             options.mcpat_scale_factor)
         profiling = True
@@ -472,7 +474,7 @@ def dump(root=None, exit=False):
         mp_v = options.pdn_VDC
         mp_f = [options.pdn_CLK]
     
-
+        print(stat_strings)
         if(options.ncverilog_enable):
             if init_ncsim:
                 # Run an Initial McPAT stats run with 1.0v

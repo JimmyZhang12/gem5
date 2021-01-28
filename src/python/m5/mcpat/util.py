@@ -32,11 +32,14 @@ import re
 import pickle
 import subprocess
 import math
+import m5.mcpat_internal as mcpat_internal
+
 from file_read_backwards import FileReadBackwards
 from collections import defaultdict
 from m5.SimObject import SimObject
 from m5.util import fatal
 from m5.params import *
+
 
 from node import Node
 from device import Device
@@ -145,6 +148,9 @@ def parse_output(output_file):
 first_time = True
 
 def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
+  import time 
+
+  begin = time.time()
   global first_time
   from m5 import options
   mcpat_output_path = os.path.join(options.mcpat_out,
@@ -174,17 +180,17 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
     "--serial_restore=true",
     "--serial_file="+mcpat_serial]
 
-  # print("Jimmy: **************mcpat/util.py 177*******************")
-  # print(mcpat_output_path)
-  # print(mcpat_exe)
-  # print(mcpat_serial)
-  # print("first_time: ", first_time)
-  # print("command: ", mcpat)
-  # print("Jimmy: **************mcpat/util.py 177*******************")
-
+  end = time.time()
+  print("time0", end-begin) 
+  begin = time.time()
   with open(ofile, "w") as ostd, open(errfile, "w") as oerr:
     p = subprocess.Popen(mcpat, stdout=ostd, stderr=oerr)
     p.wait()
+  end = time.time()
+  print("time1", end-begin)
+
+  mcpat_internal.test(xml)
+
 
 def get_data(path, mcpat_trees):
   data = {}

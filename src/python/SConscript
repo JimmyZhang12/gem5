@@ -70,6 +70,8 @@ PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/util.py')
 
 PySource('m5.power_supply', 'm5/power_supply/__init__.py')
 
+PySource('m5.mcpat_internal', 'm5/mcpat_internal/__init__.py')
+
 PySource('m5.util', 'm5/util/__init__.py')
 PySource('m5.util', 'm5/util/attrdict.py')
 PySource('m5.util', 'm5/util/code_formatter.py')
@@ -92,9 +94,17 @@ PySource('m5.ext', 'm5/ext/__init__.py')
 PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/pyfdt.py')
 PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/__init__.py')
 
+
 Source('pybind11/core.cc', add_tags='python')
 Source('pybind11/debug.cc', add_tags='python')
 Source('pybind11/event.cc', add_tags='python')
 Source('pybind11/stats.cc', add_tags='python')
 Source('pybind11/ppred.cc', add_tags='python')
 Source('pybind11/vpi_shm.cc', add_tags='python')
+Source('pybind11/example.cc', add_tags='python')
+
+Source('pybind11/mcpat_src/XML_Parse.cc', add_tags='python')
+Source('pybind11/mcpat_src/xmlParser.cc', add_tags='python')
+
+
+

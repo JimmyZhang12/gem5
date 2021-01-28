@@ -281,6 +281,11 @@ int
 get_time_to_next() {
   return ttn;
 }
+void
+test(){
+
+}
+
 
 } // namespace vpi_shm
 
@@ -306,4 +311,6 @@ pybind_init_vpi_shm(py::module &m_native)
     m.def("get_time_to_next", &vpi_shm::get_time_to_next,
           "Get Voltage Set");
     m.def("mp_get_ncores", &vpi_shm::mp_get_ncores, "Get num cores");
+    m.def("test", &vpi_shm::test, "Get num cores");
+
 }
