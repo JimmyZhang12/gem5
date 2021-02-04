@@ -516,10 +516,17 @@ def dump(root=None, exit=False):
                     lastVoltage=lv
                     lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
+
+                    print("mcpat P I V")
+                    print(mcpat.get_last_p(mp_v))
+                    print(mcpat.get_last_i(mp_v))
+                    print("lastCurrent ", lastCurrent)
+                    print("last voltage ", lastVoltage)
             else:
                 mcpat.m5_to_mcpat(stat_strings,\
                     options.stats_read_from_file, mp_v, mp_f, \
                     380.0, options.mcpat_device_type)
+
 
             max_dump = options.power_profile_duration
             max_instr = options.power_profile_instrs
