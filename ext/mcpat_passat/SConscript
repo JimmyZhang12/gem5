@@ -1,0 +1,37 @@
+
+Import('main')
+
+def AllSources(node='.', pattern='*'):
+    result = [AllSources(dir, pattern)
+              for dir in Glob(str(node)+'/*')
+              if dir.isdir()]
+    result += [source
+               for source in Glob(str(node)+'/'+pattern)
+               if (source.isfile() and 'main' not in str(source))]
+    return result
+
+main.Prepend(CPPPATH=Dir('.'))
+main.Prepend(CPPPATH=Dir('cache'))
+main.Prepend(CPPPATH=Dir('cacti'))
+main.Prepend(CPPPATH=Dir('cacti/decoder'))
+main.Prepend(CPPPATH=Dir('core'))
+main.Prepend(CPPPATH=Dir('iocontrollers'))
+main.Prepend(CPPPATH=Dir('logic'))
+main.Prepend(CPPPATH=Dir('memoryctrl'))
+main.Append(CPPDEFINES=['inorder=0'])
+main.Append(CPPDEFINES=['NTHREADS=1'])
+
+penv = main.Clone()
+
+to_remove = ['-Wall', '-Wundef', '-Wextra', '-Werror']
+penv['CCFLAGS'] = filter(lambda f: f not in to_remove, penv['CCFLAGS'])
+curr_dir = Dir('.').srcnode().abspath
+# print("**************TEST**************")
+# print(AllSources(curr_dir, '*.cc'))
+penv.Library('mcpat', source=AllSources(curr_dir, '*.cc'))
+
+
+
+
+main.Append(LIBS=['mcpat'])
+main.Prepend(LIBPATH=[Dir('.')])

@@ -189,8 +189,6 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
   end = time.time()
   print("time1", end-begin)
 
-  mcpat_internal.test(xml)
-
 
 def get_data(path, mcpat_trees):
   data = {}

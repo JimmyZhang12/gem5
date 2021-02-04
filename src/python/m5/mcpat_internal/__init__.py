@@ -28,7 +28,8 @@
 
 import _m5.mcpat_internal as mcpat_internal
 
-def test(xml):
-  return mcpat_internal.test(xml)
+def test():
+  mp = mcpat_internal.Mcpat()
+  mp.init()
 
 

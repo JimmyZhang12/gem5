@@ -28,6 +28,7 @@
 #
 # Authors: Steve Reinhardt
 #          Nathan Binkert
+import os
 
 Import('*')
 
@@ -69,7 +70,6 @@ PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/tlb.py')
 PySource('m5.mcpat.autogen', 'm5/mcpat/autogen/util.py')
 
 PySource('m5.power_supply', 'm5/power_supply/__init__.py')
-
 PySource('m5.mcpat_internal', 'm5/mcpat_internal/__init__.py')
 
 PySource('m5.util', 'm5/util/__init__.py')
@@ -103,8 +103,11 @@ Source('pybind11/ppred.cc', add_tags='python')
 Source('pybind11/vpi_shm.cc', add_tags='python')
 Source('pybind11/example.cc', add_tags='python')
 
-Source('pybind11/mcpat_src/XML_Parse.cc', add_tags='python')
-Source('pybind11/mcpat_src/xmlParser.cc', add_tags='python')
+
+# print("*****************deathdeadhdeathdeath**")
+# LAUNCHDIR = GetLaunchDir()
+# env['CPPPATH'].append(os.path.join(LAUNCHDIR,'src/python/pybind/mcpat_src'))
+# print(env['CPPPATH'])
 
 
 

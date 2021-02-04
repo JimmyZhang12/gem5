@@ -10,9 +10,27 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace mcpat_internal{
+// #include "example.hh"
+#include "XML_Parse.h"
+#include "processor.h"
+#include "xmlParser.h"
 
-void
-test(std::string filepath);
+class Mcpat{
+    public:
+    Mcpat();
 
-}
+    void init();
+
+    void compute();
+
+    void test(std::string filepath);
+
+    private:
+    Processor proc;
+    ParseXML *xml;
+};
+
+
+
+
+
