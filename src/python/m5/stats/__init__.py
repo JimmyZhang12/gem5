@@ -53,6 +53,9 @@ from m5.params import isNullPointer
 from m5.util import attrdict, fatal
 import m5.mcpat as mcpat
 import m5.vpi_shm as vpi_shm
+import m5.mcpat_internal as mcpat_internal
+
+import time
 
 # Stat exports
 from _m5.stats import schedStatEvent as schedEvent
@@ -341,7 +344,6 @@ def _dump_to_visitor(visitor, root=None):
     if root is None:
         for stat in stats_list:
             stat_strings.append(stat.visit(visitor))
-
     # New stats
     def dump_group(group):
         global stat_strings
@@ -349,7 +351,7 @@ def _dump_to_visitor(visitor, root=None):
             stat_strings.append(stat.visit(visitor))
 
         for n, g in group.getStatGroups().items():
-            visitor.beginGroup(n)
+            visitor.beginGroup(n) #visitor is type output
             dump_group(g)
             visitor.endGroup()
 
@@ -406,6 +408,7 @@ def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
     from m5 import options
 
+
     now = m5.curTick()
     global lastDump
     global numDump
@@ -422,6 +425,9 @@ def dump(root=None, exit=False):
     new_dump = lastDump != now
     lastDump = now
 
+    print('*******Entering pythondump')
+    print('root= ', root)
+
     # Don't allow multiple global stat dumps in the same tick. It's
     # still possible to dump a multiple sub-trees.
     if not new_dump and root is None:
@@ -433,20 +439,22 @@ def dump(root=None, exit=False):
             runtime_begin_profile):
             mcpat.set_flags(options.mcpat_use_fg_pg, \
                 options.mcpat_scale_factor)
+
             profiling = True
             numDump += 1
+            
             if new_dump:
                 _m5.stats.processDumpQueue()
                 sim_root = Root.getInstance()
                 if sim_root:
-                    sim_root.preDumpStats();
-                prepare()
-
+                    sim_root.preDumpStats(); #predumping does nothing unless overriden
+                prepare() #prepare for scalar stats does nothing: statistic.h - class statstor.prepare()
             for output in outputList:
                 if output.valid():
                     stat_strings.append(output.begin())
                     _dump_to_visitor(output, root=root)
                     stat_strings.append(output.end())
+            
 
             #print("".join(stat_strings))
             #sys.exit(1)
@@ -517,11 +525,15 @@ def dump(root=None, exit=False):
                     lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
 
-                    print("mcpat P I V")
-                    print(mcpat.get_last_p(mp_v))
-                    print(mcpat.get_last_i(mp_v))
-                    print("lastCurrent ", lastCurrent)
-                    print("last voltage ", lastVoltage)
+                    # print("mcpat P I V")
+                    # print(mcpat.get_last_p(mp_v))
+                    # print(mcpat.get_last_i(mp_v))
+                    # print("lastCurrent ", lastCurrent)
+                    # print("last voltage ", lastVoltage)
+                    
+                    # mcpat_internal.test()
+                    # mcpat_internal.update_stats(stat_strings)
+
             else:
                 mcpat.m5_to_mcpat(stat_strings,\
                     options.stats_read_from_file, mp_v, mp_f, \

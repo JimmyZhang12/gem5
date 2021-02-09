@@ -50,6 +50,7 @@
 #include "sim/global_event.hh"
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
+#include "mcpat.hh"
 
 class PPredStat : public ClockedObject
 {
@@ -73,6 +74,7 @@ class PPredStat : public ClockedObject
      */
     bool get_begin() const;
   private:
+
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
@@ -88,11 +90,19 @@ class PPredStat : public ClockedObject
     /** Ncores */
     double ncores;
 
+    std::string mcpat_output_path;
+
+    std::string xml_path;
+
     /** Time */
     bool first_time;
 
+    bool mcpat_ready;
+
     /** Flag to signal the PPred testing can begin */
     bool begin;
+
+    Mcpat mp;
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

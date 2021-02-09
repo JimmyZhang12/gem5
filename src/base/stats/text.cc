@@ -164,8 +164,8 @@ std::string
 Text::begin()
 {
     // std::cout<<"this is enable "<<enable<<std::endl;
-    if (enable && !stripped_stats)
-    ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
+    if (enable)
+        ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
     return "\n---------- Begin Simulation Statistics ----------\n";
 }
 
@@ -173,8 +173,8 @@ std::string
 Text::end()
 {
     // std::cout<<"this is enable "<<enable<<std::endl;
-    if (enable && !stripped_stats)
-    ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
+    if (enable)
+        ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();
     return "\n---------- End Simulation Statistics   ----------\n";
 }
@@ -274,11 +274,9 @@ std::string ScalarPrint::operator()
         return "";
     //if (flags.isSet(nonan) && std::isnan(value))
     //    return;
-    bool search = \
-    name.find("powerPred")!=std::string::npos || \
-    name.find("totalInstsReady")!=std::string::npos || \
-    name.find("icacheStallCycles")!=std::string::npos || \
-    name.find("instsReadyMax")!=std::string::npos;
+    bool search = notStripped(name);
+
+
     std::string stats_str;
     stringstream pdfstr, cdfstr;
 
@@ -389,11 +387,7 @@ std::string VectorPrint::operator()
         return stats_str;
     }
 
-    bool search = \
-    name.find("powerPred")!=std::string::npos || \
-    name.find("totalInstsReady")!=std::string::npos || \
-    name.find("icacheStallCycles")!=std::string::npos || \
-    name.find("instsReadyMax")!=std::string::npos;
+    bool search = notStripped(name);
 
     if ((!flags.isSet(nozero)) || (total != 0)) {
         if (flags.isSet(oneline)) {
@@ -562,11 +556,7 @@ DistPrint::operator()(ostream &stream, bool enable,bool stripped_stats) const
         stats_str.append(print(stream,enable, stripped_stats));
     }
 
-    bool search = \
-    name.find("powerPred")!=std::string::npos || \
-    name.find("totalInstsReady")!=std::string::npos || \
-    name.find("icacheStallCycles")!=std::string::npos || \
-    name.find("instsReadyMax")!=std::string::npos;
+    bool search = notStripped(name);
 
     if (flags.isSet(oneline)) {
         if (enable && (!stripped_stats || search))
@@ -643,7 +633,6 @@ Text::visit(const ScalarInfo &info)
     print.precision = info.precision;
     print.pdf = NAN;
     print.cdf = NAN;
-    // std::cout<<"this is enable in scalar visit "<<enable<<std::endl;
 
     return print(*stream,enable, stripped_stats);
 }
@@ -888,5 +877,18 @@ Output * initText
 
     return &text;
 }
+
+bool
+notStripped(string name){
+    bool strip = 
+        name.find("powerPred")!=std::string::npos || 
+        name.find("system.cpu.iew.intInstsReady")!=std::string::npos || 
+        name.find("system.cpu.iew.memOrderViolationEvents")!=std::string::npos || 
+        name.find("system.cpu.iew.exec_branches")!=std::string::npos || 
+        name.find("system.cpu.iew.branchMispredicts")!=std::string::npos || 
+        name.find("overall_misses::total")!=std::string::npos;
+    return strip;
+}
+
 
 } // namespace Stats

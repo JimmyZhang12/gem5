@@ -505,6 +505,9 @@ def addSEOptions(parser):
                       default=16,
                       help="Number of events to use in Perceptron/DNN")
 
+    parser.add_option("--mcpat_output_path", type="str",
+                      default=16,
+                      help="mcpat output write path")
 
 def addFSOptions(parser):
     from .FSConfig import os_types

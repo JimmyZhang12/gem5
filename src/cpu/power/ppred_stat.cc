@@ -31,6 +31,7 @@
 #include "cpu/power/ppred_stat.hh"
 
 #include <algorithm>
+#include <iostream>
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
@@ -46,10 +47,14 @@ PPredStat::PPredStat(const Params *params)
   cycles(params->cycle_period),
   clkDomain(params->stat_clk_domain),
   frequency(params->frequency),
-  ncores(params->ncores)
+  ncores(params->ncores),
+  mcpat_output_path(params->mcpat_output_path),
+  mp()
 {
   /* Do Nothing */
+  xml_path = mcpat_output_path + "/mp.xml";
   first_time = true;
+  mcpat_ready = false;
   begin = false;
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
@@ -58,6 +63,7 @@ PPredStat::PPredStat(const Params *params)
   }
   vpi_shm::init(frequency, ncores);
   vpi_shm::set_ttn(frequency, cycles);
+
 }
 
 /**
@@ -67,6 +73,9 @@ void
 PPredStat::tick(void)
 {
   if (Stats::pythonGetProfiling()) {
+    DPRINTF(PPredStat, "*******entering mcpat*********\n" );
+    DPRINTF(PPredStat, "mcpat path is: %s\n", mcpat_output_path);
+
     if (first_time) {
       Stats::reset();
       first_time = false;
@@ -75,7 +84,24 @@ PPredStat::tick(void)
       Stats::dump();
       Stats::reset();
       begin = true;
+      
+      if (mcpat_ready){
+        mp.init_wrapper(xml_path, mcpat_output_path);
+
+        std::cout << '\n' << "Press a key to continue...";
+        do {
+
+        } while (cin.get() != '\n');
+
+      }
+      else{
+        mp = Mcpat();
+        mp.init(xml_path);
+        mcpat_ready = true;
+      }
+
     }
+
   }
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \

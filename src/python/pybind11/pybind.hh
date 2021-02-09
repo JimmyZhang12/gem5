@@ -49,5 +49,7 @@ void pybind_init_event(pybind11::module &m_native);
 void pybind_init_stats(pybind11::module &m_native);
 void pybind_init_ppred(pybind11::module &m_native);
 void pybind_init_vpi_shm(pybind11::module &m_native);
+void pybind_init_mcpat_internal(pybind11::module &m_native);
+
 
 #endif

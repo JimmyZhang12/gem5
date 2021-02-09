@@ -120,24 +120,12 @@ def parse_output(output_file):
 
   """ Returns an Epochs """
   with open(output_file, "r") as of:
-
-    #print("Jimmy:     **************mcpat/util.py 124 parse*******************")
-
     lines = of.readlines()
-    #print(lines)
-
     lines = strip_header(lines)
     lines = strip_space(lines)
-    #print(lines)
-
     temp = split_list(lines)
-    #print(temp)
-
     dev_list = to_devices(temp)
     epoch = Epoch(dev_list)
-
-
-    #print("Jimmy:     **************mcpat/util.py 124 parse*******************")
 
     return epoch
 
@@ -174,14 +162,6 @@ def run_mcpat(xml, print_level, opt_for_clk, ofile, errfile):
     "--serial_restore=true",
     "--serial_file="+mcpat_serial]
 
-  # print("Jimmy: **************mcpat/util.py 177*******************")
-  # print(mcpat_output_path)
-  # print(mcpat_exe)
-  # print(mcpat_serial)
-  # print("first_time: ", first_time)
-  # print("command: ", mcpat)
-  # print("Jimmy: **************mcpat/util.py 177*******************")
-
   with open(ofile, "w") as ostd, open(errfile, "w") as oerr:
     p = subprocess.Popen(mcpat, stdout=ostd, stderr=oerr)
     p.wait()
@@ -202,6 +182,14 @@ def get_data(path, mcpat_trees):
 def calc_total_power(data, power_gating = False, scale_factor=1.0):
   # Add Runtime Dynamic to Gate Leakage and Subthreshold Leakage with Power
   # Gating
+  print("calc_total_power=",power_gating)
+  print("gate leakage ", float(data["Gate Leakage"]))
+  print("Subthreshold Leakage with power gating ", float(data["Subthreshold Leakage with power gating"]))
+  print("Runtime Dynamic ", float(data["Runtime Dynamic"]))
+  print("sum ", float(data["Gate Leakage"]) + \
+    float(data["Subthreshold Leakage with power gating"]) + \
+    float(data["Runtime Dynamic"])*scale_factor)
+
   if power_gating:
     return (float(data["Gate Leakage"]) + \
            float(data["Subthreshold Leakage with power gating"]) + \

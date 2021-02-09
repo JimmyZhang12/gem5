@@ -48,6 +48,12 @@ def generate_xml(stat_file, config_file, out_file, stat_list=[],
   # Parse & build the context dictionaries:
   stat_dict = \
     build_gem5_stat_dict(stat_file, stat_list, read_from_file)
+
+  # print('stat_dict:')
+  # for k,v in stat_dict.items():
+  #   print(k, " :  ", v)
+
+
   config_dict = build_gem5_config_dict(config_file)
   sim_dict = build_gem5_sim_dict(**kwargs)
 

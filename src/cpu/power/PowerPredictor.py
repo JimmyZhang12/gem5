@@ -248,3 +248,4 @@ class PPredStat(ClockedObject):
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
     frequency = Param.Float(3.5e9, "Default clock freq")
     ncores = Param.Unsigned(1, "Number of cores to sim")
+    mcpat_output_path = Param.String("", "xml path for mcpat")

@@ -205,10 +205,10 @@ EmbeddedPyBind::initAll()
 
     pybind_init_core(m_m5);
     pybind_init_debug(m_m5);
-
     pybind_init_event(m_m5);
     pybind_init_stats(m_m5);
     pybind_init_vpi_shm(m_m5);
+    // pybind_init_mcpat_internal(m_m5);
 
     for (auto &kv : getMap()) {
         auto &obj = kv.second;

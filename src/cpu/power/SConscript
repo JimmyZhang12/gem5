@@ -62,6 +62,9 @@ Source('dnn_predictor.cc')
 Source('throttle_after_stall.cc')
 Source('dependency_analysis.cc')
 
+Source('mcpat.cc')
+
+
 DebugFlag('PredictionTable')
 DebugFlag('HistoryRegister')
 DebugFlag('PPredStat')

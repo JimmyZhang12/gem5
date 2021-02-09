@@ -231,7 +231,9 @@ system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
 system.ppred_stat = PPredStat( \
     cycle_period = options.power_pred_cpu_cycles, \
     frequency = options.power_pred_cpu_freq, \
-    ncores = np)
+    ncores = np, \
+    mcpat_output_path = options.mcpat_output_path)
+
 system.ppred_stat.clk_domain = system.ppred_stat_clk
 
 for i in range(np):

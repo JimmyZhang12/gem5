@@ -43,18 +43,22 @@
 
 using namespace std;
 
-
-
 Component::Component()
         : area(), power(), rt_power(), delay(0) {
 }
 
-
-
 Component::~Component() {
 }
 
-
+void Component::reset() {
+    power.reset();
+    rt_power.reset();
+}
+void Component::reset_dynamic() {
+    rt_power.writeOp.dynamic = 0;
+    rt_power.readOp.dynamic = 0;
+    rt_power.searchOp.dynamic = 0;
+}
 
 double Component::compute_diffusion_width(int num_stacked_in, int num_folded_tr) {
     double w_poly = g_ip->F_sz_um;
