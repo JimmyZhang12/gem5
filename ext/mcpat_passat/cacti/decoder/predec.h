@@ -62,6 +62,8 @@ public:
   powerDef block_power;
   powerDef driver_power;
 
+  void reset();
+
 private:
   // returns <delay, risetime>
   pair<double, double>

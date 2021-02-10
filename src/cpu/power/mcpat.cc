@@ -82,13 +82,13 @@ Mcpat::compute(std::string output_path){
 void
 Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
     std::cout<<"    mcpat init_wrapper:" << std::endl;
+
     xml = new ParseXML();
     xml->parse(xml_dir);
-    proc.reset();
+    proc.XML = xml;
 
     std::string serial = output_path + "/mcpat_serial.txt";
     Processor proc_serial;
-
     std::ifstream ifs(serial.c_str());
     if (ifs.good()) {
         boost::archive::text_iarchive ia(ifs);
@@ -97,9 +97,12 @@ Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
         std::cerr << "Archive " << serial << " cannot be used\n";
         assert(false);
     }
+    
     std::cout<<"    mcpat proc_serial:" << std::endl;
     proc_serial.init(xml,true);
-    proc.init(xml,true);
+
+    proc.reset();
+    proc.compute();
 
     bool long_channel = xml->sys.longer_channel_device;
     double gate_leakage = proc_serial.power.readOp.gate_leakage;
@@ -130,6 +133,11 @@ Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
     proc.displayEnergy(2, 5);
     std::cout.rdbuf(coutbuf); //reset to standard output again
 
+}
+
+void
+Mcpat::update_stats(){
+    
 }
 
 void

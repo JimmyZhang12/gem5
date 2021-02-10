@@ -177,14 +177,18 @@ void MemoryController::computeDynamicPower() {
   }
 }
 void MemoryController::reset(){
-  // Component::reset();
-  // frontend.reset();
-  // frontend.frontendBuffer.reset();
-  // frontend.readBuffer.reset();
-  // frontend.writeBuffer.reset();
-  // transecEngine.power_t.reset();
+  Component::reset();
+  frontend.reset();
+  frontend.frontendBuffer.reset();
+  frontend.readBuffer.reset();
+  frontend.writeBuffer.reset();
 
-  // PHY.reset_dynamic();
+  transecEngine.reset();
+  transecEngine.power_t.reset();
+
+  // PHY.reset();
+  // PHY.power_t.reset();
+
 }
 
 void MemoryController::display(uint32_t indent, bool enable) {

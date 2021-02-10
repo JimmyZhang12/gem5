@@ -148,6 +148,10 @@ void inst_decoder::computeArea() {
 void inst_decoder::computeDynamicPower() {
   inst_decoder_delay_power();
 
+  // cout << "power.*.dynamic: \n";
+  // cout <<power.readOp.dynamic << "\n";
+  // cout << "power.*.dynamic: \n";
+
   double sckRation = g_tp.sckt_co_eff;
   power.readOp.dynamic *= sckRation;
   power.writeOp.dynamic *= sckRation;
@@ -178,12 +182,24 @@ void inst_decoder::inst_decoder_delay_power() {
            num_decoder_segments,
            squencer_passes * num_decoder_segments,
            num_decoder_segments);
+
+  // cout << "inst_decoder_delay_power: \n";
+  // cout <<power.readOp.dynamic << "\n";
+  // cout <<pre_dec.power.readOp.dynamic << "\n";
+  // cout << "inst_decoder_delay_power: \n";
+
   power = power + pre_dec.power * pppm_t;
   set_pppm(pppm_t,
            squencer_passes * num_decoder_segments,
            num_decoder_segments * num_decoded_signals,
            num_decoder_segments * num_decoded_signals,
            squencer_passes * num_decoder_segments);
+
+  // cout << "inst_decoder_delay_power 2 : \n";
+  // cout <<power.readOp.dynamic << "\n";
+  // cout <<final_dec.power.readOp.dynamic << "\n";
+  // cout << "inst_decoder_delay_power 2: \n";
+
   power = power + final_dec.power * pppm_t;
 }
 
@@ -230,6 +246,8 @@ void inst_decoder::leakage_feedback(double temperature) {
 void inst_decoder::reset(){
   Component::reset();
   power_t.reset();
+  pre_dec.reset();
+  final_dec.reset();
   // final_dec.reset_dynamic();
   // pre_dec.reset_dynamic();
   // pre_dec.block_power.reset();

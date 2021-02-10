@@ -55,12 +55,6 @@ void Processor::init(const ParseXML *XML, bool cp) {
    * accumulated from 90 to 22nm There is no point to have heterogeneous memory
    * controller on chip, thus McPAT only support homogeneous memory controllers.
    */
-  if (cp){
-    std::cout << "IB\n";
-    std::cout << cores[0].ifu.IB.power.readOp.dynamic << "IB\n";
-    std::cout << cores[0].ifu.IB.rt_power.readOp.dynamic << "IB\n";
-    std::cout << cores[0].ifu.IB.local_result.power.readOp.dynamic << "IB\n";  
-  }
   
   this->XML = XML;
   int i;
@@ -589,7 +583,10 @@ void Processor::compute(){
   int i;
   double pppm_t[4] = {1, 1, 1, 1};
   
+
   for (i = 0; i < numCore; i++) {
+    cout << "lsu area 1 " << cores[i].lsu.area.get_area() << "\n";
+
     cores[i].set_params(XML, i, &interface_ip, false);
     cores[i].set_stats(XML);
     cores[i].computeDynamicPower();
@@ -618,6 +615,8 @@ void Processor::compute(){
       core.rt_power = core.rt_power + cores[i].rt_power * pppm_t;
       rt_power = rt_power + cores[i].rt_power * pppm_t;
     }
+    cout << "lsu area 2 " << cores[i].lsu.area.get_area() << "\n";;
+
   }
 
   if (!XML->sys.Private_L2) {
@@ -773,7 +772,7 @@ void Processor::compute(){
 
   // Memory Controllers:
   if (XML->sys.mc.number_mcs > 0 && XML->sys.mc.memory_channels_per_mc > 0) {
-    // mc.set_params(XML, &interface_ip, MC);
+    mc.set_params(XML, &interface_ip, MC);
     mc.set_stats(XML);
 
     mc.computeStaticPower();

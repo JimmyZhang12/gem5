@@ -368,6 +368,7 @@ void BranchPredictor::computeDynamicPower(bool is_tdp) {
   }
 }
 void BranchPredictor::reset() {
+  Component::reset();
   globalBPT.power_t.reset();
 	L1_localBPT.power_t.reset();
 	L2_localBPT.power_t.reset();

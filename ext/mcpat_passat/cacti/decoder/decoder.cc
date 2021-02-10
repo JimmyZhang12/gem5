@@ -301,6 +301,8 @@ double Decoder::compute_delays(double inrisetime) {
     this_delay = horowitz(inrisetime, tf, 0.5, 0.5, RISE);
     delay += this_delay;
     inrisetime = this_delay / (1.0 - 0.5);
+
+
     power.readOp.dynamic += (c_load + c_intrinsic) * Vdd * Vdd;
     //    cout<<"w_dec_n["<<0<<"] = "<<w_dec_n[0]<<" delay = "<<this_delay<<"
     //    tf= "<<tf  <<endl;

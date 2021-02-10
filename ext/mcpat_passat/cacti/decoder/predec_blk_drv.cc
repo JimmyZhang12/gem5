@@ -430,3 +430,9 @@ void PredecBlkDrv::leakage_feedback(double temperature) {
         gate_leak_nand3_path * g_tp.peri_global.Vdd;
   }
 }
+
+void PredecBlkDrv::reset() {
+  Component::reset();
+  power_nand2_path.reset();
+  power_nand3_path.reset();
+}

@@ -84,6 +84,7 @@ public:
   void compute_area();
 
   void leakage_feedback(double temperature);
+  void reset();
 
   pair<double, double> compute_delays(
       double inrisetime_nand2_path,

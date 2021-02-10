@@ -512,6 +512,9 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
 
     IB.stats_t.readAc.access = IB.stats_t.writeAc.access =
         XML->sys.core[ithCore].total_instructions;
+    // std::cout << "XML->sys.core[ithCore].total_instructions " << XML->sys.core[ithCore].total_instructions << "\n";
+
+
     IB.rtp_stats = IB.stats_t;
 
     if (coredynp.predictionW > 0) {
@@ -574,6 +577,13 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
       IB.local_result.power.readOp.dynamic * IB.stats_t.readAc.access +
       IB.stats_t.writeAc.access * IB.local_result.power.writeOp.dynamic;
 
+    // std::cout << "IB.local_result.power.readOp.dynamic " << IB.local_result.power.readOp.dynamic  / executionTime << "\n";
+    // std::cout << "IB.stats_t.readAc.access " <<  IB.stats_t.readAc.access / executionTime << "\n";
+    // std::cout << "IB.stats_t.writeAc.access " <<  IB.stats_t.writeAc.access / executionTime << "\n";
+    // std::cout << "IB.local_result.power.writeOp.dynamic " << IB.local_result.power.writeOp.dynamic  / executionTime << "\n";
+
+
+
   if (coredynp.predictionW > 0) {
     BTB.power_t.readOp.dynamic +=
         BTB.local_result.power.readOp.dynamic * BTB.stats_t.readAc.access +
@@ -592,6 +602,11 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
     ID_misc.computeDynamicPower();
     ID_operand.computeDynamicPower();
     ID_inst.computeDynamicPower();
+
+    // std::cout << "ID_misc.power.readOp.dynamic " << ID_misc.power.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_operand.power.readOp.dynamic " << ID_operand.power.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_inst.power.readOp.dynamic " << ID_inst.power.readOp.dynamic / executionTime << "\n";
+
     icache.power =
         icache.power_t +
         (icache.caches.local_result.power + icache.missb.local_result.power +
@@ -627,12 +642,18 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
          icache.ifb.local_result.power + icache.prefetchb.local_result.power) *
             pppm_lkg;
 
+    // std::cout << "IB.power_t.readOp.dynamic " << IB.power_t.readOp.dynamic  / executionTime << "\n";
+    // std::cout << "IB.local_result.power.readOp.dynamic " << IB.local_result.power.readOp.dynamic  / executionTime << "\n";
+
     IB.rt_power = IB.power_t + IB.local_result.power * pppm_lkg;
     rt_power = rt_power + icache.rt_power + IB.rt_power;
     if (coredynp.predictionW > 0) {
       BTB.rt_power = BTB.power_t + BTB.local_result.power * pppm_lkg;
       rt_power = rt_power + BTB.rt_power + BPT.rt_power;
     }
+
+    // std::cout << "IB.rt_power.readOp.dynamic " << IB.rt_power.readOp.dynamic / executionTime << "\n";
+
 
     ID_inst.rt_power.readOp.dynamic =
         ID_inst.power_t.readOp.dynamic * ID_inst.rtp_stats.readAc.access;
@@ -647,27 +668,15 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
 }
 void InstFetchU::reset() {
     Component::reset();
-    // IB.reset();
-    IB.power.reset();
-    IB.rt_power.reset();
-    IB.power_t.reset();
 
-    // icache.power_t.reset();
-	// ID_inst.power_t.reset();
-	// ID_operand.power_t.reset();
-	// ID_misc.power_t.reset();
-    // BTB.power_t.reset();
-    // BTB.reset();
+    icache.reset();
+    IB.reset();
+    BTB.reset();
+    BPT.reset();
 
-
-    // icache.reset();
-    // IB.reset();
-    // BTB.reset();
-    // BPT.reset();
-
-    // ID_inst.reset();
-    // ID_misc.reset();
-    // ID_operand.reset();
+    ID_inst.reset();
+    ID_misc.reset();
+    ID_operand.reset();
 }
 
 void InstFetchU::displayEnergy(uint32_t indent, int plevel, bool is_tdp) {

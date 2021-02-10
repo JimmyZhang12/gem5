@@ -23,6 +23,7 @@ class Mcpat{
     void init_wrapper(std::string xml_dir, std::string output_path);
     void update();
     ParseXML get_xml();
+    void update_stats();
     void get_power();
 
     void test(std::string filepath);

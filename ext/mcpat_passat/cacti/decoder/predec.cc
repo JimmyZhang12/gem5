@@ -158,6 +158,11 @@ double Predec::compute_delays(double inrisetime) {
       blk2->power_nand3_path.readOp.dynamic * blk1->num_L1_active_nand3_path +
       blk2->power_L2.readOp.dynamic;
 
+//   std::cout << "    predec compute delays \n";
+//   std::cout << "    "<< driver_power.readOp.dynamic;
+//   std::cout << "    "<< block_power.readOp.dynamic;
+//   std::cout << "    predec compute delays \n";
+
   power.readOp.dynamic =
       driver_power.readOp.dynamic + block_power.readOp.dynamic;
 
@@ -194,6 +199,8 @@ void Predec::leakage_feedback(double temperature) {
                                     blk2->power_nand2_path.readOp.gate_leakage +
                                     blk2->power_nand3_path.readOp.gate_leakage +
                                     blk2->power_L2.readOp.gate_leakage;
+  
+  
   power.readOp.gate_leakage =
       driver_power.readOp.gate_leakage + block_power.readOp.gate_leakage;
 }
@@ -202,6 +209,7 @@ void Predec::leakage_feedback(double temperature) {
 pair<double, double>
 Predec::get_max_delay_before_decoder(pair<double, double> input_pair1,
                                      pair<double, double> input_pair2) {
+
   pair<double, double> ret_val;
   double delay;
 
@@ -225,4 +233,17 @@ Predec::get_max_delay_before_decoder(pair<double, double> input_pair1,
   }
 
   return ret_val;
+}
+
+
+
+void
+Predec::reset(){
+    Component::reset();
+    driver_power.reset();
+    block_power.reset();
+    blk1->reset();
+    blk2->reset();
+    drv1->reset();
+    drv2->reset();
 }

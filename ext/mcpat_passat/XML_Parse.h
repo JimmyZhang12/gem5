@@ -155,6 +155,7 @@ typedef struct {
   double write_misses;
   double replacements;
 } BTB_systemcore;
+//system core
 typedef struct {
   // all params at the level of system.core(0-n)
   int clock_rate;
@@ -544,6 +545,7 @@ typedef struct {
   double total_load_perc;
 } system_pcie;
 
+//root_system
 typedef struct {
   // All number_of_* at the level of 'system' Ying 03/21/2009
   int number_of_cores;
@@ -614,3 +616,22 @@ public:
 };
 
 #endif /* XML_PARSE_H_ */
+
+// system
+  // system_core core[64];
+    // predictor_systemcore predictor;
+    // itlb_systemcore itlb;
+    // icache_systemcore icache;
+    // dtlb_systemcore dtlb;
+    // dcache_systemcore dcache;
+    // BTB_systemcore BTB;
+  // system_L1Directory L1Directory[64];
+  // system_L2Directory L2Directory[64];
+  // system_L2 L2[64];
+  // system_L3 L3[64];
+  // system_NoC NoC[64];
+  // system_mem mem;
+  // system_mc mc;
+  // system_mc flashc;
+  // system_niu niu;
+  // system_pcie pcie;

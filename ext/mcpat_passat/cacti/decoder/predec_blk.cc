@@ -870,3 +870,10 @@ void PredecBlk::leakage_feedback(double temperature) {
     power_L2.readOp.gate_leakage = gate_leakage_L2 * g_tp.peri_global.Vdd;
   }
 }
+
+void PredecBlk::reset() {
+    Component::reset();
+    power_nand2_path.reset();
+    power_nand3_path.reset();
+    power_L2.reset();   
+}
