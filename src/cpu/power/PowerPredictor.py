@@ -59,6 +59,7 @@ class PowerPredictor(ClockedObject):
     signature_length = Param.Unsigned(256,"Length of History Snapshot " \
         "(Figure 2)")
     action_length = Param.Unsigned(2,"Number of Throttle Actions")
+    lead_time = Param.Unsigned(40,"Lead time for predictions")
 
 class Test(PowerPredictor):
     type = 'Test'

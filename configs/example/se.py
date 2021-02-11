@@ -368,7 +368,8 @@ for i in range(np):
                     table_size=128,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
-                    duration=8)
+                    duration=8,
+                    lead_time=options.power_pred_lead_time)
         elif options.power_pred_type == "DepAnalysis":
             system.cpu[i].powerPred = \
                 powerPredClass(

@@ -43,6 +43,7 @@
 #include "cpu/power/ppred_unit.hh"
 
 #include <algorithm>
+#include <list>
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
@@ -91,6 +92,34 @@ PPredUnit::PPredUnit(const Params *params)
             (double)params->action_length),
             0.0, 1.0, period_normal, period_half);
     }
+
+    /*****Stats stuff*******/
+    LEAD_TIME_CAP = params->lead_time;
+    total_action = 0;
+    total_ve = 0;
+    VE.resize(LEAD_TIME_CAP);
+    for (auto &x:VE){
+        x = false;
+    }
+
+    action.resize(LEAD_TIME_CAP);
+    for (auto &x:action){
+        x= false;
+    }
+
+    bins.resize(LEAD_TIME_CAP);
+    for (auto &x:bins){
+        x = 0;
+    }
+
+    act_bins.resize(LEAD_TIME_CAP);
+    for (auto &x:act_bins){
+            x = 0;
+    }
+
+    hits.resize(LEAD_TIME_CAP);
+    false_pos.resize(LEAD_TIME_CAP);
+    false_neg.resize(LEAD_TIME_CAP);
 }
 
 void
@@ -268,4 +297,74 @@ void
 PPredUnit::setCPUStalled(const bool stalled) {
   cpuStalled = stalled;
   stat_decode_idle = cpuStalled;
+}
+
+void
+PPredUnit::VEencountered(bool yes){
+    if (yes){
+        VE.push_front(true);
+        total_ve++;
+    }
+    else{
+        VE.push_front(false);
+    }
+    VE.pop_back();
+
+}
+
+void
+PPredUnit::VEPredicted(bool yes){
+    if (yes){
+        action.push_front(true);
+        total_action++;
+    }
+    else{
+        action.push_front(false);
+    }
+    action.pop_back();
+
+}
+
+
+void
+PPredUnit::stats_tick(){
+    if (VE.front()){
+        int count = 0;
+        for (auto x:action){
+            if (x){
+                bins[count] +=1;
+                break;
+            }
+            count++;
+        }
+        count = 0;
+        std::list<bool>::iterator it=VE.begin();
+        for (auto x:action){
+            if (count>0 && *it){
+                break;
+            }
+            if (x){
+                act_bins[count] +=1;
+            }
+            count++;
+            it++;
+        }
+    }
+
+    int running_sum = 0;
+    int count = 0;
+    for (auto x:bins){
+        running_sum+=x;
+        false_neg[count] = 100* (total_ve-running_sum)*1.0/total_ve;
+        hits[count] = 100* (running_sum)*1.0/total_ve;
+        count++;
+    }
+
+    running_sum = 0;
+    count = 0;
+    for (auto x:act_bins){
+        running_sum+=x;
+        false_pos[count] = 100* (total_action-running_sum)*1.0/total_action;
+        count++;
+    }
 }

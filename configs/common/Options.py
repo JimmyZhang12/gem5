@@ -505,6 +505,10 @@ def addSEOptions(parser):
                       default=16,
                       help="Number of events to use in Perceptron/DNN")
 
+    parser.add_option("--power_pred_lead_time", type="int",
+                      default=40,
+                      help="Lead time for stats calculation")
+
 
 def addFSOptions(parser):
     from .FSConfig import os_types
