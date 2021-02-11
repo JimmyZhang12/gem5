@@ -137,6 +137,11 @@ class Info
     virtual std::string visit(Output &visitor) = 0;
 
     /**
+    * get mcpat stat 
+    */
+    virtual Result get_mcpat_stat(){return 0;};
+
+    /**
      * Checks if the first stat's name is alphabetically less than the second.
      * This function breaks names up at periods and considers each subname
      * separately.
@@ -153,6 +158,10 @@ class ScalarInfo : public Info
     virtual Counter value() const = 0;
     virtual Result result() const = 0;
     virtual Result total() const = 0;
+
+    Result get_mcpat_stat() override {
+      return result();
+    };
 };
 
 class VectorInfo : public Info
@@ -161,6 +170,8 @@ class VectorInfo : public Info
     /** Names and descriptions of subfields. */
     std::vector<std::string> subnames;
     std::vector<std::string> subdescs;
+
+
 
   public:
     void enable();

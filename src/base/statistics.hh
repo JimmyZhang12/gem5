@@ -105,11 +105,13 @@ class InfoProxy : public Base
     bool check() const { return s.check(); }
     void prepare() { s.prepare(); }
     void reset() { s.reset(); }
+    
     std::string
     visit(Output &visitor)
     {
         return visitor.visit(*static_cast<Base *>(this));
     }
+
     bool zero() const { return s.zero(); }
 };
 

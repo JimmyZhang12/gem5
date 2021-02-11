@@ -137,11 +137,11 @@ void MCPHY::computeStaticPower() {
     // This is power not energy, 10mw/Gb/s @90nm for each channel and scaling
     // down power.readOp.dynamic = 0.02*memAccesses*llcBlocksize*8;//change
     // from Bytes to bits.
-  std::cout << "PHY static compute: \n";
-  std::cout << power_per_gb_per_s << " PHY: \n";
-  std::cout << (ip.F_sz_um / 0.09) << " PHY: \n";
-  std::cout << g_tp.peri_global.Vdd << " PHY: \n";
-  std::cout << "PHY: \n";
+  // std::cout << "PHY static compute: \n";
+  // std::cout << power_per_gb_per_s << " PHY: \n";
+  // std::cout << (ip.F_sz_um / 0.09) << " PHY: \n";
+  // std::cout << g_tp.peri_global.Vdd << " PHY: \n";
+  // std::cout << "PHY: \n";
 
     power_t.readOp.dynamic = power_per_gb_per_s * sqrt(ip.F_sz_um / 0.09) *
                              g_tp.peri_global.Vdd / 1.2 * g_tp.peri_global.Vdd /
@@ -172,11 +172,11 @@ void MCPHY::computeStaticPower() {
     // This is power not energy, 10mw/Gb/s @90nm for each channel and scaling
     // down
 
-  std::cout << "PHY static compute: \n";
-  std::cout << power_per_gb_per_s << " PHY: \n";
-  std::cout << (ip.F_sz_um / 0.09) << " PHY: \n";
-  std::cout << g_tp.peri_global.Vdd << " PHY: \n";
-  std::cout << "PHY: \n";
+  // std::cout << "PHY static compute: \n";
+  // std::cout << power_per_gb_per_s << " PHY: \n";
+  // std::cout << (ip.F_sz_um / 0.09) << " PHY: \n";
+  // std::cout << g_tp.peri_global.Vdd << " PHY: \n";
+  // std::cout << "PHY: \n";
 
     power_t.readOp.dynamic = power_per_gb_per_s * (ip.F_sz_um / 0.09) *
                              g_tp.peri_global.Vdd / 1.2 * g_tp.peri_global.Vdd /
@@ -235,11 +235,11 @@ void MCPHY::computeDynamicPower() {
   rtp_stats = stats_t;
   double data_transfer_unit = (mc_type == MC) ? 72 : 16; /*DIMM data width*/
 
-  std::cout << "PHY: \n";
-  std::cout <<power_t.readOp.dynamic<< " PHY: \n";
-  std::cout <<power_t.readOp.gate_leakage<< " PHY: \n";
-  std::cout <<power_t.readOp.longer_channel_leakage<< " PHY: \n";
-  std::cout << "PHY: \n";
+  // std::cout << "PHY: \n";
+  // std::cout <<power_t.readOp.dynamic<< " PHY: \n";
+  // std::cout <<power_t.readOp.gate_leakage<< " PHY: \n";
+  // std::cout <<power_t.readOp.longer_channel_leakage<< " PHY: \n";
+  // std::cout << "PHY: \n";
 
 
   power.readOp.dynamic =

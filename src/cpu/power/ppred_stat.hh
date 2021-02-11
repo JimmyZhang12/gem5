@@ -73,6 +73,7 @@ class PPredStat : public ClockedObject
      * @return True if stats have begun
      */
     bool get_begin() const;
+
   private:
 
     /** The tick event used for scheduling CPU ticks. */

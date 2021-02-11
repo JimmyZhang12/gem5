@@ -349,7 +349,7 @@ class Core:
       str(int(stat_dict["rename.int_rename_lookups"][1]))
     self.stats["rename_writes"][0]= \
       str(int(stat_dict["rename.RenamedOperands"][1]) \
-      *int(stat_dict["rename.int_rename_lookups"][1]) \
+         *int(stat_dict["rename.int_rename_lookups"][1]) \
       /(1+int(stat_dict["rename.RenameLookups"][1])))
     self.stats["fp_rename_reads"][0]= \
       str(int(stat_dict["rename.fp_rename_lookups"][1]))

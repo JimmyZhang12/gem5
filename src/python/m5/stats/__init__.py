@@ -344,11 +344,14 @@ def _dump_to_visitor(visitor, root=None):
     if root is None:
         for stat in stats_list:
             stat_strings.append(stat.visit(visitor))
+
+    # temp = []
     # New stats
     def dump_group(group):
         global stat_strings
         for stat in group.getStats():
             stat_strings.append(stat.visit(visitor))
+            # temp.append(stat.visit(visitor))
 
         for n, g in group.getStatGroups().items():
             visitor.beginGroup(n) #visitor is type output
@@ -362,6 +365,8 @@ def _dump_to_visitor(visitor, root=None):
     if root is not None:
         for p in reversed(root.path_list()):
             visitor.endGroup()
+    # print(temp)
+
 
 lastDump = 0
 numDump = 0

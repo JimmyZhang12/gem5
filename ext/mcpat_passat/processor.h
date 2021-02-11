@@ -57,18 +57,18 @@
 class Processor : public Component {
 public:
   Processor();
-  void init(const ParseXML *XML, bool cp = false);
+  void init(ParseXML *XML, bool cp = false);
   void displayEnergy(uint32_t indent = 0, int plevel = 100, bool is_tdp = true);
   void compute();
   void reset();
-  const ParseXML *XML;
+  ParseXML *XML;
   vector<Core> cores; //TODO jimmy change this back to private
+  vector<SharedCache> l3array; //TODO jimmy change this back to private
 
   ~Processor();
 
 private:
   vector<SharedCache> l2array;
-  vector<SharedCache> l3array;
   vector<SharedCache> l1dirarray;
   vector<SharedCache> l2dirarray;
   vector<NoC> nocs;

@@ -63,6 +63,7 @@ Source('throttle_after_stall.cc')
 Source('dependency_analysis.cc')
 
 Source('mcpat.cc')
+Source('mcpat_update.cc')
 
 
 DebugFlag('PredictionTable')

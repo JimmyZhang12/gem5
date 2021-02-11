@@ -48,7 +48,7 @@
 
 Processor::Processor() {}
 
-void Processor::init(const ParseXML *XML, bool cp) {
+void Processor::init(ParseXML *XML, bool cp) {
   // TODO: using one global copy may have problems.
   /*
    * placement and routing overhead is 10%, core scales worse than cache 40% is
@@ -585,9 +585,9 @@ void Processor::compute(){
   
 
   for (i = 0; i < numCore; i++) {
-    cout << "lsu area 1 " << cores[i].lsu.area.get_area() << "\n";
+    // cout << "lsu area 1 " << cores[i].lsu.area.get_area() << "\n";
 
-    cores[i].set_params(XML, i, &interface_ip, false);
+    // cores[i].set_params(XML, i, &interface_ip, false);
     cores[i].set_stats(XML);
     cores[i].computeDynamicPower();
     cores[i].computeDynamicPower(false);
@@ -615,7 +615,7 @@ void Processor::compute(){
       core.rt_power = core.rt_power + cores[i].rt_power * pppm_t;
       rt_power = rt_power + cores[i].rt_power * pppm_t;
     }
-    cout << "lsu area 2 " << cores[i].lsu.area.get_area() << "\n";;
+    // cout << "lsu area 2 " << cores[i].lsu.area.get_area() << "\n";;
 
   }
 
@@ -772,7 +772,7 @@ void Processor::compute(){
 
   // Memory Controllers:
   if (XML->sys.mc.number_mcs > 0 && XML->sys.mc.memory_channels_per_mc > 0) {
-    mc.set_params(XML, &interface_ip, MC);
+    // mc.set_params(XML, &interface_ip, MC);
     mc.set_stats(XML);
 
     mc.computeStaticPower();

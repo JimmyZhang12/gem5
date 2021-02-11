@@ -271,8 +271,8 @@ typedef struct {
   double main_memory_access;
   double main_memory_read;
   double main_memory_write;
+  
   double pipeline_duty_cycle;
-
   double IFU_duty_cycle;
   double BR_duty_cycle;
   double LSU_duty_cycle;
@@ -486,7 +486,7 @@ typedef struct {
   double memory_accesses;
   double memory_reads;
   double memory_writes;
-} system_mem;
+} system_mem; //unused
 typedef struct {
   // params
   // Common Param for mc and fc

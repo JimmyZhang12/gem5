@@ -82,7 +82,6 @@ PPredStat::tick(void)
     }
     else {
       Stats::dump();
-      Stats::reset();
       begin = true;
       
       if (mcpat_ready){
@@ -90,7 +89,6 @@ PPredStat::tick(void)
 
         std::cout << '\n' << "Press a key to continue...";
         do {
-
         } while (cin.get() != '\n');
 
       }
@@ -99,6 +97,8 @@ PPredStat::tick(void)
         mp.init(xml_path);
         mcpat_ready = true;
       }
+      Stats::reset();
+
 
     }
 
