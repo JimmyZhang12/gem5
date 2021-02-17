@@ -506,8 +506,21 @@ def addSEOptions(parser):
                       help="Number of events to use in Perceptron/DNN")
 
     parser.add_option("--mcpat_output_path", type="str",
-                      default=16,
+                      default="",
                       help="mcpat output write path")
+    parser.add_option("--pdn_ind", type="float",
+                      default=0,
+                      help="pdn inductance, in units henrys")
+    parser.add_option("--pdn_res", type="float",
+                    default=0,
+                    help="pdn resistance, in units ohms")
+    parser.add_option("--pdn_cap", type="float",
+                      default=0,
+                      help="pdn inductance, in units farads")
+
+    parser.add_option("--power_pred_lead_time", type="int",
+                      default=40,
+                      help="Lead time for stats calculation")
 
 def addFSOptions(parser):
     from .FSConfig import os_types

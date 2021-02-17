@@ -232,7 +232,12 @@ system.ppred_stat = PPredStat( \
     cycle_period = options.power_pred_cpu_cycles, \
     frequency = options.power_pred_cpu_freq, \
     ncores = np, \
-    mcpat_output_path = options.mcpat_output_path)
+    mcpat_output_path = options.mcpat_output_path, \
+    vdc = options.power_pred_voltage, \
+    ind = options.pdn_ind, \
+    cap = options.pdn_cap,\
+    res = options.pdn_res
+)
 
 system.ppred_stat.clk_domain = system.ppred_stat_clk
 
@@ -370,7 +375,8 @@ for i in range(np):
                     table_size=128,
                     bloom_filter_size=2048,
                     hysteresis=0.005,
-                    duration=8)
+                    duration=8,
+                    lead_time=options.power_pred_lead_time)
         elif options.power_pred_type == "DepAnalysis":
             system.cpu[i].powerPred = \
                 powerPredClass(

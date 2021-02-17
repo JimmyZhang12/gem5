@@ -126,100 +126,70 @@ Harvard::tick(void)
 
   table.tick();
 
-  // Transition Logic
-  switch(state) {
-    case NORMAL : {
-      next_state = NORMAL;
-      if (supply_voltage < emergency) {
-        next_state = EMERGENCY;
-        table.insert(this->history.get_entry());
-      }
-      // If hr updated:
-      if (hr_updated) {
-        if (table.find(this->history.get_entry())) {
-          total_pred_action++;
-          next_state = THROTTLE;
-        }
-        else {
-          total_pred_inaction++;
-        }
-        hr_updated = false;
-        total_preds++;
-      }
-      break;
-    }
-    case EMERGENCY : {
-      // DECOR Rollback
-      next_state = EMERGENCY;
-      if (e_count == 0) {
-        num_ve++;
-      }
-      if (t_count == 0) {
-        total_misspred++;
-      }
-      if (e_count > emergency_duration &&
-         supply_voltage > emergency + hysteresis) {
-        if (throttle_on_restore) {
-          next_state = THROTTLE;
-        }
-        else {
-          next_state = NORMAL;
-        }
-      }
-      break;
-    }
-    case THROTTLE : {
-      // Pre-emptive Throttle
-      next_state = THROTTLE;
-      if (supply_voltage < emergency) {
-        next_state = EMERGENCY;
-        table.insert(this->history.get_entry());
-      }
-      else if (t_count > throttle_duration &&
-               supply_voltage > emergency + hysteresis) {
-        next_state = NORMAL;
-      }
-      break;
-    }
-    default : {
-      break;
-    }
+  if (supply_voltage < emergency && supply_voltage_prev > emergency) {
+    VEencountered(true);
+    table.insert(this->history.get_entry());
   }
+  else{
+    VEencountered(false);
+  }
+  // If hr updated:
+  bool prediction = false;
+  if (hr_updated) {
+    if (table.find(this->history.get_entry())) {
+      prediction = true;
+      total_pred_action++;
+      next_state = NORMAL;
+
+    }
+    else {
+      total_pred_inaction++;
+    }
+    hr_updated = false;
+    total_preds++;
+  }
+  VEPredicted(prediction);
+  stats_tick();
+
+  //do we need this?
+  clkRestore();
+  unsetStall();
 
   // Output Logic
-  switch(state) {
-    case NORMAL : {
-      t_count = 0;
-      e_count = 0;
-      // Restore Frequency
-      clkRestore();
-      unsetStall();
-      break;
-    }
-    case EMERGENCY : {
-      e_count += 1;
-      t_count = 0;
-      clkThrottle();
-      setStall();
-      break;
-    }
-    case THROTTLE : {
-      t_count += 1;
-      e_count = 0;
-      clkThrottle();
-      unsetStall();
-      break;
-    }
-    default : {
-      // Nothing
-      break;
-    }
-  }
+  // switch(state) {
+  //   case NORMAL : {
+  //     t_count = 0;
+  //     e_count = 0;
+  //     // Restore Frequency
+
+  //     break;
+  //   }
+  //   case EMERGENCY : {
+  //     e_count += 1;
+  //     t_count = 0;
+  //     clkThrottle();
+  //     setStall();
+  //     break;
+  //   }
+  //   case THROTTLE : {
+  //     t_count += 1;
+  //     e_count = 0;
+  //     clkThrottle();
+  //     unsetStall();
+  //     break;
+  //   }
+  //   default : {
+  //     // Nothing
+  //     break;
+  //   }
+  // }
   // Update Stats:
   s = state;
   ns = next_state;
   // Update Next State Transition:
   state = next_state;
+  
+  //accuracy stats
 
   // Set Permanant Stats:
   nve = num_ve;

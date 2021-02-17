@@ -40,6 +40,9 @@
 #include "config/the_isa.hh"
 #include "debug/PPredStat.hh"
 
+double PPredStat::voltage = 0;
+double PPredStat::current = 0;
+
 PPredStat::PPredStat(const Params *params)
   : ClockedObject(params),
   tickEvent([this]{ tick(); }, "PPredStat tick",
@@ -49,20 +52,28 @@ PPredStat::PPredStat(const Params *params)
   frequency(params->frequency),
   ncores(params->ncores),
   mcpat_output_path(params->mcpat_output_path),
-  mp()
+  mp(),
+  _pdn(pdn(params->ind,
+    params->res,
+    params->cap,
+    params->vdc,
+    params->frequency) 
+  )
 {
   /* Do Nothing */
-  xml_path = mcpat_output_path + "/mp.xml";
+  xml_path = mcpat_output_path + "/serial_mp.xml";
   first_time = true;
   mcpat_ready = false;
   begin = false;
+
+
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
-        clockEdge(Cycles(cycles)));
-    schedule(tickEvent, clockEdge(Cycles(cycles)));
+        clockEdge(Cycles(1)));
+    schedule(tickEvent, clockEdge(Cycles(1)));
   }
-  vpi_shm::init(frequency, ncores);
-  vpi_shm::set_ttn(frequency, cycles);
+  // vpi_shm::init(frequency, ncores);
+  // vpi_shm::set_ttn(frequency, cycles);
 
 }
 
@@ -74,22 +85,22 @@ PPredStat::tick(void)
 {
   if (Stats::pythonGetProfiling()) {
     DPRINTF(PPredStat, "*******entering mcpat*********\n" );
-    DPRINTF(PPredStat, "mcpat path is: %s\n", mcpat_output_path);
 
     if (first_time) {
       Stats::reset();
       first_time = false;
     }
     else {
-      Stats::dump();
+      // Stats::dump();
       begin = true;
       
+      Stats::pythonGenerateXML();
       if (mcpat_ready){
         mp.init_wrapper(xml_path, mcpat_output_path);
 
-        std::cout << '\n' << "Press a key to continue...";
-        do {
-        } while (cin.get() != '\n');
+        // std::cout << '\n' << "Press a key to continue...";
+        // do {
+        // } while (cin.get() != '\n');
 
       }
       else{
@@ -97,16 +108,17 @@ PPredStat::tick(void)
         mp.init(xml_path);
         mcpat_ready = true;
       }
+      current = _pdn.get_current(mp.power);
+      voltage = _pdn.get_voltage(mp.power);
+
       Stats::reset();
-
-
     }
 
   }
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
-        clockEdge(Cycles(cycles)));
-    schedule(tickEvent, clockEdge(Cycles(cycles)));
+        clockEdge(Cycles(1)));
+    schedule(tickEvent, clockEdge(Cycles(1)));
   }
 }
 

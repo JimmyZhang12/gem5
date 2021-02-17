@@ -610,6 +610,7 @@ class ParseXML {
 public:
   void parse(std::string filepath);
   void initialize();
+  void print();
 
 public:
   root_system sys;

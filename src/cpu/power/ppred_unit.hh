@@ -43,13 +43,17 @@
 #define __CPU_POWER_PPRED_UNIT_HH__
 
 #include <deque>
+#include <list>
 #include <string>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
+#include "cpu/power/ppred_stat.hh"
+
 #include "cpu/static_inst.hh"
+
 #include "debug/PowerPred.hh"
 #include "params/PowerPredictor.hh"
 #include "python/pybind11/vpi_shm.h"
@@ -120,6 +124,23 @@ class PPredUnit : public ClockedObject
      * Set by the CPU if it is stalled.
      */
     void setCPUStalled(const bool stalled);
+
+    /**
+    * Indicates that a VE occured this cycle
+    * Update VE history register for accuracy values calculation
+    */
+    void VEencountered(bool yes);
+
+    /**
+    * Indicates that an action has been taken this cycle
+    * Update action history register for accuracy values calculation
+    */
+    void VEPredicted(bool yes);
+
+    /**
+    * Update the various stats
+    */
+    void stats_tick();
 
   protected:
     Stats::Scalar stat_freq;
@@ -192,6 +213,20 @@ class PPredUnit : public ClockedObject
     Tick period_normal;
     Tick period_half;
     bool stall;
+
+    /*stats variables*/
+    int LEAD_TIME_CAP;
+    int total_ve;
+    int total_action;
+
+    std::list<bool> VE;
+    std::list<bool> action;
+    std::vector<int> bins;
+    std::vector<int> act_bins;
+
+    std::vector<float> hits;
+    std::vector<float> false_neg;
+    std::vector<float> false_pos;
 
     /**
      * Rescale from range [a0, a1] -> [b0, b1]

@@ -121,7 +121,13 @@ pythonSetCommittedInstr(uint64_t num) {
     m.attr("setCommittedInstr")(num);
 }
 
+void
+pythonGenerateXML() {
+    py::module m = py::module::import("m5.stats");
+    m.attr("create_xml")();
 }
+
+} //end Stats namespace
 
 void
 pybind_init_stats(py::module &m_native)

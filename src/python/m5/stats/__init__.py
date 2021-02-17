@@ -52,8 +52,9 @@ from m5.objects import Root
 from m5.params import isNullPointer
 from m5.util import attrdict, fatal
 import m5.mcpat as mcpat
+from m5.mcpat.autogen import generate_xml
+
 import m5.vpi_shm as vpi_shm
-import m5.mcpat_internal as mcpat_internal
 
 import time
 
@@ -573,6 +574,37 @@ def dump(root=None, exit=False):
                 output.begin()
                 _dump_to_visitor(output, root=root)
                 output.end()
+
+def create_xml():
+    from m5 import options
+    import os
+
+    global stat_strings
+    stat_strings = []
+    _m5.stats.processDumpQueue()
+    sim_root = Root.getInstance()
+    if sim_root:
+        sim_root.preDumpStats(); #predumping does nothing unless overriden
+        prepare() #prepare for scalar stats does nothing: statistic.h - class statstor.prepare()
+    for output in outputList:
+        if output.valid():
+            stat_strings.append(output.begin())
+            _dump_to_visitor(output, None)
+            stat_strings.append(output.end())
+
+    m5_stats_file = os.path.join(options.outdir, options.stats_file)
+    m5_config_file = os.path.join(options.outdir, options.dump_config)
+    mcpat_output_path = os.path.join(options.mcpat_out, options.mcpat_testname)
+
+    if not os.path.isdir(mcpat_output_path):
+        os.mkdir(mcpat_output_path)
+
+    #TODO jimmy change these stats from hardcoded to params
+    fr = [4E9 / 1E6]
+    i_f = os.path.join(mcpat_output_path,"serial_mp.xml")
+    generate_xml(m5_stats_file, m5_config_file, i_f, stat_strings, \
+                True, voltage=1.4, frequency=fr, temperature=380.0, \
+                device_type=options.mcpat_device_type)
 
 def reset():
     '''Reset all statistics to the base state'''

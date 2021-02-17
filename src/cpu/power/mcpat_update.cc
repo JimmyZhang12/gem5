@@ -16,9 +16,8 @@ Mcpat::stat_map = unordered_map<std::string, int>({
      {"system.cpu.commit.fp_insts" , 21},
      {"system.cpu.rob.rob_reads" , 26},
      {"system.cpu.rob.rob_writes" , 27},
-     {"system.cpu.rename.int_rename_lookups)" , 28},
+     {"system.cpu.rename.int_rename_lookups" , 28},
      {"system.cpu.rename.RenamedOperands" , 33},
-     {"system.cpu.rename.int_rename_lookups" , 30},
      {"system.cpu.rename.RenameLookups" , 35},
      {"system.cpu.rename.fp_rename_lookups" , 34},
      {"system.cpu.iq.int_inst_queue_reads" , 36},
@@ -73,10 +72,23 @@ Mcpat::stat_map = unordered_map<std::string, int>({
 });
 
 
+void Mcpat::set_mcpat_stat(Stats::Info* stat, bool new_stat, std::string path){
+    std::string name;
+    if (new_stat)
+        name = path + stat->name;
+    else
+        name = stat->name;
 
+    // std::cout <<"before: " << name << "\n";
+    // std::cout << name.compare("system.cpu.rename.int_rename_lookups")<< "\n";
+    // std::cout << stat_map.count(name)<< "\n";
 
-void Mcpat::set_mcpat_stat(Stats::Info* stat){
-    switch(stat_map[stat->name]) {
+    //TODO stat_map.count is slow, linear search of stat_map, 
+    if(stat_map.count(name) == 0) {
+        return;
+    }
+
+    switch(stat_map[name]) {
     case(24): //system.cpu.numCycles
         stat_storage.numCycles = static_cast<Stats::ScalarInfo*>(stat)->result();
         proc.XML->sys.core[0].total_cycles= stat_storage.numCycles;
@@ -133,7 +145,7 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat){
         break;
     case(28): //system.cpu.rename.int_rename_lookups
         stat_storage.int_rename_lookups = static_cast<Stats::ScalarInfo*>(stat)->result();
-        proc.XML->sys.core[0].rename_reads= static_cast<Stats::ScalarInfo*>(stat)->result();
+        proc.XML->sys.core[0].rename_reads = static_cast<Stats::ScalarInfo*>(stat)->result();
         break;
     case(33): //system.cpu.rename.RenamedOperands
         stat_storage.RenamedOperands = static_cast<Stats::ScalarInfo*>(stat)->result();
@@ -186,7 +198,8 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat){
         proc.XML->sys.core[0].cdb_alu_accesses= static_cast<Stats::ScalarInfo*>(stat)->result();
         break;
     case(50): //system.cpu.iq.fu_full
-        proc.XML->sys.core[0].mul_accesses= static_cast<Stats::ScalarInfo*>(stat)->result();
+    
+        proc.XML->sys.core[0].mul_accesses= static_cast<Stats::VectorInfo*>(stat)->result()[Enums::FloatMult];
         break;
     case(53): //system.cpu.iq.fp_alu_accesses
         proc.XML->sys.core[0].fpu_accesses= static_cast<Stats::ScalarInfo*>(stat)->result();
@@ -236,55 +249,55 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat){
         proc.XML->sys.core[0].BTB.write_accesses= static_cast<Stats::ScalarInfo*>(stat)->result();
         break;
     case(68): //system.l2.ReadExReq_accesses
-        stat_storage.l2_ReadExReq_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_ReadExReq_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(69): //system.l2.ReadCleanReq_accesses
-        stat_storage.l2_ReadCleanReq_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_ReadCleanReq_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(70): //system.l2.ReadSharedReq_accesses
-        stat_storage.l2_ReadSharedReq_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_ReadSharedReq_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(71): //system.l2.ReadCleanReq_misses
-        stat_storage.l2_ReadCleanReq_misses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_ReadCleanReq_misses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(72): //system.l2.ReadExReq_misses
-        stat_storage.l2_ReadExReq_misses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_ReadExReq_misses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(73): //system.l2.WritebackDirty_accesses
-        stat_storage.l2_WritebackDirty_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_WritebackDirty_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(75): //system.l2.WritebackClean_accesses
-        stat_storage.l2_WritebackClean_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_WritebackClean_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(76): //system.l2.WritebackDirty_hits
-        stat_storage.l2_WritebackDirty_hits = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l2_WritebackDirty_hits = static_cast<Stats::VectorInfo*>(stat)->total();
         break;     
     case(77): //system.l2.replacements
         proc.XML->sys.L2[0].conflicts= static_cast<Stats::ScalarInfo*>(stat)->result();
         break;
     case(78): //system.l3.ReadExReq_accesses
-        stat_storage.l3_ReadExReq_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_ReadExReq_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(79): //system.l3.ReadCleanReq_accesses
-        stat_storage.l3_ReadCleanReq_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_ReadCleanReq_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(80): //system.l3.ReadSharedReq_accesses
-        stat_storage.l3_ReadSharedReq_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_ReadSharedReq_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(81): //system.l3.ReadCleanReq_misses
-        stat_storage.l3_ReadCleanReq_misses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_ReadCleanReq_misses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(82): //system.l3.ReadExReq_misses
-        stat_storage.l3_ReadExReq_misses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_ReadExReq_misses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(83): //system.l3.WritebackDirty_accesses
-        stat_storage.l3_WritebackDirty_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_WritebackDirty_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(85): //system.l3.WritebackClean_accesses
-        stat_storage.l3_WritebackClean_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_WritebackClean_accesses = static_cast<Stats::VectorInfo*>(stat)->total();
         break;
     case(86): //system.l3.WritebackDirty_hits
-        stat_storage.l3_WritebackDirty_hits = static_cast<Stats::ScalarInfo*>(stat)->result();
+        stat_storage.l3_WritebackDirty_hits = static_cast<Stats::VectorInfo*>(stat)->total();
         break;  
     case(87): //system.l3.replacements
         proc.XML->sys.L3[0].conflicts= static_cast<Stats::ScalarInfo*>(stat)->result();
@@ -297,5 +310,180 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat){
         break;
     default:
         break;
+    }
+}
+
+
+
+
+void Mcpat::print_stats(Stats::Info* stat){
+    switch(stat_map[stat->name]) {
+        case(2): //system.cpu.iq.iqInstsIssued
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(16): //system.cpu.iq.FU_type
+            //????? CUSTOM FUNCTION NEEDED
+            break;
+        case(17): //system.cpu.branchPred.condPredicted
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(18): //system.cpu.branchPred.condIncorrect
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(19): //system.cpu.commit.committedOps
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(20): //system.cpu.commit.int_insts
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(21): //system.cpu.commit.fp_insts
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(24): //system.cpu.numCycles
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(25): //system.cpu.idleCycles
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(26): //system.cpu.rob.rob_reads
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(27): //system.cpu.rob.rob_writes
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(28): //system.cpu.rename.int_rename_lookups)
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(33): //system.cpu.rename.RenamedOperands
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(34): //system.cpu.rename.fp_rename_lookups
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(36): //system.cpu.iq.int_inst_queue_reads
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(37): //system.cpu.iq.int_inst_queue_writes
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(38): //system.cpu.iq.int_inst_queue_wakeup_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(39): //system.cpu.iq.fp_inst_queue_reads
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(40): //system.cpu.iq.fp_inst_queue_writes
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(41): //system.cpu.iq.fp_inst_queue_wakeup_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(42): //system.cpu.int_regfile_reads
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(43): //system.cpu.fp_regfile_reads
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(44): //system.cpu.int_regfile_writes
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(45): //system.cpu.fp_regfile_writes
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(46): //system.cpu.commit.function_calls
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(47): //system.cpu.workload.num_syscalls
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(50): //system.cpu.iq.fu_full
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(51): //system.cpu.iq.int_alu_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(53): //system.cpu.iq.fp_alu_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(54): //system.cpu.itlb.tags.data_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(55): //system.cpu.itlb.replacements
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(56): //system.cpu.icache.ReadReq_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::VectorInfo*>(stat)->total() << "\n";
+            break;
+        case(57): //system.cpu.icache.ReadReq_misses
+            std::cout << stat->name << " : " << static_cast<Stats::VectorInfo*>(stat)->total() << "\n";
+            break;
+        case(58): //system.cpu.icache.replacements
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(59): //system.cpu.dtlb.tags.data_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(60): //system.cpu.dtlb.replacements
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(61): //system.cpu.dcache.ReadReq_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::VectorInfo*>(stat)->total() << "\n";
+            break;
+        case(62): //system.cpu.dcache.ReadReq_misses
+            std::cout << stat->name << " : " << static_cast<Stats::VectorInfo*>(stat)->total() << "\n";
+            break;
+        case(63): //system.cpu.dcache.WriteReq_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::VectorInfo*>(stat)->total() << "\n";
+            break;
+        case(64): //system.cpu.dcache.WriteReq_misses
+            std::cout << stat->name << " : " << static_cast<Stats::VectorInfo*>(stat)->total() << "\n";
+            break;
+        case(65): //system.cpu.dcache.replacements
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(66): //system.cpu.branchPred.BTBLookups
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(67): //system.cpu.commit.branches
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(68): //system.l2.ReadExReq_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(71): //system.l2.ReadCleanReq_misses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(73): //system.l2.WritebackDirty_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(75): //system.l2.WritebackClean_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(77): //system.l2.replacements
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(78): //system.l3.ReadExReq_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(81): //system.l3.ReadCleanReq_misses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(83): //system.l3.WritebackDirty_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(85): //system.l3.WritebackClean_accesses
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(87): //system.l3.replacements
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(90): //system.mem_ctrls.readReqs
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        case(91): //system.mem_ctrls.writeReqs
+            std::cout << stat->name << " : " << static_cast<Stats::ScalarInfo*>(stat)->result() << "\n";
+            break;
+        default:
+            break;
     }
 }

@@ -28,30 +28,32 @@
 
 class Mcpat{
     public:
-    Mcpat();
+        Mcpat();
 
-    typedef const std::vector< Stats::Info * > & Stat_list;
+        void init(std::string xml_dir);
+        void reset();
+        void compute(std::string output_path);
 
-    void init(std::string xml_dir);
-    void reset();
-    void compute(std::string output_path);
-    void init_wrapper(std::string xml_dir, std::string output_path);
-    void update();
-    void save_output(std::string fname, Processor &proc_t);
-    ParseXML get_xml();
+        void init_wrapper(std::string xml_dir, std::string output_path);
+        void update();
+        void save_output(std::string fname, Processor &proc_t);
 
-    void update_stats();
-    void update_stats_helper(Stats::Group* group, std::string path);
-    void print_power(Processor &proc_t);
+        void update_stats();
+        void update_stats_helper(Stats::Group* group, std::string path);
+        void update_system_stats();
 
-    void test(std::string filepath);
+        void print_power(Processor &proc_t);
+        double get_power(Processor &proc_t);
+        double power;
 
-    Processor proc; //eventually make the private
+        void test(std::string filepath);
 
-    void update_system_stats();
+        ParseXML get_xml();
+        Processor proc; //eventually make the private
 
-    void set_mcpat_stat(Stats::Info*);
-
+    void set_mcpat_stat(Stats::Info*, bool new_stat, std::string path);
+    void print_stats(Stats::Info*);
+    
     private:
     static std::unordered_map<std::string, int> stat_map;
 

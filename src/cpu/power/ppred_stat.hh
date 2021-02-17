@@ -50,7 +50,9 @@
 #include "sim/global_event.hh"
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
+
 #include "mcpat.hh"
+#include "pdn.hh"
 
 class PPredStat : public ClockedObject
 {
@@ -73,6 +75,9 @@ class PPredStat : public ClockedObject
      * @return True if stats have begun
      */
     bool get_begin() const;
+
+    static double voltage;
+    static double current;
 
   private:
 
@@ -104,6 +109,8 @@ class PPredStat : public ClockedObject
     bool begin;
 
     Mcpat mp;
+
+    pdn _pdn;
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

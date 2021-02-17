@@ -59,6 +59,7 @@ class PowerPredictor(ClockedObject):
     signature_length = Param.Unsigned(256,"Length of History Snapshot " \
         "(Figure 2)")
     action_length = Param.Unsigned(2,"Number of Throttle Actions")
+    lead_time = Param.Unsigned(40,"Lead time for predictions")
 
 class Test(PowerPredictor):
     type = 'Test'
@@ -249,3 +250,8 @@ class PPredStat(ClockedObject):
     frequency = Param.Float(3.5e9, "Default clock freq")
     ncores = Param.Unsigned(1, "Number of cores to sim")
     mcpat_output_path = Param.String("", "xml path for mcpat")
+    ind = Param.Float(0, "pdn inductance")
+    cap = Param.Float(0, "pdn capacitance")
+    res = Param.Float(0, "pdn resistance")
+    vdc = Param.Float(0, "steady state pdn voltage")
+

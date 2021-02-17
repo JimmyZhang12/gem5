@@ -64,7 +64,7 @@ Source('dependency_analysis.cc')
 
 Source('mcpat.cc')
 Source('mcpat_update.cc')
-
+Source('pdn.cc')
 
 DebugFlag('PredictionTable')
 DebugFlag('HistoryRegister')
