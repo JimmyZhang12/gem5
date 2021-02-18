@@ -91,26 +91,28 @@ PPredStat::tick(void)
       first_time = false;
     }
     else {
-      // Stats::dump();
       begin = true;
-      
-      Stats::pythonGenerateXML();
       if (mcpat_ready){
         mp.init_wrapper(xml_path, mcpat_output_path);
 
-        // std::cout << '\n' << "Press a key to continue...";
-        // do {
-        // } while (cin.get() != '\n');
+        std::cout << '\n' << "Press a key to continue...";
+        do {
+        } while (cin.get() != '\n');
 
       }
       else{
+        Stats::pythonGenerateXML();
         mp = Mcpat();
         mp.init(xml_path);
         mcpat_ready = true;
       }
       current = _pdn.get_current(mp.power);
       voltage = _pdn.get_voltage(mp.power);
+      std::cout << "power = :" << mp.power << "\n";
+      std::cout << "supply_current = :" << current << "\n";
+      std::cout << "supply_voltage = :" << voltage << "\n";
 
+      Stats::dump();
       Stats::reset();
     }
 

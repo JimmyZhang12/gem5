@@ -98,8 +98,6 @@ class PPredUnit : public ClockedObject
 
     void unsetStall();
 
-    void get_analog_stats();
-
     void historyInsert(const PPred::event_t event);
 
     void historySetPC(const uint64_t pc);
@@ -126,21 +124,9 @@ class PPredUnit : public ClockedObject
     void setCPUStalled(const bool stalled);
 
     /**
-    * Indicates that a VE occured this cycle
-    * Update VE history register for accuracy values calculation
-    */
-    void VEencountered(bool yes);
-
-    /**
-    * Indicates that an action has been taken this cycle
-    * Update action history register for accuracy values calculation
-    */
-    void VEPredicted(bool yes);
-
-    /**
     * Update the various stats
     */
-    void stats_tick();
+    void update_stats(bool pred, bool ve);
 
   protected:
     Stats::Scalar stat_freq;
@@ -149,39 +135,29 @@ class PPredUnit : public ClockedObject
     Stats::Scalar stat_stall;
     Stats::Scalar stat_insts_available;
     Stats::Scalar stat_decode_idle;
-
+    //analog stats
     Stats::Scalar sv;
-    Stats::Scalar svdv;
+    Stats::Scalar sv_p;
     Stats::Scalar sc;
-    Stats::Scalar rtc;
-    Stats::Scalar rtc_p;
-    Stats::Scalar rtc_d;
-    Stats::Scalar trtc;
-    Stats::Scalar trtc_p;
-    Stats::Scalar trtc_d;
-    Stats::Scalar ptrtc;
+    //prediction stats
+    Stats::Vector hits;
+    Stats::Vector false_pos;
+
+    Stats::Scalar ves_outside_leadtime;
+    Stats::Scalar preds_outside_leadtime;
+    Stats::Scalar _total_ve;
+    Stats::Scalar _total_action;
+    Stats::Scalar overall_hit_rate;
+    Stats::Scalar overall_fp_rate;
 
     SrcClockDomain* sysClkDomain;
-
-
     double min_current;
     double max_current;
 
     double supply_voltage;
     double supply_current;
     double supply_voltage_prev;
-    double supply_voltage_dv;
 
-    // Core Runtime Current
-    double core_runtime_current;
-    double core_runtime_current_prev;
-    double core_runtime_current_di;
-
-    // Total Core Runtime Current
-    double total_core_runtime_current;
-    double total_core_runtime_current_prev;
-    double total_core_runtime_current_di;
-    double pct_total_runtime_current;
 
     // Number of Pending Instructions
     uint64_t pendingInstructions;
@@ -215,18 +191,16 @@ class PPredUnit : public ClockedObject
     bool stall;
 
     /*stats variables*/
-    int LEAD_TIME_CAP;
+
+    const int LEAD_TIME_CAP;
+
     int total_ve;
     int total_action;
-
-    std::list<bool> VE;
+    int cycles_since_pred;
+    int cycles_since_ve;
     std::list<bool> action;
-    std::vector<int> bins;
-    std::vector<int> act_bins;
 
-    std::vector<float> hits;
-    std::vector<float> false_neg;
-    std::vector<float> false_pos;
+
 
     /**
      * Rescale from range [a0, a1] -> [b0, b1]

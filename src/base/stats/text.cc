@@ -881,12 +881,12 @@ Output * initText
 bool
 notStripped(string name){
     bool strip = 
-        name.find("powerPred")!=std::string::npos || 
-        name.find("system.cpu.iew.intInstsReady")!=std::string::npos || 
-        name.find("system.cpu.iew.memOrderViolationEvents")!=std::string::npos || 
-        name.find("system.cpu.iew.exec_branches")!=std::string::npos || 
-        name.find("system.cpu.iew.branchMispredicts")!=std::string::npos || 
-        name.find("overall_misses::total")!=std::string::npos;
+        name.find("powerPred")!=std::string::npos; //|| 
+        // name.find("system.cpu.iew.intInstsReady")!=std::string::npos || 
+        // name.find("system.cpu.iew.memOrderViolationEvents")!=std::string::npos || 
+        // name.find("system.cpu.iew.exec_branches")!=std::string::npos || 
+        // name.find("system.cpu.iew.branchMispredicts")!=std::string::npos || 
+        // name.find("overall_misses::total")!=std::string::npos;
     return strip;
 }
 

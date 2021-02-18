@@ -346,13 +346,11 @@ def _dump_to_visitor(visitor, root=None):
         for stat in stats_list:
             stat_strings.append(stat.visit(visitor))
 
-    # temp = []
     # New stats
     def dump_group(group):
         global stat_strings
         for stat in group.getStats():
             stat_strings.append(stat.visit(visitor))
-            # temp.append(stat.visit(visitor))
 
         for n, g in group.getStatGroups().items():
             visitor.beginGroup(n) #visitor is type output
@@ -366,7 +364,6 @@ def _dump_to_visitor(visitor, root=None):
     if root is not None:
         for p in reversed(root.path_list()):
             visitor.endGroup()
-    # print(temp)
 
 
 lastDump = 0
@@ -411,6 +408,38 @@ def setCommittedInstr(num):
     committedInstrs = num
 
 def dump(root=None, exit=False):
+    '''Dump all statistics data to the registered outputs'''
+    now = m5.curTick()
+    global lastDump
+    global numDump
+  
+    assert lastDump <= now
+    global stat_strings
+    stat_strings = []
+    new_dump = lastDump != now
+    lastDump = now
+
+
+    # Don't allow multiple global stat dumps in the same tick. It's
+    # still possible to dump a multiple sub-trees.
+    if not new_dump and root is None:
+        return
+
+    if new_dump:
+        _m5.stats.processDumpQueue()
+        sim_root = Root.getInstance()
+        if sim_root:
+            sim_root.preDumpStats();
+        prepare()
+
+    for output in outputList:
+        if output.valid():
+            output.begin()
+            _dump_to_visitor(output, root=root)
+            output.end()
+
+
+def dump_verilog(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
     from m5 import options
 
@@ -530,15 +559,6 @@ def dump(root=None, exit=False):
                     lastVoltage=lv
                     lastCurrent=vpi_shm.get_current()
                     vpi_shm.ack_supply()
-
-                    # print("mcpat P I V")
-                    # print(mcpat.get_last_p(mp_v))
-                    # print(mcpat.get_last_i(mp_v))
-                    # print("lastCurrent ", lastCurrent)
-                    # print("last voltage ", lastVoltage)
-                    
-                    # mcpat_internal.test()
-                    # mcpat_internal.update_stats(stat_strings)
 
             else:
                 mcpat.m5_to_mcpat(stat_strings,\

@@ -46,6 +46,7 @@
 
 #include "base/types.hh"
 #include "sim/core.hh"
+#include "base/stats/group.hh"
 
 namespace Stats {
 
@@ -56,6 +57,8 @@ Tick statElapsedTicks();
 Tick statFinalTick();
 
 void initSimStats();
+
+extern void groupDump(Group* group);
 
 extern void pythonBeginProfile();
 

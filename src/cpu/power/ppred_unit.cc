@@ -65,22 +65,19 @@ PPredUnit::PPredUnit(const Params *params)
     emergency_throttle(params->emergency_throttle),
     voltage_set(params->voltage_set),
     clk(params->clk),
-    clk_half(params->clk/2)
+    clk_half(params->clk/2),
+    LEAD_TIME_CAP(params->lead_time)
 {
     DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
     supply_voltage = 0.0;
     supply_current = 0.0;
-    core_runtime_current = 0.0;
-    total_core_runtime_current = 0.0;
-    pct_total_runtime_current = 0.0;
 
     period_normal = this->clockPeriod();
     period_half = this->clockPeriod()*2;
 
     stall = false;
     this->id = params->cpu_id;
-    vpi_shm::set_voltage_set(voltage_set, id);
-    vpi_shm::set_core_freq(clk, id);
+
     history.resize(params->signature_length);
     hr_updated = false;
     clk_vals.resize(params->action_length);
@@ -93,40 +90,25 @@ PPredUnit::PPredUnit(const Params *params)
             0.0, 1.0, period_normal, period_half);
     }
 
-
     /*****Stats stuff*******/
-    LEAD_TIME_CAP = params->lead_time;
     total_action = 0;
     total_ve = 0;
-    VE.resize(LEAD_TIME_CAP);
-    for (auto &x:VE){
-        x = false;
-    }
+    cycles_since_pred = 0;
+    cycles_since_ve = 0;
 
     action.resize(LEAD_TIME_CAP);
     for (auto &x:action){
-        x= false;
+         x= false;
     }
 
-    bins.resize(LEAD_TIME_CAP);
-    for (auto &x:bins){
-        x = 0;
-    }
-
-    act_bins.resize(LEAD_TIME_CAP);
-    for (auto &x:act_bins){
-            x = 0;
-    }
-
-    hits.resize(LEAD_TIME_CAP);
-    false_pos.resize(LEAD_TIME_CAP);
-    false_neg.resize(LEAD_TIME_CAP);
-    
+  
 }
 
 void
 PPredUnit::regStats()
 {
+    using namespace Stats;
+
     SimObject::regStats();
 
     stat_freq
@@ -158,9 +140,9 @@ PPredUnit::regStats()
         .desc("Supply Voltage")
         .precision(6)
         ;
-    svdv
-        .name(name() + ".supply_voltage_dv")
-        .desc("Change in Supply Voltage")
+    sv_p
+        .name(name() + ".supply_voltage_prev")
+        .desc("Previous cycle supply voltage")
         .precision(6)
         ;
     sc
@@ -168,41 +150,52 @@ PPredUnit::regStats()
         .desc("Supply Current")
         .precision(6)
         ;
-    rtc
-        .name(name() + ".core_runtime_current")
-        .desc("Core Runtime Current")
+    hits
+        .init(LEAD_TIME_CAP)
+        .name(name() + "hit rate")
+        .desc("Noncumulative hit rate over lead time")
+        .precision(3)
+        .flags(total)
+        ;
+    false_pos
+        .init(LEAD_TIME_CAP)
+        .name(name() + "false_pos rate")
+        .desc("Noncumulative false positive rate over lead time")
+        .precision(3)
+        .flags(total)
+        ;
+    ves_outside_leadtime
+        .name(name() + ".hits_outside_leadtime")
+        .desc("uncaught hits at lead time cap")
         .precision(6)
         ;
-    rtc_p
-        .name(name() + ".core_runtime_current_prev")
-        .desc("Previous Core Runtime Current")
+    preds_outside_leadtime
+        .name(name() + ".hits_outside_leadtime")
+        .desc("uncaught preds at lead time cap")
         .precision(6)
         ;
-    rtc_d
-        .name(name() + ".core_runtime_current_di")
-        .desc("Change in Runtime Current")
+
+    _total_action
+        .name(name() + ".total_actions")
+        .desc("total number for prediction highs")
         .precision(6)
         ;
-    trtc
-        .name(name() + ".total_runtime_current")
-        .desc("Total Runtime Current")
+    _total_ve
+        .name(name() + ".total_ve")
+        .desc("total number of VEs")
         .precision(6)
         ;
-    trtc_p
-        .name(name() + ".total_runtime_current_prev")
-        .desc("Previous Total Runtime Current")
+    overall_hit_rate
+        .name(name() + ".overall_hit_rate")
+        .desc("hit rate at lead time cap")
         .precision(6)
         ;
-    trtc_d
-        .name(name() + ".total_runtime_current_di")
-        .desc("Change in Total Runtime Current")
+    overall_fp_rate
+        .name(name() + ".overall_fp_rate")
+        .desc("false positive rate at lead time cap")
         .precision(6)
         ;
-    ptrtc
-        .name(name() + ".pct_total_runtime_current")
-        .desc("Percent Total Runtime Current")
-        .precision(6)
-        ;
+
 }
 
 void
@@ -210,7 +203,6 @@ PPredUnit::clkThrottle()
 {
     // Set the CPU Clock Object to Half Freq
     sysClkDomain->clockPeriod(period_half);
-    vpi_shm::set_core_freq(clk_half, id);
     stat_freq = clk_half;
 }
 
@@ -219,7 +211,6 @@ PPredUnit::clkRestore()
 {
     // Set the CPU Clock Object to Normal
     sysClkDomain->clockPeriod(period_normal);
-    vpi_shm::set_core_freq(clk, id);
     stat_freq = clk;
 }
 
@@ -227,7 +218,6 @@ void
 PPredUnit::takeAction(size_t idx) {
     // Set the CPU Clock Object to Normal
     sysClkDomain->clockPeriod(period_vals[idx]);
-    vpi_shm::set_core_freq(clk_vals[idx], id);
     stat_freq = clk_vals[idx];
 }
 
@@ -253,34 +243,6 @@ PPredUnit::unsetStall()
 }
 
 void
-PPredUnit::get_analog_stats() {
-    supply_voltage_prev = supply_voltage;
-    supply_voltage = PPredStat::voltage;
-    supply_voltage_dv = supply_voltage - supply_voltage_prev;
-    supply_current = PPredStat::voltage;
-    core_runtime_current_prev = core_runtime_current;
-    core_runtime_current = PPredStat::voltage;
-    core_runtime_current_di = core_runtime_current - core_runtime_current_prev;
-    total_core_runtime_current_prev = total_core_runtime_current;
-    total_core_runtime_current = PPredStat::current;
-    total_core_runtime_current_di = total_core_runtime_current -
-        total_core_runtime_current_prev;
-    pct_total_runtime_current = core_runtime_current\
-        /total_core_runtime_current;
-    //stats
-    sv = supply_voltage;
-    svdv = supply_voltage_dv;
-    sc = supply_current;
-    rtc = core_runtime_current;
-    rtc_p = core_runtime_current_prev;
-    rtc_d = core_runtime_current_di;
-    trtc = total_core_runtime_current;
-    trtc_p = total_core_runtime_current_prev;
-    trtc_d = total_core_runtime_current_di;
-    ptrtc = pct_total_runtime_current;
-}
-
-void
 PPredUnit::historyInsert(const PPred::event_t event) {
     hr_updated = history.add_event(event);
 }
@@ -302,72 +264,52 @@ PPredUnit::setCPUStalled(const bool stalled) {
   stat_decode_idle = cpuStalled;
 }
 
-
 void
-PPredUnit::VEencountered(bool yes){
-    if (yes){
-        VE.push_front(true);
-        total_ve++;
-    }
-    else{
-        VE.push_front(false);
-    }
-    VE.pop_back();
-
-}
-
-void
-PPredUnit::VEPredicted(bool yes){
-    if (yes){
-        action.push_front(true);
-        total_action++;
-    }
-    else{
-        action.push_front(false);
-    }
+PPredUnit::update_stats(bool pred, bool ve){
+    action.push_front(pred);
     action.pop_back();
 
-}
+    if (pred){
+        total_action++;
+        _total_action = total_action;
 
-void
-PPredUnit::stats_tick(){
-    if (VE.front()){
-        int count = 0;
-        for (auto x:action){
-            if (x){
-                bins[count] +=1;
-                break;
-            }
-            count++;
-        }
-        count = 0;
-        std::list<bool>::iterator it=VE.begin();
-        for (auto x:action){
-            if (count>0 && *it){
-                break;
-            }
-            if (x){
-                act_bins[count] +=1;
-            }
-            count++;
-            it++;
-        }
+        cycles_since_pred = 0;
+    }
+    else{
+        cycles_since_pred++;
     }
 
-    int running_sum = 0;
-    int count = 0;
-    for (auto x:bins){
-        running_sum+=x;
-        false_neg[count] = 100* (total_ve-running_sum)*1.0/total_ve;
-        hits[count] = 100* (running_sum)*1.0/total_ve;
-        count++;
+    if (ve){
+        total_ve++;
+        _total_ve = total_ve;
+
+
+        cycles_since_ve = 0;
+        if (cycles_since_pred >= LEAD_TIME_CAP)
+            ves_outside_leadtime++;
+        else
+            hits[cycles_since_pred] += 1;
+    }
+    else{
+        cycles_since_ve++;
     }
 
-    running_sum = 0;
-    count = 0;
-    for (auto x:act_bins){
-        running_sum+=x;
-        false_pos[count] = 100* (total_action-running_sum)*1.0/total_action;
-        count++;
+    if (action.back()){
+        if (cycles_since_ve >= LEAD_TIME_CAP)
+            preds_outside_leadtime++;
+        else
+            false_pos[LEAD_TIME_CAP-cycles_since_ve-1] += 1;
     }
+
+    //stats
+    supply_voltage_prev = supply_voltage;
+    supply_voltage = PPredStat::voltage;
+    supply_current = PPredStat::current;
+    overall_hit_rate = ves_outside_leadtime.value() / total_ve;
+    overall_fp_rate = preds_outside_leadtime.value() / total_action;
+    sv = supply_voltage;
+    sv_p = supply_voltage_prev;
+    sc = supply_current;
+
+
 }

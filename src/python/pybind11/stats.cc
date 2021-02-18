@@ -67,6 +67,13 @@ pythonDump()
 }
 
 void
+groupDump(Stats::Group* group)
+{
+    py::module m = py::module::import("m5.stats");
+    m.attr("dump_verilog")(group);
+}
+
+void
 pythonReset()
 {
     py::module m = py::module::import("m5.stats");

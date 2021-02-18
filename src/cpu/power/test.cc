@@ -85,7 +85,7 @@ void
 Test::tick(void)
 {
   DPRINTF(TestPowerPred, "Test::lookup()\n");
-  get_analog_stats();
+  update_stats(false,false);
   if (supply_voltage >= emergency) {
     ve = false;
   }

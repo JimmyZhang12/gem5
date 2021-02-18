@@ -71,11 +71,6 @@ Harvard::Harvard(const Params *params)
     hysteresis = params->hysteresis;
     t_count = 0;
     e_count = 0;
-    num_ve = 0;
-    total_misspred = 0;
-    total_preds = 0;
-    total_pred_action = 0;
-    total_pred_inaction = 0;
 }
 
 void
@@ -91,56 +86,30 @@ Harvard::regStats()
         .name(name() + ".next_state")
         .desc("Next State of the Predictor")
         ;
-    nve
-        .name(name() + ".num_voltage_emergency")
-        .desc("Num Voltage Emergencies")
-        ;
-    tmp
-        .name(name() + ".total_mispred")
-        .desc("Total Misprediction")
-        ;
-    tpred
-        .name(name() + ".total_predictions")
-        .desc("Total Predictions")
-        ;
-    taction
-        .name(name() + ".total_action")
-        .desc("Total Actions Taken")
-        ;
-    tiaction
-        .name(name() + ".total_inaction")
-        .desc("Total No Actions Taken")
-        ;
-    mp_rate
-        .name(name() + ".mispred_rate")
-        .desc("Misprediction Rate")
-        .precision(6)
-        ;
+
 }
 
 void
 Harvard::tick(void)
 {
   DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
-  get_analog_stats();
 
   table.tick();
 
+  bool ve = false;
+  bool prediction = false;
+
   if (supply_voltage < emergency && supply_voltage_prev > emergency) {
-    VEencountered(true);
+    ve = true;
     table.insert(this->history.get_entry());
   }
-  else{
-    VEencountered(false);
-  }
+
   // If hr updated:
-  bool prediction = false;
   if (hr_updated) {
     if (table.find(this->history.get_entry())) {
       prediction = true;
       total_pred_action++;
       next_state = NORMAL;
-
     }
     else {
       total_pred_inaction++;
@@ -148,8 +117,7 @@ Harvard::tick(void)
     hr_updated = false;
     total_preds++;
   }
-  VEPredicted(prediction);
-  stats_tick();
+  update_stats(prediction, ve);
 
   //do we need this?
   clkRestore();
@@ -189,17 +157,6 @@ Harvard::tick(void)
   // Update Next State Transition:
   state = next_state;
   
-  //accuracy stats
-
-  // Set Permanant Stats:
-  nve = num_ve;
-  tmp = total_misspred;
-  tpred = total_preds;
-  taction = total_pred_action;
-  tiaction = total_pred_inaction;
-  if (total_preds != 0) {
-    mp_rate = (double)total_misspred/(double)total_preds;
-  }
   return;
 }
 
