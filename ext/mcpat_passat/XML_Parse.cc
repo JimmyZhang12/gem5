@@ -3848,12 +3848,12 @@ void ParseXML::initialize() // Initialize all
 void ParseXML::print(){
 
 std::cout << "    rename  : " << "\n";
-std::cout << " fp_rename_writes = "<< sys.core[0].fp_rename_writes<< "\n";
-std::cout << " fp_rename_reads = "<< sys.core[0].fp_rename_reads<< "\n";
-std::cout << " rename_writes ="<<  sys.core[0].rename_writes<< "\n";
-std::cout << " rename_reads = "<< sys.core[0].rename_reads<< "\n";
-std::cout << " int_instructions = "<< sys.core[0].int_instructions<< "\n";
-std::cout << " fp_instructions ="<<  sys.core[0].fp_instructions<< "\n";
+std::cout << "    fp_rename_writes = "<< sys.core[0].fp_rename_writes<< "\n";
+std::cout << "    fp_rename_reads = "<< sys.core[0].fp_rename_reads<< "\n";
+std::cout << "    rename_writes ="<<  sys.core[0].rename_writes<< "\n";
+std::cout << "    rename_reads = "<< sys.core[0].rename_reads<< "\n";
+std::cout << "    int_instructions = "<< sys.core[0].int_instructions<< "\n";
+std::cout << "    fp_instructions ="<<  sys.core[0].fp_instructions<< "\n";
 
 std::cout << "    sys.core[0].total_instructions  : " <<    sys.core[0].total_instructions  << "\n";
 std::cout << "    sys.core[0].int_instructions  : " <<    sys.core[0].int_instructions  << "\n";

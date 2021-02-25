@@ -859,6 +859,7 @@ void Processor::compute(){
 
   // Compute energy of NoC (w or w/o links) or buses
   for (i = 0; i < numNOC; i++) {
+    nocs[i].set_stats(XML);
     nocs[i].computePower(true);
     nocs[i].computeRuntimeDynamicPower();
     if (procdynp.homoNOC) {

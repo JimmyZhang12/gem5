@@ -291,6 +291,7 @@ void NoC::computeRuntimeDynamicPower() {
 
 void NoC::reset() {
   Component::reset();
+  router.reset_dynamic();
   router.arbiter.reset_dynamic();
   router.crossbar.reset_dynamic();
   router.buffer.reset_dynamic();

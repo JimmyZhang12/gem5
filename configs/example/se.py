@@ -236,7 +236,8 @@ system.ppred_stat = PPredStat( \
     vdc = options.power_pred_voltage, \
     ind = options.pdn_ind, \
     cap = options.pdn_cap,\
-    res = options.pdn_res
+    res = options.pdn_res, \
+    debug_print_delay = options.debug_print_delay
 )
 
 system.ppred_stat.clk_domain = system.ppred_stat_clk
@@ -369,7 +370,7 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
-                    signature_length=4,
+                    signature_length=32,
                     # Specific
                     throttle_on_restore=False,
                     table_size=128,
@@ -499,6 +500,8 @@ for i in range(np):
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
     system.cpu[i].createThreads()
+
+system.ppred_stat.powerpred = system.cpu[0].powerPred
 
 
 if options.ruby:
