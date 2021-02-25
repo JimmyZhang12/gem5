@@ -1071,9 +1071,9 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             toRename->iewUnblock[tid] = false;
 
             ++iewLSQFullEvents;
-            if (powerPred) {
-                powerPred->historyInsert(PPred::LSQ_FULL);
-            }
+            // if (powerPred) {
+            //     powerPred->historyInsert(PPred::LSQ_FULL);
+            // }
             break;
         }
 
@@ -1367,6 +1367,7 @@ DefaultIEW<Impl>::executeInsts()
 
             inst->setExecuted();
 
+
             instToCommit(inst);
         }
 
@@ -1390,7 +1391,24 @@ DefaultIEW<Impl>::executeInsts()
             // that have not been executed.
             bool loadNotExecuted = !inst->isExecuted() && inst->isLoad();
 
+            //if correctly predicted make a ppred event
+            if (powerPred) {
+                if (!(inst->mispredicted()) && !loadNotExecuted && inst->isControl()){
+                    if (inst->readPredTaken()){
+                        powerPred->historyInsert(PPred::BRANCH_T);
+                        powerPred->historySetPC(inst->pcState().instAddr());
+
+                    } 
+                    else 
+                        powerPred->historyInsert(PPred::BRANCH_NT);
+                }
+            }
+
             if (inst->mispredicted() && !loadNotExecuted) {
+
+                if (powerPred)
+                    powerPred->historyInsert(PPred::BRANCH_MP);
+
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
@@ -1433,6 +1451,9 @@ DefaultIEW<Impl>::executeInsts()
                 // Squash.
                 squashDueToMemOrder(violator, tid);
 
+                if (powerPred)
+                    powerPred->historyInsert(PPred::MEM_MP);
+
                 ++memOrderViolationEvents;
             }
         } else {
@@ -1449,6 +1470,9 @@ DefaultIEW<Impl>::executeInsts()
                         inst->physEffAddr);
                 DPRINTF(IEW, "Violation will not be handled because "
                         "already squashing\n");
+
+                if (powerPred)
+                    powerPred->historyInsert(PPred::MEM_MP);
 
                 ++memOrderViolationEvents;
             }

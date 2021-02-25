@@ -58,7 +58,7 @@ Tick statFinalTick();
 
 void initSimStats();
 
-extern void groupDump(Group* group);
+extern void runVerilog();
 
 extern void pythonBeginProfile();
 

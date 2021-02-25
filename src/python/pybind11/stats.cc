@@ -67,10 +67,10 @@ pythonDump()
 }
 
 void
-groupDump(Stats::Group* group)
+runVerilog()
 {
     py::module m = py::module::import("m5.stats");
-    m.attr("dump_verilog")(group);
+    m.attr("dump_verilog")();
 }
 
 void

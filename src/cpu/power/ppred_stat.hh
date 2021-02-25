@@ -40,9 +40,11 @@
 
 #include "base/statistics.hh"
 #include "base/types.hh"
+
 #include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
 #include "cpu/static_inst.hh"
+
 #include "debug/PowerPred.hh"
 #include "params/PPredStat.hh"
 #include "python/pybind11/vpi_shm.h"
@@ -51,9 +53,10 @@
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
 
-
 #include "mcpat.hh"
 #include "pdn.hh"
+
+class PPredUnit;//forward declare to avoid circular includes
 
 class PPredStat : public ClockedObject
 {
@@ -112,6 +115,11 @@ class PPredStat : public ClockedObject
     Mcpat mp;
 
     pdn _pdn;
+
+    int count = 0;
+
+    int delay;
+    int max_delay;
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

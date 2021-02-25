@@ -248,8 +248,9 @@ public:
   void print();
 };
 
-} // namespace PPred
+} 
 
+// namespace PPred
 /**
  * Need to extend on the hash function to hash an arbitrary class
  */

@@ -409,6 +409,8 @@ def setCommittedInstr(num):
 
 def dump(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
+    from m5 import options
+    
     now = m5.curTick()
     global lastDump
     global numDump
@@ -424,6 +426,8 @@ def dump(root=None, exit=False):
     # still possible to dump a multiple sub-trees.
     if not new_dump and root is None:
         return
+    
+    numDump+=1
 
     if new_dump:
         _m5.stats.processDumpQueue()
@@ -438,11 +442,18 @@ def dump(root=None, exit=False):
             _dump_to_visitor(output, root=root)
             output.end()
 
+    max_dump = options.power_profile_duration
+    max_instr = options.power_profile_instrs
+    print("Num Dumps: ",numDump, "Committed Instrs: ",  committedInstrs)
+    if(numDump == max_dump or exit or committedInstrs >= max_instr):
+        print("Ending after "+str(numDump)+
+                " datapoints")
+        sys.exit()
+
 
 def dump_verilog(root=None, exit=False):
     '''Dump all statistics data to the registered outputs'''
     from m5 import options
-
 
     now = m5.curTick()
     global lastDump
@@ -568,19 +579,19 @@ def dump_verilog(root=None, exit=False):
 
             max_dump = options.power_profile_duration
             max_instr = options.power_profile_instrs
-            if(numDump == max_dump or exit or committedInstrs >= max_instr):
-                mcpat.dump()
-                runtime_begin_profile = False
-                print("Ending after "+str(numDump)+
-                      " datapoints")
-                # Clean up simulation:
-                if(options.ncverilog_enable):
-                    current = mcpat.get_last_i(mp_v)
-                    vpi_shm.set_driver_signals(current, 1)
-                    lastVoltage=vpi_shm.get_voltage()
-                    lastCurrent=vpi_shm.get_current()
-                    vpi_shm.ack_supply()
-                sys.exit()
+            # if(numDump == max_dump or exit or committedInstrs >= max_instr):
+            #     mcpat.dump()
+            #     runtime_begin_profile = False
+            #     print("Ending after "+str(numDump)+
+            #           " stat dumps")
+            #     # Clean up simulation:
+            #     if(options.ncverilog_enable):
+            #         current = mcpat.get_last_i(mp_v)
+            #         vpi_shm.set_driver_signals(current, 1)
+            #         lastVoltage=vpi_shm.get_voltage()
+            #         lastCurrent=vpi_shm.get_current()
+            #         vpi_shm.ack_supply()
+            #     sys.exit()
     else:
         if new_dump:
             _m5.stats.processDumpQueue()

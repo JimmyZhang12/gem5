@@ -29,6 +29,7 @@
  */
 
 #include "cpu/power/ppred_stat.hh"
+#include "cpu/power/ppred_unit.hh"
 
 #include <algorithm>
 #include <iostream>
@@ -40,10 +41,13 @@
 #include "config/the_isa.hh"
 #include "debug/PPredStat.hh"
 
+#include <chrono> 
+using namespace std::chrono; 
+
 double PPredStat::voltage = 0;
 double PPredStat::current = 0;
 
-PPredStat::PPredStat(const Params *params)
+PPredStat::PPredStat(const PPredStatParams *params)
   : ClockedObject(params),
   tickEvent([this]{ tick(); }, "PPredStat tick",
             false, Event::Power_Event_Pri),
@@ -52,28 +56,31 @@ PPredStat::PPredStat(const Params *params)
   frequency(params->frequency),
   ncores(params->ncores),
   mcpat_output_path(params->mcpat_output_path),
-  mp(),
+  mp(Mcpat(params->powerpred)),
   _pdn(pdn(params->ind,
     params->res,
     params->cap,
     params->vdc,
     params->frequency) 
-  )
-{
-  /* Do Nothing */
+  ),
+  count(0),
+  delay(1),
+  max_delay(params->debug_print_delay)
+ { 
   xml_path = mcpat_output_path + "/serial_mp.xml";
   first_time = true;
   mcpat_ready = false;
   begin = false;
 
-
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
         clockEdge(Cycles(1)));
     schedule(tickEvent, clockEdge(Cycles(1)));
+    // vpi_shm::init(frequency, ncores);
+    // vpi_shm::set_ttn(frequency, cycles);
+
   }
-  // vpi_shm::init(frequency, ncores);
-  // vpi_shm::set_ttn(frequency, cycles);
+
 
 }
 
@@ -83,8 +90,9 @@ PPredStat::PPredStat(const Params *params)
 void
 PPredStat::tick(void)
 {
+
   if (Stats::pythonGetProfiling()) {
-    DPRINTF(PPredStat, "*******entering mcpat*********\n" );
+    count++;
 
     if (first_time) {
       Stats::reset();
@@ -93,30 +101,62 @@ PPredStat::tick(void)
     else {
       begin = true;
       if (mcpat_ready){
+        // auto start = high_resolution_clock::now(); 
         mp.init_wrapper(xml_path, mcpat_output_path);
+        // auto stop = high_resolution_clock::now(); 
+        // auto duration = duration_cast<microseconds>(stop - start); 
+        // std::cout <<"init_wrapper:" <<duration.count() << endl; 
 
-        std::cout << '\n' << "Press a key to continue...";
-        do {
-        } while (cin.get() != '\n');
+        if (delay >= max_delay && max_delay > 0){
+          // Stats::runVerilog();
+          // Stats::pythonGenerateXML();
+          // mp.run_with_xml(xml_path, mcpat_output_path);
+          mp.save_output(mcpat_output_path);
+          mp.print_power();
+          mp.proc.XML->print();
+          // Stats::reset();
+
+          std::cout << "power = :" << mp.power << "\n";
+          std::cout << "supply_current = :" << current << "\n";
+          std::cout << "supply_voltage = :" << voltage << "\n";
+
+          std::cout << '\n' << "Press a key to continue...";
+          do {
+          } while (cin.get() != '\n');
+        }
+        else{
+          delay++;
+        }
+
 
       }
       else{
         Stats::pythonGenerateXML();
-        mp = Mcpat();
         mp.init(xml_path);
         mcpat_ready = true;
       }
+
       current = _pdn.get_current(mp.power);
       voltage = _pdn.get_voltage(mp.power);
-      std::cout << "power = :" << mp.power << "\n";
-      std::cout << "supply_current = :" << current << "\n";
-      std::cout << "supply_voltage = :" << voltage << "\n";
+      
 
+
+      // auto start = high_resolution_clock::now(); 
+      // mp.reset();
+      // auto stop = high_resolution_clock::now(); 
+      // auto duration = duration_cast<microseconds>(stop - start); 
+      // std::cout <<"reset :" <<duration.count() << endl; 
+    }
+
+    //dump every cycle number of ticks
+    if (count == cycles){
+      count = 0;
       Stats::dump();
-      Stats::reset();
     }
 
   }
+
+
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
         clockEdge(Cycles(1)));

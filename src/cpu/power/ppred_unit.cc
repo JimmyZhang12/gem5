@@ -51,6 +51,8 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/PowerPred.hh"
+#include "cpu/power/ppred_stat.hh"
+
 
 PPredUnit::PPredUnit(const Params *params)
     : ClockedObject(params),
@@ -77,6 +79,9 @@ PPredUnit::PPredUnit(const Params *params)
 
     stall = false;
     this->id = params->cpu_id;
+    
+    vpi_shm::set_voltage_set(voltage_set, id);
+    vpi_shm::set_core_freq(clk, id);
 
     history.resize(params->signature_length);
     hr_updated = false;
@@ -152,25 +157,25 @@ PPredUnit::regStats()
         ;
     hits
         .init(LEAD_TIME_CAP)
-        .name(name() + "hit rate")
-        .desc("Noncumulative hit rate over lead time")
+        .name(name() + ".hit_rate")
+        .desc("Noncumulative num hits per lead time")
         .precision(3)
         .flags(total)
         ;
     false_pos
         .init(LEAD_TIME_CAP)
-        .name(name() + "false_pos rate")
-        .desc("Noncumulative false positive rate over lead time")
+        .name(name() + ".false_pos_rate")
+        .desc("Noncumulative num false positives per lead time")
         .precision(3)
         .flags(total)
         ;
     ves_outside_leadtime
-        .name(name() + ".hits_outside_leadtime")
+        .name(name() + ".ves_outside_leadtime")
         .desc("uncaught hits at lead time cap")
         .precision(6)
         ;
     preds_outside_leadtime
-        .name(name() + ".hits_outside_leadtime")
+        .name(name() + ".preds_outside_leadtime")
         .desc("uncaught preds at lead time cap")
         .precision(6)
         ;
@@ -190,11 +195,26 @@ PPredUnit::regStats()
         .desc("hit rate at lead time cap")
         .precision(6)
         ;
+    overall_hit_rate = (_total_ve - ves_outside_leadtime)/ _total_ve;
+
     overall_fp_rate
         .name(name() + ".overall_fp_rate")
         .desc("false positive rate at lead time cap")
         .precision(6)
         ;
+    overall_fp_rate = (preds_outside_leadtime) / _total_action;
+
+    event_count
+        .init(PPred::DUMMY_EVENT)
+        .name(name() + ".event_count")
+        .desc("event counts")
+        .precision(6)
+        ;
+
+    for (int i=0; i< PPred::DUMMY_EVENT; i++){
+        event_count.subname(i, PPred::event_t_name[i]);
+    }
+
 
 }
 
@@ -244,7 +264,9 @@ PPredUnit::unsetStall()
 
 void
 PPredUnit::historyInsert(const PPred::event_t event) {
-    hr_updated = history.add_event(event);
+    event_count[event] += 1;
+    hr_updated = true;
+    history.add_event(event);
 }
 
 void
@@ -283,7 +305,6 @@ PPredUnit::update_stats(bool pred, bool ve){
         total_ve++;
         _total_ve = total_ve;
 
-
         cycles_since_ve = 0;
         if (cycles_since_pred >= LEAD_TIME_CAP)
             ves_outside_leadtime++;
@@ -305,8 +326,7 @@ PPredUnit::update_stats(bool pred, bool ve){
     supply_voltage_prev = supply_voltage;
     supply_voltage = PPredStat::voltage;
     supply_current = PPredStat::current;
-    overall_hit_rate = ves_outside_leadtime.value() / total_ve;
-    overall_fp_rate = preds_outside_leadtime.value() / total_action;
+
     sv = supply_voltage;
     sv_p = supply_voltage_prev;
     sc = supply_current;

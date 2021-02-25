@@ -48,19 +48,22 @@
 
 #include "base/statistics.hh"
 #include "base/types.hh"
+
 #include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
-#include "cpu/power/ppred_stat.hh"
-
 #include "cpu/static_inst.hh"
 
 #include "debug/PowerPred.hh"
 #include "params/PowerPredictor.hh"
 #include "python/pybind11/vpi_shm.h"
+
 #include "sim/clocked_object.hh"
 #include "sim/global_event.hh"
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
+
+//forward declare
+class PPredStat;
 
 class PPredUnit : public ClockedObject
 {
@@ -140,6 +143,7 @@ class PPredUnit : public ClockedObject
     Stats::Scalar sv_p;
     Stats::Scalar sc;
     //prediction stats
+    Stats::Vector event_count;
     Stats::Vector hits;
     Stats::Vector false_pos;
 
@@ -147,8 +151,9 @@ class PPredUnit : public ClockedObject
     Stats::Scalar preds_outside_leadtime;
     Stats::Scalar _total_ve;
     Stats::Scalar _total_action;
-    Stats::Scalar overall_hit_rate;
-    Stats::Scalar overall_fp_rate;
+    Stats::Formula overall_hit_rate;
+    Stats::Formula overall_fp_rate;
+
 
     SrcClockDomain* sysClkDomain;
     double min_current;

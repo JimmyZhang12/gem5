@@ -14,9 +14,15 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <chrono> 
 
 
-Mcpat::Mcpat(){}
+std::unordered_map<std::string, Stats::Info*> Mcpat::name_to_stat;
+std::unordered_set<std::string> Mcpat::stat_names;
+
+Mcpat::Mcpat(PPredUnit* _powerPred){
+    powerPred = _powerPred;
+}
 
 
 void
@@ -24,22 +30,45 @@ Mcpat::init(std::string xml_dir){
     xml = new ParseXML();
     xml->parse(xml_dir);
     proc.init(xml);
-    // print_power(proc);
+
+    //TODO make this compile time
+    for(std::unordered_map<std::string, int>::iterator it = stat_map.begin(); it != stat_map.end(); ++it) {
+        stat_names.insert(it->first);
+    }
+
+
+    list<Stats::Info *>& statlist = Stats::statsList();
+    list<Stats::Info *>::iterator it;
+    for (it = statlist.begin(); it != statlist.end(); ++it){
+        std::string name = (*it)->name;
+        if (stat_names.find(name) != stat_names.end())
+            name_to_stat[name] = (*it);
+    }
+
+    // new stats
+    Root* root = Root::root();
+    init_stat_map_helper(root, "");
 
 }
- 
+
 void
-Mcpat::compute(std::string output_path){
-    proc.compute();
-    // output_path = output_path + "/out_mcpat_internal.txt";
-    // std::cout << output_path << '\n';
+Mcpat::init_stat_map_helper(Stats::Group* group, std::string path){
+    const std::vector< Stats::Info * >&  stats = group->getStats();
 
-    // std::ofstream out(output_path);
-    // std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
-    // std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-    // proc.displayEnergy(2, 5);
-    // std::cout.rdbuf(coutbuf); //reset to standard output again
+    std::vector<Stats::Info *>::const_iterator it;
+    for (it = stats.begin(); it != stats.end(); ++it){
+        std::string name = path + (*it)->name;
+        if (stat_names.find(name) != stat_names.end())
+            name_to_stat[name] = (*it);
+    }
+    
+    const std::map< std::string, Stats::Group * > & childGroups = group->getStatGroups();    
+    for (auto const& x : childGroups){
+        std::string child_path = path + x.first + ".";
+        init_stat_map_helper(x.second, child_path);
+    }
 }
+
 
 void
 Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
@@ -73,81 +102,92 @@ Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
     // save_output(output_path_serial, proc_serial);
 
 }
+void 
+Mcpat::run_with_xml(std::string xml_dir, std::string output_path){
+
+    proc_serial_xml = new ParseXML();
+    proc_serial_xml->parse(xml_dir);
+    proc.XML = proc_serial_xml;
+    proc.reset();
+    proc.compute();
+    power = get_power(proc);
+
+}
+
 
 void
 Mcpat::update_stats(){
-    //legacy stats
-    list<Stats::Info *>& statlist = Stats::statsList();
-    list<Stats::Info *>::iterator it;
-    for (it = statlist.begin(); it != statlist.end(); ++it){
-        set_mcpat_stat((*it), false, "");
+    for(std::unordered_map<std::string, Stats::Info*>::iterator it = name_to_stat.begin(); it != name_to_stat.end(); ++it) {
+        it->second->prepare();
+        set_mcpat_stat(it->second, it->first);
     }
-
-    // new stats
-    Root* root = Root::root();
-    update_stats_helper(root, "");
-
 
     //stats with >1 dependencies
-    // std::cout << "test:RenamedOperands " << stat_storage.RenamedOperands << "\n";
-    // std::cout << "test:int_rename_lookups " << stat_storage.int_rename_lookups << "\n";
-    // std::cout << "test:RenameLookups " << stat_storage.RenameLookups << "\n";
-
-    proc.XML->sys.core[0].busy_cycles = stat_storage.numCycles-stat_storage.idleCycles;
+    proc.XML->sys.core[0].busy_cycles = 
+        proc.XML->sys.core[0].total_cycles - 
+        proc.XML->sys.core[0].idle_cycles;
 
     proc.XML->sys.core[0].rename_writes = 
-        stat_storage.RenamedOperands*stat_storage.int_rename_lookups/
-        (1+stat_storage.RenameLookups);
+        (stat_storage.cpu_rename_RenamedOperands - stat_storage_prev.cpu_rename_RenamedOperands) * 
+        (proc.XML->sys.core[0].rename_reads) / 
+        ((stat_storage.cpu_rename_RenameLookups - stat_storage_prev.cpu_rename_RenameLookups)+1);
+
     proc.XML->sys.core[0].fp_rename_writes = 
-        stat_storage.RenamedOperands*stat_storage.fp_rename_lookups/
-        (1+stat_storage.RenameLookups);
+        (stat_storage.cpu_rename_RenamedOperands - stat_storage_prev.cpu_rename_RenamedOperands) * 
+        (proc.XML->sys.core[0].fp_rename_reads) /
+        ((stat_storage.cpu_rename_RenameLookups - stat_storage_prev.cpu_rename_RenameLookups)+1);
+        
     proc.XML->sys.L2->read_accesses = 
-        stat_storage.l2_ReadExReq_accesses + 
-        stat_storage.l2_ReadCleanReq_accesses + 
-        stat_storage.l2_ReadSharedReq_accesses;
+        (stat_storage.l2_ReadExReq_accesses - stat_storage_prev.l2_ReadExReq_accesses) + 
+        (stat_storage.l2_ReadCleanReq_accesses - stat_storage_prev.l2_ReadCleanReq_accesses) + 
+        (stat_storage.l2_ReadSharedReq_accesses - stat_storage_prev.l2_ReadSharedReq_accesses);
+
     proc.XML->sys.L2->read_misses = 
-        stat_storage.l2_ReadCleanReq_misses + 
-        stat_storage.l2_ReadExReq_misses;
+        (stat_storage.l2_ReadCleanReq_misses - stat_storage_prev.l2_ReadCleanReq_misses) + 
+        (stat_storage.l2_ReadExReq_misses - stat_storage_prev.l2_ReadExReq_misses);
+
     proc.XML->sys.L2->write_accesses =
-        stat_storage.l2_WritebackDirty_accesses + 
-        stat_storage.l2_WritebackClean_accesses;
+        (stat_storage.l2_WritebackDirty_accesses - stat_storage_prev.l2_WritebackDirty_accesses) + 
+        (stat_storage.l2_WritebackClean_accesses - stat_storage_prev.l2_WritebackClean_accesses);
+
     proc.XML->sys.L2->write_misses =
-        stat_storage.l2_WritebackClean_accesses -
-        stat_storage.l2_WritebackDirty_hits;
+        (stat_storage.l2_WritebackClean_accesses - stat_storage_prev.l2_WritebackClean_accesses) -
+        (stat_storage.l2_WritebackDirty_hits - stat_storage_prev.l2_WritebackDirty_hits);
 
     proc.XML->sys.L3->read_accesses = 
-        stat_storage.l3_ReadExReq_accesses + 
-        stat_storage.l3_ReadCleanReq_accesses + 
-        stat_storage.l3_ReadSharedReq_accesses;
+        (stat_storage.l3_ReadExReq_accesses - stat_storage_prev.l3_ReadExReq_accesses) + 
+        (stat_storage.l3_ReadCleanReq_accesses - stat_storage_prev.l3_ReadCleanReq_accesses) + 
+        (stat_storage.l3_ReadSharedReq_accesses - stat_storage_prev.l3_ReadSharedReq_accesses);
+
     proc.XML->sys.L3->read_misses = 
-        stat_storage.l3_ReadCleanReq_misses + 
-        stat_storage.l3_ReadExReq_misses;
+        (stat_storage.l3_ReadCleanReq_misses - stat_storage_prev.l3_ReadCleanReq_misses) + 
+        (stat_storage.l3_ReadExReq_misses - stat_storage_prev.l3_ReadExReq_misses);
+
     proc.XML->sys.L3->write_accesses =
-        stat_storage.l3_WritebackDirty_accesses + 
-        stat_storage.l3_WritebackClean_accesses;
+        (stat_storage.l3_WritebackDirty_accesses - stat_storage_prev.l3_WritebackDirty_accesses) + 
+        (stat_storage.l3_WritebackClean_accesses - stat_storage_prev.l3_WritebackClean_accesses);
+
     proc.XML->sys.L3->write_misses =
-        stat_storage.l3_WritebackClean_accesses -
-        stat_storage.l3_WritebackDirty_hits;
-
-}
-
-void
-Mcpat::update_stats_helper(Stats::Group* group, std::string path){
-    const std::vector< Stats::Info * >&  stats = group->getStats();
-    std::vector<Stats::Info *>::const_iterator it;
-    for (it = stats.begin(); it != stats.end(); ++it){
-        set_mcpat_stat((*it), true, path);
-    }
+        (stat_storage.l3_WritebackClean_accesses - stat_storage_prev.l3_WritebackClean_accesses) -
+        (stat_storage.l3_WritebackDirty_hits - stat_storage.l3_WritebackDirty_hits);
     
-    const std::map< std::string, Stats::Group * > & childGroups = group->getStatGroups();    
-    for (auto const& x : childGroups){
-        std::string child_path = path + x.first + ".";
-        update_stats_helper(x.second, child_path);
-    }
+    proc.XML->sys.NoC[0].total_accesses =
+        (stat_storage.membus_pkt_count - stat_storage_prev.membus_pkt_count) + 
+        (stat_storage.tol2bus_pkt_count - stat_storage_prev.tol2bus_pkt_count) + 
+        (stat_storage.tol3bus_pkt_count - stat_storage_prev.tol3bus_pkt_count); 
+
+
 }
 
+
+
 void
-Mcpat::reset(){ proc.reset();}
+Mcpat::reset(){ 
+    // for(std::unordered_map<std::string, Stats::Info*>::iterator it = name_to_stat.begin(); it != name_to_stat.end(); ++it) {
+    //     it->second->reset();
+    // }
+    proc.reset();
+}
 
 void
 Mcpat::print_power(Processor &proc_t){
@@ -170,6 +210,10 @@ Mcpat::print_power(Processor &proc_t){
     std::cout << " total power = " << power
         << " W" << std::endl;
 }
+void
+Mcpat::print_power(){
+    print_power(proc);
+}
 
 
 double
@@ -184,12 +228,18 @@ Mcpat::get_power(Processor &proc_t){
 }
 
 void
-Mcpat::save_output(std::string fname, Processor &proc_t)
-{
+Mcpat::save_output(std::string fname, Processor &proc_t){
     std::ofstream out(fname);
     std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
     std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
     proc_t.displayEnergy(2, 5);
     std::cout.rdbuf(coutbuf); //reset to standard output again
 }
+
+void
+Mcpat::save_output(std::string output_path){
+    std::string output_path_internal = output_path + "/out_mcpat_internal.txt";
+    save_output(output_path_internal, proc);
+}
+
 

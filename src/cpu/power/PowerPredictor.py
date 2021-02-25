@@ -99,4 +99,6 @@ class PPredStat(ClockedObject):
     cap = Param.Float(0, "pdn capacitance")
     res = Param.Float(0, "pdn resistance")
     vdc = Param.Float(0, "steady state pdn voltage")
+    debug_print_delay = Param.Unsigned(0, "debug print delay")
+    powerpred = Param.PowerPredictor(Parent.cpu[0].powerPred , "the power predictor")
 

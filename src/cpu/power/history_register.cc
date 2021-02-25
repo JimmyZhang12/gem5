@@ -60,7 +60,6 @@
  */
 PPred::HistoryRegister::HistoryRegister(size_t len) {
   this->signature.resize(len, BRANCH_T);
-  this->pc.resize(len, 0);
 }
 
 /**
@@ -68,75 +67,7 @@ PPred::HistoryRegister::HistoryRegister(size_t len) {
  * @return Entry type that can be hashed or looked up in a CAM
  */
 PPred::Entry PPred::HistoryRegister::get_entry() {
-  return PPred::Entry(this->pc[0], this->signature);
-}
-
-/**
- * Convert the History Register to an Array2D type that can be used in the
- * perceptron and DNN
- *
- * Rescales the Portions of the features to [0,1]
- *
- * @param events Number of events/pcs to return
- * @param no_pc Return an array with no PC values
- * @param anchor_pc Return an array with [anchor_pc, e0, e1,...]
- * @return Array2D
- */
-Array2D PPred::HistoryRegister::get_array2d(size_t events,
-                                            bool no_pc,
-                                            bool anchor_pc) {
-  assert(events <= signature.size());
-  Array2D ret;
-  Array2D temp;
-  if (no_pc) {
-    ret = Array2D(1, events, 0.0);
-    for (size_t i = 0; i < events; i++) {
-      ret.data[0][i] = (double)(int)signature[i];
-    }
-    return ret;
-  }
-  if (anchor_pc) {
-    ret = Array2D(1, 1+events, 0.0);
-    for (size_t i = 0; i < events; i++) {
-      ret.data[0][i+1] = (double)(int)signature[i];
-    }
-    ret.data[0][0] = (double)pc[0];
-    return ret;
-  }
-  ret = Array2D(1, 2*events, 0.0);
-  for (size_t i = 0; i < events; i++) {
-    ret.data[0][i] = (double)pc[i];
-    ret.data[0][i+events] = (double)(int)signature[i];
-  }
-  if (no_pc) {
-    // rescale just the Events:
-    temp = rescale(ret.get_subset(1, events, 0, 0), \
-        0.0, 9.0, 0.0, 1.0);
-    ret.apply_subset(temp, 0, 0);
-  }
-  else if (anchor_pc) {
-    // rescale PC and Events:
-    // First rescale PC
-    temp = rescale(ret.get_subset(1, 1, 0, 0), \
-        0.0, (double)std::pow((double)2.0,(double)64), 0.0, 1.0);
-    ret.apply_subset(temp, 0, 0);
-    // First rescale Events
-    temp = rescale(ret.get_subset(1, events, 0, 1), \
-        0.0, 9.0, 0.0, 1.0);
-    ret.apply_subset(temp, 0, 1);
-  }
-  else {
-    // rescale PC and Events:
-    // First rescale PC
-    temp = rescale(ret.get_subset(1, events, 0, 0), \
-        0.0, (double)std::pow((double)2.0,(double)64), 0.0, 1.0);
-    ret.apply_subset(temp, 0, 0);
-    // First rescale Events
-    temp = rescale(ret.get_subset(1, events, 0, events), \
-        0.0, 9.0, 0.0, 1.0);
-    ret.apply_subset(temp, 0, events);
-  }
-  return ret;
+  return PPred::Entry(this->pc, this->signature);
 }
 
 /**
@@ -148,43 +79,27 @@ Array2D PPred::HistoryRegister::get_array2d(size_t events,
  * @param event uArch Event Type from the event_t enum
  * @return if the event is added correctly
  */
-bool PPred::HistoryRegister::add_event(PPred::event_t event) {
-  // First check if the event isnt already in the HR for the same PC
-  for (size_t i = 0; i < signature.size(); i++) {
-    if (pc[i] != inst_pc) {
-      // Not in the most recent set of PCs, any other match would
-      // be from a previous time frame
-      break;
-    }
-    if (signature[i] == event && pc[i] == inst_pc) {
-      // Event & PC value are a duplicate
-      return false;
-    }
-  }
-
+void PPred::HistoryRegister::add_event(PPred::event_t event) {
   // shift all the vector elements:
   for (int i = (int)signature.size() - 2; i >= 0; i--) {
     this->signature[i+1] = this->signature[i];
   }
-  for (int i = (int)pc.size() - 2; i >= 0; i--) {
-    this->pc[i+1] = this->pc[i];
-  }
   this->signature[0] = event;
-  this->pc[0] = this->inst_pc;
+
   // Print Vector & PC
   DPRINTF(HistoryRegister, "[ HistoryRegister ] add_event(): PC %d; " \
-  "Signature", this->pc[0]);
+  "Signature", this->pc);
   //for (auto i : this->signature) {
   //  DPRINTF(HistoryRegister, "%s,", PPred::event_t_name[i]);
   //}
   DPRINTF(HistoryRegister, "\n");
-  return true;
 }
 
 /**
  * Set the internal PC value, called from the cpu.tick() function.
- * @param pc The current pc value at the time of the cpu.tick() function.
+ *
  */
+
 void PPred::HistoryRegister::set_pc(uint64_t pc) {
-  this->inst_pc = pc;
+  this->pc = pc;
 }

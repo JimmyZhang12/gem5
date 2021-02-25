@@ -65,126 +65,116 @@ class HistoryRegister {
    */
   std::vector<event_t> signature;
 
-  /**
-   * PC of last event
-   */
-  std::vector<uint64_t> pc;
 
-  /**
-   * PC of tick
-   */
-  uint64_t inst_pc;
+  public:
+    /**
+     * PC of last taken branch
+     */
+    uint64_t pc;
 
-public:
-  /**
-   * Default Constructor
-   */
-  HistoryRegister(size_t len = 4);
+    /**
+     * Default Constructor
+     */
+    HistoryRegister(size_t len = 4);
 
-  /**
-   * resize
-   * Resize the history register
-   * @param len The length of the new history register
-   */
-  void resize(size_t len = 4) {
-    signature.resize(len);
-    pc.resize(len);
-  }
+    /**
+     * resize
+     * Resize the history register
+     * @param len The length of the new history register
+     */
+    void resize(size_t len = 4) {
+      signature.resize(len);
+    }
 
-  /**
-   * Convert the History Register to an Event type
-   * @return Entry type that can be hashed or looked up in a CAM
-   */
-  Entry get_entry();
+    /**
+     * Convert the History Register to an Event type
+     * @return Entry type that can be hashed or looked up in a CAM
+     */
+    Entry get_entry();
 
-  /**
-   * Convert the History Register to an Array2D type that can be used in the
-   * perceptron and DNN
-   * @param events Number of events/pcs to return
-   * @param no_pc Return an array with no PC values
-   * @param anchor_pc Return an array with [anchor_pc, e0, e1,...]
-   * @return Array2D
-   */
-  Array2D get_array2d(size_t events, bool no_pc=false, bool anchor_pc=false);
+    /**
+     * Convert the History Register to an Array2D type that can be used in the
+     * perceptron and DNN
+     * @param events Number of events/pcs to return
+     * @param no_pc Return an array with no PC values
+     * @param anchor_pc Return an array with [anchor_pc, e0, e1,...]
+     * @return Array2D
+     */
+    Array2D get_array2d(size_t events, bool no_pc=false, bool anchor_pc=false);
 
-  /**
-   * Add Event
-   * Adds Event to the HistoryRegister; takes the internal updating PC
-   * register, and external event and adds to the PC/Event registers. This is
-   * so events that dont have reference to a PC can also insert events, such as
-   * the memory hierarchy.
-   * @param event uArch Event Type from the event_t enum
-   * @return if the event is added correctly
-   */
-  bool add_event(event_t event);
+    /**
+     * Add Event
+     * Adds Event to the HistoryRegister; takes the internal updating PC
+     * register, and external event and adds to the PC/Event registers. This is
+     * so events that dont have reference to a PC can also insert events, such as
+     * the memory hierarchy.
+     * @param event uArch Event Type from the event_t enum
+     * @return if the event is added correctly
+     */
+    void add_event(event_t event);
 
-  /**
-   * Set the internal PC value, called from the cpu.tick() function.
-   * @param pc The current pc value at the time of the cpu.tick() function.
-   */
-  void set_pc(uint64_t pc);
+    /**
+     * Set the internal PC value, called from the cpu.tick() function.
+     * W
+     */
+    void set_pc(uint64_t pc);
 
-  /**
-   * Friend ostream& operator<<
-   * Write the contents of the History Register out to a stream
-   * @param os The output stream
-   * @param t This
-   * @return output stream reference
-   */
-  friend std::ostream& operator<<(std::ostream& os, const HistoryRegister& t) {
-    // Print PC Followed by all the uArchEvent IDs
-    for (size_t i = 0; i < t.pc.size(); i++) {
-      if (i != 0) {
+    /**
+     * Friend ostream& operator<<
+     * Write the contents of the History Register out to a stream
+     * @param os The output stream
+     * @param t This
+     * @return output stream reference
+     */
+    friend std::ostream& operator<<(std::ostream& os, const HistoryRegister& t) {
+      // Print PC Followed by all the uArchEvent IDs
+      for (size_t i = 0; i < t.signature.size(); i++) {
         os << ",";
+        os << std::dec << t.signature[i];
       }
-      os << std::hex << t.pc[i];
+
+      return os;
     }
-    for (size_t i = 0; i < t.signature.size(); i++) {
-      os << ",";
-      os << std::dec << t.signature[i];
+
+    /**
+     * == operator
+     * Compare the other HR to self
+     * @param other
+     * @return bool
+     */
+    bool operator==(const HistoryRegister& other) const {
+      return (this->get_signature() == other.get_signature() && \
+          this->get_pc() == other.get_pc());
     }
-    return os;
-  }
 
-  /**
-   * == operator
-   * Compare the other HR to self
-   * @param other
-   * @return bool
-   */
-  bool operator==(const HistoryRegister& other) const {
-    return (this->get_signature() == other.get_signature() && \
-        this->get_pc() == other.get_pc());
-  }
+    /**
+     * != operator
+     * Compare the other HR to self
+     * @param other
+     * @return bool
+     */
+    bool operator!=(const HistoryRegister& other) const {
+      return (this->get_signature() != other.get_signature() || \
+          this->get_pc() != other.get_pc());
+    }
 
-  /**
-   * != operator
-   * Compare the other HR to self
-   * @param other
-   * @return bool
-   */
-  bool operator!=(const HistoryRegister& other) const {
-    return (this->get_signature() != other.get_signature() || \
-        this->get_pc() != other.get_pc());
-  }
+    /**
+     * get_signature
+     * Return the signature vector
+     * @return Anchor Signature
+     */
+    std::vector<event_t> get_signature() const {
+      return signature;
+    }
 
-  /**
-   * get_signature
-   * Return the signature vector
-   * @return Anchor Signature
-   */
-  std::vector<event_t> get_signature() const {
-    return signature;
-  }
-
-  /**
-   * get_pc
-   * Return the PC value
-   * @return Anchor PC
-   */
-  uint64_t get_pc() const {
-    return pc[0];
-  }
+    /**
+     * get_pc
+     * Return the PC value
+     * @return Anchor PC
+     */
+    uint64_t get_pc() const {
+      return pc;
+    }
 };
 
 } // namespace PPred
