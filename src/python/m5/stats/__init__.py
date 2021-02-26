@@ -442,10 +442,12 @@ def dump(root=None, exit=False):
             _dump_to_visitor(output, root=root)
             output.end()
 
+    # max_instr = options.power_profile_instrs
     max_dump = options.power_profile_duration
-    max_instr = options.power_profile_instrs
+
     print("Num Dumps: ",numDump, "Committed Instrs: ",  committedInstrs)
-    if(numDump == max_dump or exit or committedInstrs >= max_instr):
+
+    if(numDump == max_dump or exit):
         print("Ending after "+str(numDump)+
                 " datapoints")
         sys.exit()

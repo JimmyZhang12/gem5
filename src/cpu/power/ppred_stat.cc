@@ -65,7 +65,9 @@ PPredStat::PPredStat(const PPredStatParams *params)
   ),
   count(0),
   delay(1),
-  max_delay(params->debug_print_delay)
+  max_delay(params->debug_print_delay),
+  power_start_delay(params->power_start_delay),
+  count_init(0)
  { 
   xml_path = mcpat_output_path + "/serial_mp.xml";
   first_time = true;
@@ -80,8 +82,6 @@ PPredStat::PPredStat(const PPredStatParams *params)
     // vpi_shm::set_ttn(frequency, cycles);
 
   }
-
-
 }
 
 /**
@@ -89,69 +89,62 @@ PPredStat::PPredStat(const PPredStatParams *params)
  */
 void
 PPredStat::tick(void)
-{
-
-  if (Stats::pythonGetProfiling()) {
+{ 
+  if (Stats::pythonGetProfiling()) { //TODO move pythonGetProfiling to C++ side only
+    begin = true;
     count++;
 
-    if (first_time) {
-      Stats::reset();
-      first_time = false;
-    }
-    else {
-      begin = true;
-      if (mcpat_ready){
-        // auto start = high_resolution_clock::now(); 
-        mp.init_wrapper(xml_path, mcpat_output_path);
-        // auto stop = high_resolution_clock::now(); 
-        // auto duration = duration_cast<microseconds>(stop - start); 
-        // std::cout <<"init_wrapper:" <<duration.count() << endl; 
-
-        if (delay >= max_delay && max_delay > 0){
-          // Stats::runVerilog();
-          // Stats::pythonGenerateXML();
-          // mp.run_with_xml(xml_path, mcpat_output_path);
-          mp.save_output(mcpat_output_path);
-          mp.print_power();
-          mp.proc.XML->print();
-          // Stats::reset();
-
-          std::cout << "power = :" << mp.power << "\n";
-          std::cout << "supply_current = :" << current << "\n";
-          std::cout << "supply_voltage = :" << voltage << "\n";
-
-          std::cout << '\n' << "Press a key to continue...";
-          do {
-          } while (cin.get() != '\n');
-        }
-        else{
-          delay++;
-        }
-
-
-      }
-      else{
-        Stats::pythonGenerateXML();
-        mp.init(xml_path);
-        mcpat_ready = true;
-      }
-
-      current = _pdn.get_current(mp.power);
-      voltage = _pdn.get_voltage(mp.power);
-      
-
-
+    if (mcpat_ready){
       // auto start = high_resolution_clock::now(); 
-      // mp.reset();
+      mp.init_wrapper(xml_path, mcpat_output_path);
       // auto stop = high_resolution_clock::now(); 
       // auto duration = duration_cast<microseconds>(stop - start); 
-      // std::cout <<"reset :" <<duration.count() << endl; 
+      // std::cout <<"init_wrapper:" <<duration.count() << endl; 
+
+      if (delay >= max_delay && max_delay > 0){
+        // Stats::runVerilog();
+        // Stats::pythonGenerateXML();
+        // mp.run_with_xml(xml_path, mcpat_output_path);
+        mp.save_output(mcpat_output_path);
+        mp.print_power();
+        mp.proc.XML->print();
+
+        std::cout << "power = :" << mp.power << "\n";
+        std::cout << "supply_current = :" << current << "\n";
+        std::cout << "supply_voltage = :" << voltage << "\n";
+
+        std::cout << '\n' << "Press a key to continue...";
+        do {
+        } while (cin.get() != '\n');
+      }
+      else{
+        delay++;
+      }
+
+    }
+    else{
+      Stats::pythonGenerateXML();
+      mp.init(xml_path);
+      mcpat_ready = true;
     }
 
+    current = _pdn.get_current(mp.power);
+    voltage = _pdn.get_voltage(mp.power);
+  
     //dump every cycle number of ticks
     if (count == cycles){
       count = 0;
       Stats::dump();
+    }
+
+  }
+  else{
+    if (power_start_delay > 0){
+      count_init++;
+      if (count_init > power_start_delay){
+        Stats::pythonBeginProfile();
+        Stats::reset();
+      }
     }
 
   }

@@ -45,7 +45,7 @@
 #include "cpu/power/history_register.hh"
 #include "cpu/static_inst.hh"
 
-#include "debug/PowerPred.hh"
+// #include "debug/PowerPred.hh"
 #include "params/PPredStat.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/clocked_object.hh"
@@ -120,6 +120,9 @@ class PPredStat : public ClockedObject
 
     int delay;
     int max_delay;
+
+    int power_start_delay;
+    unsigned int count_init = 0;
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

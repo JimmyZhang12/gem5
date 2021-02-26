@@ -70,7 +70,6 @@ PPredUnit::PPredUnit(const Params *params)
     clk_half(params->clk/2),
     LEAD_TIME_CAP(params->lead_time)
 {
-    DPRINTF(PowerPred, "PPredUnit::PPredUnit()\n");
     supply_voltage = 0.0;
     supply_current = 0.0;
 
@@ -292,6 +291,8 @@ PPredUnit::update_stats(bool pred, bool ve){
     action.pop_back();
 
     if (pred){
+        DPRINTF(PowerPred, "Prediction High\n");
+
         total_action++;
         _total_action = total_action;
 
@@ -302,24 +303,35 @@ PPredUnit::update_stats(bool pred, bool ve){
     }
 
     if (ve){
+
         total_ve++;
         _total_ve = total_ve;
 
         cycles_since_ve = 0;
-        if (cycles_since_pred >= LEAD_TIME_CAP)
+        if (cycles_since_pred >= LEAD_TIME_CAP){
             ves_outside_leadtime++;
-        else
+            DPRINTF(PowerPred, "Emergency High, MISSED\n");
+        }
+        else{
             hits[cycles_since_pred] += 1;
+            DPRINTF(PowerPred, "Emergency High, caught with prediction %d cycles ago\n", cycles_since_pred);
+        }
     }
     else{
         cycles_since_ve++;
     }
 
     if (action.back()){
-        if (cycles_since_ve >= LEAD_TIME_CAP)
+        if (cycles_since_ve >= LEAD_TIME_CAP){
             preds_outside_leadtime++;
-        else
+            DPRINTF(PowerPred, "Prediction at end of action buffer, MISSED\n");
+        }
+        else{
             false_pos[LEAD_TIME_CAP-cycles_since_ve-1] += 1;
+            DPRINTF(PowerPred, 
+                "Prediction at end of action buffer, caught with VE %d cycles ago\n",
+                 (LEAD_TIME_CAP-cycles_since_ve-1));
+        }
     }
 
     //stats

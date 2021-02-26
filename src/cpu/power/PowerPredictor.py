@@ -89,8 +89,7 @@ class PPredStat(ClockedObject):
     cxx_class = "PPredStat"
     cxx_header = "cpu/power/ppred_stat.hh"
 
-    stat_clk_domain = Param.SrcClockDomain(Parent.ppred_stat_clk, \
-                         "Clk domain for Stat Dump")
+    stat_clk_domain = Param.SrcClockDomain(Parent.ppred_stat_clk, "Clk domain for Stat Dump")
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
     frequency = Param.Float(3.5e9, "Default clock freq")
     ncores = Param.Unsigned(1, "Number of cores to sim")
@@ -100,5 +99,6 @@ class PPredStat(ClockedObject):
     res = Param.Float(0, "pdn resistance")
     vdc = Param.Float(0, "steady state pdn voltage")
     debug_print_delay = Param.Unsigned(0, "debug print delay")
+    power_start_delay = Param.Int(1, "after how many cycles to begin power simulation")
     powerpred = Param.PowerPredictor(Parent.cpu[0].powerPred , "the power predictor")
 

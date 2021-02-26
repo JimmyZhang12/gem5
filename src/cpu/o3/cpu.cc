@@ -581,16 +581,16 @@ FullO3CPU<Impl>::tick()
           globalTotalInstrs = global_total_instrs - global_total_instrs_0;
           localCycleCount = ppred_cycle_count - ppred_cycle_count_0;
           localInstrCount = ppred_numCommittedInsts - ppred_instr_count_0;
-          Stats::pythonSetCommittedInstr(
-              global_total_instrs - global_total_instrs_0);
+        //   Stats::pythonSetCommittedInstr(
+        //       global_total_instrs - global_total_instrs_0);
           powerPred->tick();
         }
-        if (powerPred->get_stall()) {
-          fetch.setPowerPredStall();
-        }
-        else {
-          fetch.unsetPowerPredStall();
-        }
+        // if (powerPred->get_stall()) {
+        //   fetch.setPowerPredStall();
+        // }
+        // else {
+        //   fetch.unsetPowerPredStall();
+        // }
       }
     }
 
