@@ -484,6 +484,12 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
     ID_inst.stats_t.readAc.access = coredynp.decodeW;
     ID_operand.stats_t.readAc.access = coredynp.decodeW;
     ID_misc.stats_t.readAc.access = coredynp.decodeW;
+
+    // std::cout << "flag!\n";
+    // std::cout << "ID_inst.stats_t.readAc.access" << ID_inst.stats_t.readAc.access / executionTime << "\n";
+    // std::cout << "ID_operand.stats_t.readAc.access" << ID_operand.stats_t.readAc.access / executionTime << "\n";
+    // std::cout << "ID_misc.stats_t.readAc.access" << ID_misc.stats_t.readAc.access / executionTime << "\n";
+
     ID_inst.tdp_stats = ID_inst.stats_t;
     ID_operand.tdp_stats = ID_operand.stats_t;
     ID_misc.tdp_stats = ID_misc.stats_t;
@@ -529,12 +535,19 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
     }
 
     ID_inst.stats_t.readAc.access = XML->sys.core[ithCore].total_instructions;
-    ID_operand.stats_t.readAc.access =
-        XML->sys.core[ithCore].total_instructions;
+    ID_operand.stats_t.readAc.access = XML->sys.core[ithCore].total_instructions;
     ID_misc.stats_t.readAc.access = XML->sys.core[ithCore].total_instructions;
+
+    // std::cout << "flag2!\n";
+    // std::cout << "ID_inst.stats_t.readAc.access" << ID_inst.stats_t.readAc.access / executionTime << "\n";
+    // std::cout << "ID_operand.stats_t.readAc.access" << ID_operand.stats_t.readAc.access / executionTime << "\n";
+    // std::cout << "ID_misc.stats_t.readAc.access" << ID_misc.stats_t.readAc.access / executionTime << "\n";
+
     ID_inst.rtp_stats = ID_inst.stats_t;
     ID_operand.rtp_stats = ID_operand.stats_t;
     ID_misc.rtp_stats = ID_misc.stats_t;
+
+
   }
 
   icache.power_t.reset();
@@ -624,9 +637,17 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
     ID_operand.power_t.readOp.dynamic = ID_operand.power.readOp.dynamic;
     ID_misc.power_t.readOp.dynamic = ID_misc.power.readOp.dynamic;
 
+    // std::cout << "ID_inst.power_t.readOp.dynamic" << ID_misc.power_t.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_operand.power_t.readOp.dynamic " << ID_operand.power_t.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_misc.power_t.readOp.dynamic" << ID_inst.power_t.readOp.dynamic / executionTime << "\n";
+
     ID_inst.power.readOp.dynamic *= ID_inst.tdp_stats.readAc.access;
     ID_operand.power.readOp.dynamic *= ID_operand.tdp_stats.readAc.access;
     ID_misc.power.readOp.dynamic *= ID_misc.tdp_stats.readAc.access;
+
+    // std::cout << "ID_inst.power.readOp.dynamic" << ID_misc.power.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_operand.power.readOp.dynamic " << ID_operand.power.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_misc.power.readOp.dynamic" << ID_inst.power.readOp.dynamic / executionTime << "\n";
 
     power = power + (ID_inst.power + ID_operand.power + ID_misc.power);
   } else {
@@ -661,6 +682,14 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
         ID_operand.power_t.readOp.dynamic * ID_operand.rtp_stats.readAc.access;
     ID_misc.rt_power.readOp.dynamic =
         ID_misc.power_t.readOp.dynamic * ID_misc.rtp_stats.readAc.access;
+
+    // std::cout << "ID_inst.rtp_stats.readAc.access" << ID_inst.rtp_stats.readAc.access / executionTime << "\n";
+    // std::cout << "ID_operand.rtp_stats.readAc.access " << ID_operand.rtp_stats.readAc.access / executionTime << "\n";
+    // std::cout << "ID_misc.rtp_stats.readAc.access" << ID_misc.rtp_stats.readAc.access / executionTime << "\n";
+
+    // std::cout << "ID_inst.rt_power.readOp.dynamic" << ID_misc.rt_power.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_operand.rt_power.readOp.dynamic " << ID_operand.rt_power.readOp.dynamic / executionTime << "\n";
+    // std::cout << "ID_misc.rt_power.readOp.dynamic" << ID_inst.rt_power.readOp.dynamic / executionTime << "\n";
 
     rt_power =
         rt_power + (ID_inst.rt_power + ID_operand.rt_power + ID_misc.rt_power);

@@ -147,6 +147,8 @@ void MemoryController::computeStaticPower() {
                  "computeStaticPower()\n";
     exit(1);
   }
+
+
   transecEngine.computeStaticPower();
   frontend.computeStaticPower();
   if (mcp.type == 0 || (mcp.type == 1 && mcp.withPHY)) {
@@ -184,7 +186,7 @@ void MemoryController::reset(){
   frontend.writeBuffer.reset();
 
   transecEngine.reset();
-  transecEngine.power_t.reset();
+  // transecEngine.power_t.reset();
 
   // PHY.reset();
   // PHY.power_t.reset();

@@ -46,10 +46,8 @@ class Mcpat{
 
         void save_output(std::string fname, Processor &proc_t);
         void save_output(std::string output_path);
-
-
+        
         void update_stats();
-
 
         void print_power(Processor &proc_t);
         void print_power();
@@ -73,6 +71,7 @@ class Mcpat{
         static std::unordered_map<std::string, Stats::Info*> name_to_stat;
         static std::unordered_set <std::string> stat_names; 
 
+    public:
         struct _stat_storage
         {
             double cpu_numCycles,

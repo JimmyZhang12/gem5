@@ -72,46 +72,36 @@ Mcpat::init_stat_map_helper(Stats::Group* group, std::string path){
 
 void
 Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
-    // Processor proc_serial;
-    // std::string serial = output_path + "/mcpat_serial.txt";
-    // std::ifstream ifs(serial.c_str());
-    // if (ifs.good()) {
-    //     boost::archive::text_iarchive ia(ifs);
-    //     ia >> proc_serial;
-    // } else {
-    //     std::cerr << "Archive " << serial << " cannot be used\n";
-    //     assert(false);
-    // }
-    // proc_serial_xml = new ParseXML();
-    // proc_serial_xml->parse(xml_dir);
-    // proc_serial.init(proc_serial_xml,true);
+
 
     update_stats();
+    // proc.XML->print();
+
     proc.reset();
     proc.compute();
     power = get_power(proc);
-
-    // std::cout<<"mcpat internal:" << std::endl;
-    // print_power(proc);
-    // std::string output_path_internal = output_path + "/out_mcpat_internal.txt";
-    // save_output(output_path_internal, proc);
-    // proc.XML->print();
-    // std::cout<<"mcpat proc_serial:" << std::endl;
-    // print_power(proc_serial);
-    // std::string output_path_serial = output_path + "/out_mcpat_serial.txt";
-    // save_output(output_path_serial, proc_serial);
 
 }
 void 
 Mcpat::run_with_xml(std::string xml_dir, std::string output_path){
-
+    Processor proc_serial;
+    std::string serial = output_path + "/mcpat_serial.txt";
+    std::ifstream ifs(serial.c_str());
+    if (ifs.good()) {
+        boost::archive::text_iarchive ia(ifs);
+        ia >> proc_serial;
+    } else {
+        std::cerr << "Archive " << serial << " cannot be used\n";
+        assert(false);
+    }
     proc_serial_xml = new ParseXML();
     proc_serial_xml->parse(xml_dir);
-    proc.XML = proc_serial_xml;
-    proc.reset();
-    proc.compute();
-    power = get_power(proc);
-
+    proc_serial.init(proc_serial_xml,true);
+    
+    std::cout<<"mcpat proc_serial:" << std::endl;
+    print_power(proc_serial);
+    std::string output_path_serial = output_path + "/out_mcpat_serial.txt";
+    save_output(output_path_serial, proc_serial);
 }
 
 
@@ -175,6 +165,8 @@ Mcpat::update_stats(){
         (stat_storage.membus_pkt_count - stat_storage_prev.membus_pkt_count) + 
         (stat_storage.tol2bus_pkt_count - stat_storage_prev.tol2bus_pkt_count) + 
         (stat_storage.tol3bus_pkt_count - stat_storage_prev.tol3bus_pkt_count); 
+    
+    proc.XML->sys.mc.memory_accesses = proc.XML->sys.mc.memory_reads + proc.XML->sys.mc.memory_writes;
 
 
 }

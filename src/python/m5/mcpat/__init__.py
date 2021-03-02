@@ -62,8 +62,7 @@ def set_flags(pg=False, sf=1.0):
   power_gating = pg
   scale_factor = sf
 
-def m5_to_mcpat(stat_list, read_from_file,
-                voltage, freq, temperature, device_type):
+def m5_to_mcpat(stat_list, read_from_file, voltage, freq, temperature, device_type):
   from m5 import options
 
   global iter

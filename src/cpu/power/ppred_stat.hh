@@ -123,6 +123,8 @@ class PPredStat : public ClockedObject
 
     int power_start_delay;
     unsigned int count_init = 0;
+
+    bool run_verilog;
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

@@ -66,6 +66,7 @@ Harvard::Harvard(const Params *params)
     table.resize(params->table_size, params->signature_length, 3,
                   params->bloom_filter_size);
     history.resize(params->signature_length);
+  
     throttle_duration = params->duration;
     throttle_on_restore = params->throttle_on_restore;
     hysteresis = params->hysteresis;

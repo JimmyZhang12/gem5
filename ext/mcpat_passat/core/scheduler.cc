@@ -730,6 +730,18 @@ void SchedulerU::computeDynamicPower(bool is_tdp) {
         int_inst_window.stats_t.readAc.access *
             instruction_selection.power.readOp.dynamic;
 
+    // std::cout << "start!!!\n";
+    // std::cout << "int_inst_window.power_t.readOp.dynamic " << int_inst_window.power_t.readOp.dynamic  << "\n";
+    // std::cout << "int_inst_window.local_result.power.readOp.dynamic " << int_inst_window.local_result.power.readOp.dynamic  << "\n";
+    // std::cout << "int_inst_window.stats_t.readAc.access " << int_inst_window.stats_t.readAc.access  << "\n";
+    // std::cout << "int_inst_window.local_result.power.searchOp.dynamic " << int_inst_window.local_result.power.searchOp.dynamic  << "\n";
+    // std::cout << "int_inst_window.stats_t.searchAc.access " << int_inst_window.stats_t.searchAc.access  << "\n";
+    // std::cout << "int_inst_window.local_result.power.writeOp.dynamic " << int_inst_window.local_result.power.writeOp.dynamic  << "\n";
+    // std::cout << "int_inst_window.stats_t.writeAc.access " << int_inst_window.stats_t.writeAc.access  << "\n";
+    // std::cout << "int_inst_window.stats_t.readAc.access " << int_inst_window.stats_t.readAc.access  << "\n";
+    // std::cout << "instruction_selection.power.readOp.dynamic " << instruction_selection.power.readOp.dynamic  << "\n";
+
+
     fp_inst_window.power_t.readOp.dynamic +=
         fp_inst_window.local_result.power.readOp.dynamic *
             fp_inst_window.stats_t.readAc.access +
@@ -813,6 +825,8 @@ void SchedulerU::computeDynamicPower(bool is_tdp) {
       rt_power = rt_power + int_inst_window.rt_power;
     }
   }
+
+  
   //	set_pppm(pppm_t, XML->sys.core[ithCore].issue_width,1, 1, 1);
   //	cout<<"Scheduler
   // power="<<power.readOp.dynamic<<"leakage="<<power.readOp.leakage<<endl;
@@ -828,7 +842,7 @@ void SchedulerU::reset() {
   int_inst_window.reset();
   fp_inst_window.reset();
   ROB.reset();
-  instruction_selection.reset();
+  // instruction_selection.reset();
 }
 
 

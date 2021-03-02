@@ -521,10 +521,18 @@ def addSEOptions(parser):
     parser.add_option("--power_pred_lead_time", type="int",
                       default=40,
                       help="Lead time for stats calculation")
-                      
+
     parser.add_option("--debug_print_delay", type="int",
                       default=0,
                       help="after how many cycles to print debug statements")
+
+    parser.add_option("--power_start_delay", type="int",
+                      default=0,
+                      help="after how many cycles to print debug statements")
+
+    parser.add_option("--run_verilog_power_sim", type="int",
+                    default=0,
+                    help="also run the verilog sim alongside gem5/mcpat")
 
 
 def addFSOptions(parser):

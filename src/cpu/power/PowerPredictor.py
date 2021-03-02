@@ -100,5 +100,6 @@ class PPredStat(ClockedObject):
     vdc = Param.Float(0, "steady state pdn voltage")
     debug_print_delay = Param.Unsigned(0, "debug print delay")
     power_start_delay = Param.Int(1, "after how many cycles to begin power simulation")
+    run_verilog = Param.Bool(False, "call the verilog simulation instead of gem5/mcpat")
     powerpred = Param.PowerPredictor(Parent.cpu[0].powerPred , "the power predictor")
 

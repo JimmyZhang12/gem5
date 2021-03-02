@@ -107,6 +107,10 @@ void MCBackend::computeArea() {
  */
 void MCBackend::computeStaticPower() {
   
+  //TODO this is a hack! find out why these params are changing
+  g_tp.peri_global.I_off_p = 4.55625e-06;
+  g_tp.peri_global.I_off_n = 4.55625e-06;
+
   // double max_row_addr_width = 20.0;//Current address 12~18bits
   double C_MCB = 0.0;
   double mc_power = 0.0;
@@ -117,11 +121,13 @@ void MCBackend::computeStaticPower() {
   double pmos_to_nmos_sizing_r = pmos_to_nmos_sz_ratio();
   double NMOS_sizing = 0.0;
   double PMOS_sizing = 0.0;
+
   if (!init_params) {
     std::cerr << "[ MCBackend ] Error: must set params before calling "
                  "computeStaticPower()\n";
     exit(1);
   }
+
   if (mc_type == MC) {
     if (mcp.type == 0) {
       // assuming the approximately same scaling factor as seen in processors.
@@ -140,6 +146,7 @@ void MCBackend::computeStaticPower() {
           C_MCB * g_tp.peri_global.Vdd * g_tp.peri_global.Vdd *
           (mcp.dataBusWidth /*+mcp.addressBusWidth*/); // per access energy in
                                                        // memory controller
+     
       power_t.readOp.leakage =
           area.get_area() / 2 * (g_tp.scaling_factor.core_tx_density) *
           cmos_Isub_leakage(g_tp.min_w_nmos_,
@@ -147,6 +154,35 @@ void MCBackend::computeStaticPower() {
                             1,
                             inv) *
           g_tp.peri_global.Vdd; // unit W
+
+
+      // std::cout<<"TRANSACTION BACKEND" << std::endl;
+      // std::cout << "C_MCB " << C_MCB << std::endl;
+      // std::cout << "mcp.dataBusWidth " << mcp.dataBusWidth << std::endl;
+
+      // std::cout << "area.get_area() " << area.get_area() << std::endl;
+      // std::cout << "g_tp.scaling_factor.core_tx_density " << g_tp.scaling_factor.core_tx_density << std::endl;
+      // std::cout << "g_tp.min_w_nmos_ " << g_tp.min_w_nmos_ << std::endl;
+      // std::cout << "pmos_to_nmos_sizing_r " << pmos_to_nmos_sizing_r << std::endl;
+      // std::cout << "inv " <<inv << std::endl;
+      double nmos_leak = simplified_nmos_leakage(
+          g_tp.min_w_nmos_, false, false, false, false);
+      double pmos_leak = simplified_pmos_leakage(
+          g_tp.min_w_nmos_ * pmos_to_nmos_sizing_r, false, false, false, false);
+      std::cout << "nmos_leak " <<nmos_leak << std::endl;
+      std::cout << "pmos_leak " <<pmos_leak << std::endl;
+      std::cout << "g_tp.peri_global.I_off_p " <<g_tp.peri_global.I_off_p << std::endl;
+      std::cout << "g_tp.peri_global.I_off_n " <<g_tp.peri_global.I_off_n << std::endl;
+
+      std::cout << "cmos_Isub_leakage() " << cmos_Isub_leakage(g_tp.min_w_nmos_,
+                          g_tp.min_w_nmos_ * pmos_to_nmos_sizing_r,
+                          1,
+                          inv) << std::endl;
+      // std::cout << "g_tp.peri_global.Vdd;" << g_tp.peri_global.Vdd << std::endl;
+      // std::cout << "power_t.readOp.leakage" << power_t.readOp.leakage << std::endl;
+      std::cout<<"******************************" << std::endl;
+
+
       power_t.readOp.gate_leakage =
           area.get_area() / 2 * (g_tp.scaling_factor.core_tx_density) *
           cmos_Ig_leakage(g_tp.min_w_nmos_,
@@ -155,7 +191,11 @@ void MCBackend::computeStaticPower() {
                           inv) *
           g_tp.peri_global.Vdd; // unit W
 
+
+      
+
     } else {
+
       NMOS_sizing = g_tp.min_w_nmos_;
       PMOS_sizing = g_tp.min_w_nmos_ * pmos_to_nmos_sizing_r;
       backend_dyn =
@@ -191,7 +231,8 @@ void MCBackend::computeStaticPower() {
   power_t.readOp.power_gated_with_long_channel_leakage =
       power_t.readOp.power_gated_leakage * long_channel_device_reduction;
 
-  // std::cout<<"TRANSACTION BACKEND" << std::endl;
+  // std::cout<< pg_reduction << std::endl;
+  // std::cout<< longer_channel_device_reduction << std::endl;
   // std::cout<< power_t.readOp.power_gated_leakage << std::endl;
   // std::cout<< power_t.readOp.power_gated_with_long_channel_leakage << std::endl;
   // std::cout<< power_t.readOp.longer_channel_leakage << std::endl;

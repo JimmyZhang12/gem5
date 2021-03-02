@@ -100,7 +100,8 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat, std::string name){
         break;
 
     case(2): //system.cpu.iq.iqInstsIssued
-        proc.XML->sys.core[0].total_instructions = static_cast<Stats::ScalarInfo*>(stat)->result() - stat_storage.cpu_iq_iqInstsIssued;
+        proc.XML->sys.core[0].total_instructions = 
+            1+ (static_cast<Stats::ScalarInfo*>(stat)->result() - stat_storage.cpu_iq_iqInstsIssued);
         stat_storage.cpu_iq_iqInstsIssued = static_cast<Stats::ScalarInfo*>(stat)->result();
         break;
 
@@ -112,7 +113,8 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat, std::string name){
                 + static_cast<Stats::Vector2dInfo*>(stat)->cvec[Enums::IntAlu]
                 + static_cast<Stats::Vector2dInfo*>(stat)->cvec[Enums::IntDiv]
                 + static_cast<Stats::Vector2dInfo*>(stat)->cvec[Enums::IprAccess];
-        proc.XML->sys.core[0].int_instructions = new_val - stat_storage.cpu_iq_FU_type_int_instructions;
+        proc.XML->sys.core[0].int_instructions = 
+            1 + (new_val - stat_storage.cpu_iq_FU_type_int_instructions);
         stat_storage.cpu_iq_FU_type_int_instructions = new_val;
 
         new_val = 0;

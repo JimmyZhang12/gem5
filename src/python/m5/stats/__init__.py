@@ -473,8 +473,6 @@ def dump_verilog(root=None, exit=False):
     new_dump = lastDump != now
     lastDump = now
 
-    print('*******Entering pythondump')
-    print('root= ', root)
 
     # Don't allow multiple global stat dumps in the same tick. It's
     # still possible to dump a multiple sub-trees.
@@ -575,7 +573,7 @@ def dump_verilog(root=None, exit=False):
 
             else:
                 mcpat.m5_to_mcpat(stat_strings,\
-                    options.stats_read_from_file, mp_v, mp_f, \
+                    options.stats_read_from_file, 1.4, [4000], \
                     380.0, options.mcpat_device_type)
 
 

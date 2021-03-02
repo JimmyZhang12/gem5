@@ -611,6 +611,7 @@ public:
   void parse(std::string filepath);
   void initialize();
   void print();
+  void reset_stats();
 
 public:
   root_system sys;

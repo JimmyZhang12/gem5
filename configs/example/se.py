@@ -228,6 +228,7 @@ if options.simpoint_profile:
 # Clock for dumping stats
 system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
                                    voltage_domain = system.voltage_domain)
+
 system.ppred_stat = PPredStat( \
     cycle_period = options.power_pred_cpu_cycles, \
     frequency = options.power_pred_cpu_freq, \
@@ -237,7 +238,9 @@ system.ppred_stat = PPredStat( \
     ind = options.pdn_ind, \
     cap = options.pdn_cap,\
     res = options.pdn_res, \
-    debug_print_delay = options.debug_print_delay
+    debug_print_delay = options.debug_print_delay, \
+    power_start_delay = options.power_start_delay, \
+    run_verilog = bool(options.run_verilog_power_sim), \
 )
 
 system.ppred_stat.clk_domain = system.ppred_stat_clk

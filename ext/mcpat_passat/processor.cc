@@ -109,6 +109,7 @@ void Processor::init(ParseXML *XML, bool cp) {
     numL2Dir = procdynp.numL2Dir;
   }
 
+
   for (i = 0; i < numCore; i++) {
     if (!cp) {
       cores.push_back(Core());
@@ -575,7 +576,10 @@ void Processor::init(ParseXML *XML, bool cp) {
         rt_power = rt_power + nocs[i].rt_power * pppm_t;
       }
     }
+
   }
+  std::cout << g_tp.peri_global.Vdd << " 5 g_tp.peri_global.Vdd: \n";
+
 }
 
 void Processor::compute(){  
@@ -773,6 +777,8 @@ void Processor::compute(){
   // Memory Controllers:
   if (XML->sys.mc.number_mcs > 0 && XML->sys.mc.memory_channels_per_mc > 0) {
     // mc.set_params(XML, &interface_ip, MC);
+    g_tp.peri_global.Vdd = 1.5; //TODO jimmy this is a hack, find out why its being set to 1.4
+
     mc.set_stats(XML);
 
     mc.computeStaticPower();
@@ -890,6 +896,7 @@ void Processor::compute(){
 }
 
 void Processor::reset(){
+
   int i;
 
   Component::reset();

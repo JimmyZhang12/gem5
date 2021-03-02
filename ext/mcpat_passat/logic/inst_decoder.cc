@@ -148,10 +148,6 @@ void inst_decoder::computeArea() {
 void inst_decoder::computeDynamicPower() {
   inst_decoder_delay_power();
 
-  // cout << "power.*.dynamic: \n";
-  // cout <<power.readOp.dynamic << "\n";
-  // cout << "power.*.dynamic: \n";
-
   double sckRation = g_tp.sckt_co_eff;
   power.readOp.dynamic *= sckRation;
   power.writeOp.dynamic *= sckRation;
@@ -162,10 +158,24 @@ void inst_decoder::computeDynamicPower() {
   power.readOp.longer_channel_leakage =
       power.readOp.leakage * long_channel_device_reduction;
 
+  // std::cout << "start! \n";
+  // std::cout << "long_channel_device_reduction" << long_channel_device_reduction << "\n";
+  // std::cout << "power.readOp.leakage" << power.readOp.leakage << "\n";
+  // std::cout << "power.readOp.longer_channel_leakage" << power.readOp.longer_channel_leakage << "\n";
+
+
   double pg_reduction = power_gating_leakage_reduction(false);
   power.readOp.power_gated_leakage = power.readOp.leakage * pg_reduction;
   power.readOp.power_gated_with_long_channel_leakage =
       power.readOp.power_gated_leakage * long_channel_device_reduction;
+
+  // std::cout << "power.readOp.power_gated_leakage" << power.readOp.power_gated_leakage << "\n";
+  // std::cout << "power.readOp.leakage" << power.readOp.leakage << "\n";
+  // std::cout << "pg_reduction" << pg_reduction << "\n";
+  // std::cout << "power.readOp.power_gated_with_long_channel_leakage" << power.readOp.power_gated_with_long_channel_leakage << "\n";
+  // std::cout << " power.readOp.power_gated_leakage" <<  power.readOp.power_gated_leakage << "\n";
+  // std::cout << "long_channel_device_reduction" << long_channel_device_reduction << "\n";
+
 }
 
 void inst_decoder::inst_decoder_delay_power() {
@@ -244,7 +254,10 @@ void inst_decoder::leakage_feedback(double temperature) {
       power.readOp.power_gated_leakage * long_channel_device_reduction;
 }
 void inst_decoder::reset(){
-  Component::reset();
+  // Component::reset();
+  power.readOp.dynamic = 0;
+  rt_power.readOp.dynamic = 0;
+
   power_t.reset();
   pre_dec.reset();
   final_dec.reset();
