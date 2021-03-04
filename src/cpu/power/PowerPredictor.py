@@ -83,6 +83,18 @@ class HarvardPowerPredictor(PowerPredictor):
         "to stop emergency throttle")
     duration = Param.Unsigned(50, "The number of cycles to throttle for")
     throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
+    events_to_drop = Param.Unsigned(0, "Events to drop at front of signature to increase lead time")
+
+# class HarvardPowerPredictor_dev(PowerPredictor):
+#     type = "HarvardPowerPredictor_dev"
+#     cxx_class = "Harvard_dev"
+#     cxx_header = "cpu/power/harvard_dev.hh"
+#     table_size = Param.Unsigned(128, "Size of UArch Event Table")
+#     bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
+#     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+#         "to stop emergency throttle")
+#     duration = Param.Unsigned(50, "The number of cycles to throttle for")
+#     throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
 
 class PPredStat(ClockedObject):
     type = "PPredStat"

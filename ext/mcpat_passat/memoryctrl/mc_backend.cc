@@ -169,18 +169,17 @@ void MCBackend::computeStaticPower() {
           g_tp.min_w_nmos_, false, false, false, false);
       double pmos_leak = simplified_pmos_leakage(
           g_tp.min_w_nmos_ * pmos_to_nmos_sizing_r, false, false, false, false);
-      std::cout << "nmos_leak " <<nmos_leak << std::endl;
-      std::cout << "pmos_leak " <<pmos_leak << std::endl;
-      std::cout << "g_tp.peri_global.I_off_p " <<g_tp.peri_global.I_off_p << std::endl;
-      std::cout << "g_tp.peri_global.I_off_n " <<g_tp.peri_global.I_off_n << std::endl;
-
-      std::cout << "cmos_Isub_leakage() " << cmos_Isub_leakage(g_tp.min_w_nmos_,
-                          g_tp.min_w_nmos_ * pmos_to_nmos_sizing_r,
-                          1,
-                          inv) << std::endl;
+      // std::cout << "nmos_leak " <<nmos_leak << std::endl;
+      // std::cout << "pmos_leak " <<pmos_leak << std::endl;
+      // std::cout << "g_tp.peri_global.I_off_p " <<g_tp.peri_global.I_off_p << std::endl;
+      // std::cout << "g_tp.peri_global.I_off_n " <<g_tp.peri_global.I_off_n << std::endl;
+      // std::cout << "cmos_Isub_leakage() " << cmos_Isub_leakage(g_tp.min_w_nmos_,
+      //                     g_tp.min_w_nmos_ * pmos_to_nmos_sizing_r,
+      //                     1,
+      //                     inv) << std::endl;
       // std::cout << "g_tp.peri_global.Vdd;" << g_tp.peri_global.Vdd << std::endl;
       // std::cout << "power_t.readOp.leakage" << power_t.readOp.leakage << std::endl;
-      std::cout<<"******************************" << std::endl;
+      // std::cout<<"******************************" << std::endl;
 
 
       power_t.readOp.gate_leakage =

@@ -142,22 +142,20 @@ class PPredUnit : public ClockedObject
     Stats::Scalar sv;
     Stats::Scalar sv_p;
     Stats::Scalar sc;
+    const double v_min = 1.3;
+    const double v_max = 1.4001;
+    const double max_size = 40;
+    Stats::Vector voltage_dist;
     //prediction stats
     Stats::Vector event_count;
     Stats::Vector hits;
     Stats::Vector false_pos;
-
     Stats::Scalar ves_outside_leadtime;
     Stats::Scalar preds_outside_leadtime;
     Stats::Scalar _total_ve;
     Stats::Scalar _total_action;
     Stats::Formula overall_hit_rate;
     Stats::Formula overall_fp_rate;
-
-
-    SrcClockDomain* sysClkDomain;
-    double min_current;
-    double max_current;
 
     double supply_voltage;
     double supply_current;
@@ -171,24 +169,29 @@ class PPredUnit : public ClockedObject
     bool cpuStalled;
 
     uint64_t PC;
-    const int cycle_period;
-    double emergency;
-    double emergency_duration;
+
     int id;
     PPred::HistoryRegister history;
     bool hr_updated;
 
-    uint64_t get_num_actions() {
-      return clk_vals.size();
-    }
+    uint64_t get_num_actions() {return clk_vals.size();}
+
+    //initialization list params
+    SrcClockDomain* sysClkDomain;
+    const double min_current;
+    const double max_current;
+    const int cycle_period;
+    const double emergency;
+    const double emergency_duration;
+    const int period;
+    const double delta;
+    const bool emergency_throttle;
+    const double voltage_set;
+    const double clk;
+    const double clk_half;
+    const int LEAD_TIME_CAP;
 
   private:
-    int period;
-    double delta;
-    bool emergency_throttle;
-    double voltage_set;
-    double clk;
-    double clk_half;
     std::vector<double> clk_vals;
     std::vector<Tick> period_vals;
     Tick period_normal;
@@ -196,16 +199,11 @@ class PPredUnit : public ClockedObject
     bool stall;
 
     /*stats variables*/
-
-    const int LEAD_TIME_CAP;
-
     int total_ve;
     int total_action;
     int cycles_since_pred;
     int cycles_since_ve;
     std::list<bool> action;
-
-
 
     /**
      * Rescale from range [a0, a1] -> [b0, b1]

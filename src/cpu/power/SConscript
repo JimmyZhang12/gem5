@@ -61,6 +61,7 @@ Source('harvard.cc')
 # Source('dnn_predictor.cc')
 # Source('throttle_after_stall.cc')
 # Source('dependency_analysis.cc')
+# Source('harvard_dev.cc')
 
 Source('mcpat.cc')
 Source('mcpat_update.cc')

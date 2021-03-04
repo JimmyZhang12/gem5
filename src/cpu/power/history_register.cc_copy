@@ -40,79 +40,91 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_HARVARD_HH__
-#define __CPU_POWER_HARVARD_HH__
-
-#include <deque>
-#include <string>
-#include <vector>
-
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/power/history_register.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/power/prediction_table.hh"
-#include "cpu/static_inst.hh"
-#include "params/HarvardPowerPredictor.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
 
-class Harvard : public PPredUnit
-{
-  public:
-    typedef HarvardPowerPredictorParams Params;
+#include <cmath>
+#include <iostream>
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    Harvard(const Params *p);
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/utility.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "cpu/power/ml/func.h"
+#include "debug/HistoryRegister.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/stat_control.hh"
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+/**
+ * Default Constructor
+ */
+PPred::HistoryRegister::HistoryRegister(size_t len) {
+  this->signature.resize(len, BRANCH_T);
+  this->pc.resize(len, 0);
+}
 
-    /**
-     * Update the Harvard State Machine.
-     */
-    void tick(void);
+/**
+ * Convert the History Register to an Event type
+ * @return Entry type that can be hashed or looked up in a CAM
+ */
+PPred::Entry PPred::HistoryRegister::get_entry() {
+  std::vector<event_t> signature_temp;
+  for(auto it=signature.begin(); it!=signature.end(); it++){
+    signature_temp.push_back(*it);
+  }
 
-  protected:
-    /** Hysteresis level */
-    double hysteresis;
+  return PPred::Entry(pc_last, signature_temp);
+}
 
-    /** # Cycles to throttle */
-    unsigned int throttle_duration;
+PPred::Entry PPred::HistoryRegister::get_entry(int events_to_drop) {
+  
+  auto it_sig = signature.begin();
+  auto it_pc = pc.begin();
 
-    /** Throttle after DeCoR rollback */
-    bool throttle_on_restore;
+  std::advance(it_sig, events_to_drop);
+  std::advance(it_pc, events_to_drop);
+  double pc_temp = *it_pc;
 
-    int events_to_drop;
+  std::vector<event_t> signature_temp;
+  while (it_sig != signature.end()){
+    signature_temp.push_back(*it_sig);
+  }
 
-    int cycles_since_pred;
+  return PPred::Entry(pc_temp, signature_temp);
+}
 
-  private:
-    enum state_t {
-      NORMAL=1,
-      THROTTLE,
-      EMERGENCY
-    };
+/**
+ * Add Event
+ * Adds Event to the HistoryRegister; takes the internal updating PC
+ * register, and external event and adds to the PC/Event registers. This is
+ * so events that dont have reference to a PC can also insert events, such as
+ * the memory hierarchy.
+ * @param event uArch Event Type from the event_t enum
+ * @return if the event is added correctly
+ */
+void PPred::HistoryRegister::add_event(PPred::event_t event) {
+  // shift all the vector elements:
+  signature.push_front(event);
+  signature.pop_back();
 
-    // PPred::TableBloom table;
-    PPred::Table table;
+  pc.push_front(pc_last);
+  pc.pop_back();
 
-    // Counter for # Cycles to delay
-    unsigned int e_count;
-    unsigned int t_count;
 
-    // Permanant Stats:
-    // Num Voltage Emergencies
-    uint64_t num_ve;
-    uint64_t total_misspred;
-    uint64_t total_preds;
-    uint64_t total_pred_action;
-    uint64_t total_pred_inaction;
-};
+  // Print Vector & PC
+  // DPRINTF(HistoryRegister, "[ HistoryRegister ] add_event(): PC %d; " 
+  // "Signature", this->pc);
+  //for (auto i : this->signature) {
+  //  DPRINTF(HistoryRegister, "%s,", PPred::event_t_name[i]);
+  //}
+  // DPRINTF(HistoryRegister, "\n");
+}
 
-#endif // __CPU_PRED_HARVARD_HH__
+/**
+ * Set the internal PC value, called from the cpu.tick() function.
+ *
+ */
+
+void PPred::HistoryRegister::set_pc(uint64_t pc) {
+  this->pc_last = pc;
+}

@@ -46,6 +46,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <vector>
+#include <string>
+
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -85,6 +87,8 @@ public:
   bool match(uint64_t pc, std::vector<event_t> event);
   bool operator==(const Entry& obj);
 
+
+
   /**
    * Sets a new event/anchor_pc pair to this entry
    * @param pc The anchor PC of a history
@@ -117,7 +121,7 @@ public:
 
   std::vector<event_t> get_history(void) const { return history; }
 
-  void print();
+  std::string to_str();
 };
 
 
@@ -162,8 +166,8 @@ public:
    * @param history The event history register
    * @return boolean insert success
    */
-  bool insert(uint64_t pc, std::vector<event_t> history);
-  bool insert(const Entry& obj);
+  int insert(uint64_t pc, std::vector<event_t> history);
+  int insert(const Entry& obj);
 
   /**
    * Ticks the event history table for the LRU Policy

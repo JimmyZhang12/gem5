@@ -578,7 +578,7 @@ void Processor::init(ParseXML *XML, bool cp) {
     }
 
   }
-  std::cout << g_tp.peri_global.Vdd << " 5 g_tp.peri_global.Vdd: \n";
+  // std::cout << g_tp.peri_global.Vdd << " 5 g_tp.peri_global.Vdd: \n";
 
 }
 

@@ -54,8 +54,7 @@
 #include "cpu/power/ppred_stat.hh"
 
 
-PPredUnit::PPredUnit(const Params *params)
-    : ClockedObject(params),
+PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     sysClkDomain(params->sys_clk_domain),
     min_current((double)params->min_current),
     max_current((double)params->max_current),
@@ -215,6 +214,20 @@ PPredUnit::regStats()
     }
 
 
+    voltage_dist
+        .init(max_size)
+        .name(name() + ".voltage_dist")
+        .desc("distribution of voltages")
+        .precision(6)
+    ;
+    for (int i=0; i< max_size ; i++){
+        double iter = (v_max - v_min) / max_size;
+        double val = v_min + iter*i;
+        voltage_dist.subname(i, std::to_string(val));
+    }
+
+
+
 }
 
 void
@@ -337,6 +350,23 @@ PPredUnit::update_stats(bool pred, bool ve){
     //stats
     supply_voltage_prev = supply_voltage;
     supply_voltage = PPredStat::voltage;
+    
+    double diff = 0;
+    diff = supply_voltage - v_min;
+    double index_double = diff / ((v_max - v_min) / max_size);
+    int index_int = static_cast <int> (std::floor(index_double));
+
+    if (index_int < 0){      
+        voltage_dist[0] += 1;
+    }
+    else if (index_int >= max_size){
+        voltage_dist[max_size-1] += 1;
+    }
+    else{
+        voltage_dist[index_int] += 1;
+    }
+
+
     supply_current = PPredStat::current;
 
     sv = supply_voltage;

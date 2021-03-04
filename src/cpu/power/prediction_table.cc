@@ -70,6 +70,8 @@ PPred::Entry::operator==(const PPred::Entry& obj) {
   return this->anchor_pc == obj.anchor_pc && this->history == obj.history;
 }
 
+
+
 bool
 PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
   return this->anchor_pc == pc && this->history == history;
@@ -83,13 +85,15 @@ PPred::Entry::update(uint64_t pc, std::vector<PPred::event_t> history) {
   access_count = 0;
 }
 
-void
-PPred::Entry::print() {
-  std::cout << anchor_pc << "," << last_updated << "," << access_count;
-  for (auto i : history) {
-    std::cout << "," << event_t_name[i];
-  }
-  std::cout << "\n";
+std::string
+PPred::Entry::to_str() {
+  std::string ret;
+
+  // std::cout << anchor_pc << "," << last_updated << "," << access_count;
+  ret += (std::to_string(anchor_pc) + ": ");
+  for (auto i : history) 
+    ret += (event_t_name[i] + ", ");
+  return ret;
 }
 
 PPred::Table::Table(uint64_t table_size, uint64_t history_length) {
@@ -123,8 +127,7 @@ PPred::Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
 
 bool
 PPred::Table::find(const PPred::Entry& obj) {
-  for (auto it = this->prediction_table.begin();
-      it != this->prediction_table.end(); it++) {
+  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {
     if (*it == obj) {
       it->access();
       matches++;
@@ -135,59 +138,53 @@ PPred::Table::find(const PPred::Entry& obj) {
   return false;
 }
 
-bool
+int
 PPred::Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {
-  insertions++;
-  uint64_t max_time = 0;
-  size_t idx = 0;
-  if (Table::find(pc, history)) {
-    return true;
-  }
-  for (size_t i = 0; i < prediction_table.size(); i++) {
-    if (max_time < prediction_table[i].get_lru()) {
-      max_time = prediction_table[i].get_lru();
-      idx = i;
-    }
-  }
-  prediction_table[idx].update(pc, history);
-  prediction_table[idx].access();
-  return true;
+  PPred::Entry obj = Entry(pc, history);
+  return (this->insert(obj));
 }
 
-bool
+int
 PPred::Table::insert(const Entry& obj) {
   insertions++;
   uint64_t max_time = 0;
   size_t idx = 0;
-  if (Table::find(obj)) {
-    return true;
-  }
+
   for (size_t i = 0; i < prediction_table.size(); i++) {
+    if (prediction_table[i] == obj){
+      prediction_table[i] = obj;
+      return idx;
+    }
     if (max_time < prediction_table[i].get_lru()) {
       max_time = prediction_table[i].get_lru();
       idx = i;
     }
   }
   prediction_table[idx] = obj;
-  prediction_table[idx].access();
-  return true;
+  return idx;
 }
 
 void
 PPred::Table::tick(void) {
-  for (auto it = this->prediction_table.begin();
-    it != this->prediction_table.end(); it++) {
+  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {
     it->tick();
   }
 }
 
+
+
+
+
+
+
 void
 PPred::Table::print() {
-  std::cout << "\n\n";
-  for (auto it = this->prediction_table.begin();
-    it != this->prediction_table.end(); it++) {
-    it->print();
-  }
+  //TODO JIMMY
+  // std::cout << "\n\n";
+  // for (auto it = this->prediction_table.begin();
+  //   it != this->prediction_table.end(); it++) {
+  //   it->print();
+  // }
 }
 
 PPred::TableBloom::TableBloom(uint64_t table_size,
@@ -308,9 +305,10 @@ PPred::TableBloom::tick(void) {
 
 void
 PPred::TableBloom::print() {
-  std::cout << "\n\n";
-  for (auto it = this->prediction_table.begin();
-    it != this->prediction_table.end(); it++) {
-    it->print();
-  }
+  //TODO JIMMY
+  // std::cout << "\n\n";
+  // for (auto it = this->prediction_table.begin();
+  //   it != this->prediction_table.end(); it++) {
+  //   it->print();
+  // }
 }

@@ -1395,8 +1395,8 @@ DefaultIEW<Impl>::executeInsts()
             if (powerPred) {
                 if (!(inst->mispredicted()) && !loadNotExecuted && inst->isControl()){
                     if (inst->readPredTaken()){
-                        powerPred->historyInsert(PPred::BRANCH_T);
                         powerPred->historySetPC(inst->pcState().instAddr());
+                        powerPred->historyInsert(PPred::BRANCH_T);
 
                     } 
                     else 

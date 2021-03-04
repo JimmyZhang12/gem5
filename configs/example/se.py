@@ -264,8 +264,7 @@ for i in range(np):
         system.cpu[i].branchPred = bpClass()
 
     if options.power_pred_type:
-        powerPredClass = ObjectList.power_pred_list.get(\
-            options.power_pred_type)
+        powerPredClass = ObjectList.power_pred_list.get(options.power_pred_type)
         if options.power_pred_type == "Test":
             ncb = math.floor(math.log(options.power_pred_table_size, 2))
             system.cpu[i].powerPred = \
@@ -278,44 +277,7 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     threshold=options.power_pred_voltage_threshold,
                     emergency=options.power_pred_voltage_emergency)
-        elif options.power_pred_type == "SimplePowerPredictor":
-            ncb = math.floor(math.log(options.power_pred_table_size, 2))
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    # Specific
-                    num_entries=options.power_pred_table_size,
-                    num_correlation_bits=ncb,
-                    pc_start=options.power_pred_pc_start,
-                    error_array_size=100,
-                    confidence_level=0.075,
-                    limit=5.0)
-        elif options.power_pred_type == "SimpleHistoryPowerPredictor":
-            ncb = math.floor(math.log(options.power_pred_table_size, 2)/
-                (options.power_pred_history_size+1))
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    # Specific
-                    num_entries=options.power_pred_table_size,
-                    nbits_pc=ncb,
-                    history_size=options.power_pred_history_size,
-                    pc_start=options.power_pred_pc_start,
-                    error_array_size=100,
-                    confidence_level=0.075,
-                    limit=5.0)
+
         elif options.power_pred_type == "IdealSensor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -333,35 +295,6 @@ for i in range(np):
                     threshold=options.power_pred_voltage_threshold,
                     hysteresis=0.005,
                     duration=8)
-        elif options.power_pred_type == "DecorOnly":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    emergency_duration=100,
-                    throttle_on_restore=False,
-                    duration=8)
-        elif options.power_pred_type == "uArchEventPredictor":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    emergency_duration=100,
-                    # Specific
-                    throttle_on_restore=False,
-                    table_size=128,
-                    hysteresis=0.005,
-                    duration=8)
         elif options.power_pred_type == "HarvardPowerPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -373,11 +306,31 @@ for i in range(np):
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
-                    signature_length=32,
+                    signature_length=64,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=128,
-                    bloom_filter_size=2048,
+                    table_size=4000,
+                    bloom_filter_size=10000,
+                    hysteresis=0.005,
+                    duration=8,
+                    lead_time=options.power_pred_lead_time,
+                    events_to_drop=32)
+        elif options.power_pred_type == "HarvardPowerPredictor_dev":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    period=options.power_profile_interval,
+                    cpu_id=i,
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    emergency_duration=100,
+                    signature_length=64,
+                    # Specific
+                    throttle_on_restore=False,
+                    table_size=1000,
+                    bloom_filter_size=10000,
                     hysteresis=0.005,
                     duration=8,
                     lead_time=options.power_pred_lead_time)
@@ -396,70 +349,7 @@ for i in range(np):
                     throttle_on_restore=False,
                     threshold = 4,
                     duration=8)
-        elif options.power_pred_type == "ThrottleAfterStall":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    emergency_duration=100,
-                    # Specific
-                    throttle_on_restore=False,
-                    duration=8)
-        elif options.power_pred_type == "PerceptronPredictor":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    emergency_duration=100,
-                    signature_length=256,
-                    # Specific
-                    training_output=options.power_pred_train_name,
-                    action_length=options.power_pred_actions,
-                    events=options.power_pred_events,
-                    model=options.power_pred_model,
-                    hysteresis=0.005,
-                    duration=16)
-        elif options.power_pred_type == "DNNPredictor":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    signature_length=256,
-                    # Specific
-                    action_length=options.power_pred_actions,
-                    events=options.power_pred_events,
-                    model=options.power_pred_model,
-                    hysteresis=0.005,
-                    duration=50)
-        elif options.power_pred_type == "PerceptronPredictorUTA":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    signature_length=256,
-                    # Specific
-                    events=options.power_pred_events,
-                    eta=0.25,
-                    table_size=2048,
-                    hysteresis=0.005,
-                    duration=50)
+
         system.cpu[i].powerPred.clk_domain = \
             system.cpu_clk_domain[i]
         # Give core a reference to the global stat dump

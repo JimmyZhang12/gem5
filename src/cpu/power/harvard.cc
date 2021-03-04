@@ -56,15 +56,18 @@
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Harvard::Harvard(const Params *params)
-    : PPredUnit(params)
+Harvard::Harvard(const Params *params): 
+  PPredUnit(params),
+  cycles_since_pred(0)
 {
-    DPRINTF(HarvardPowerPred,
-            "Harvard::Harvard()\n");
+
     state = NORMAL;
     next_state = NORMAL;
-    table.resize(params->table_size, params->signature_length, 3,
-                  params->bloom_filter_size);
+    events_to_drop = params->events_to_drop;
+    // table.resize(params->table_size, (params->signature_length - events_to_drop), 3,
+    //               params->bloom_filter_size);
+    table.resize(params->table_size, (params->signature_length - events_to_drop));
+
     history.resize(params->signature_length);
   
     throttle_duration = params->duration;
@@ -75,42 +78,26 @@ Harvard::Harvard(const Params *params)
 }
 
 void
-Harvard::regStats()
-{
+Harvard::regStats(){
     PPredUnit::regStats();
-
-    s
-        .name(name() + ".state")
-        .desc("Current State of the Predictor")
-        ;
-    ns
-        .name(name() + ".next_state")
-        .desc("Next State of the Predictor")
-        ;
-
 }
 
 void
-Harvard::tick(void)
-{
-  DPRINTF(HarvardPowerPred, "Harvard::tick()\n");
+Harvard::tick(void){
 
   table.tick();
 
   bool ve = false;
   bool prediction = false;
 
-  if (supply_voltage < emergency && supply_voltage_prev > emergency) {
-    ve = true;
-    table.insert(this->history.get_entry());
-  }
 
   // If hr updated:
   if (hr_updated) {
-    if (table.find(this->history.get_entry())) {
+    PPred::Entry curr_entry = history.get_entry(events_to_drop);
+    if (table.find(curr_entry)){
       prediction = true;
       total_pred_action++;
-      next_state = NORMAL;
+      cycles_since_pred = 0;
     }
     else {
       total_pred_inaction++;
@@ -118,52 +105,28 @@ Harvard::tick(void)
     hr_updated = false;
     total_preds++;
   }
+
+  if (supply_voltage < emergency && supply_voltage_prev > emergency) {
+    ve = true;
+    if (cycles_since_pred>LEAD_TIME_CAP){
+      PPred::Entry curr_entry = history.get_entry(events_to_drop);
+      int index = table.insert(curr_entry);
+      DPRINTF(HarvardPowerPred, "INSERT index %4d: %s\n", index, curr_entry.to_str().c_str());
+    }
+  }
+
   update_stats(prediction, ve);
+  cycles_since_pred++;
 
   //do we need this?
   clkRestore();
   unsetStall();
 
-  // Output Logic
-  // switch(state) {
-  //   case NORMAL : {
-  //     t_count = 0;
-  //     e_count = 0;
-  //     // Restore Frequency
-
-  //     break;
-  //   }
-  //   case EMERGENCY : {
-  //     e_count += 1;
-  //     t_count = 0;
-  //     clkThrottle();
-  //     setStall();
-  //     break;
-  //   }
-  //   case THROTTLE : {
-  //     t_count += 1;
-  //     e_count = 0;
-  //     clkThrottle();
-  //     unsetStall();
-  //     break;
-  //   }
-  //   default : {
-  //     // Nothing
-  //     break;
-  //   }
-  // }
-  // Update Stats:
-  s = state;
-  ns = next_state;
-  // Update Next State Transition:
-  state = next_state;
-  
   return;
 }
 
 Harvard*
-HarvardPowerPredictorParams::create()
-{
+HarvardPowerPredictorParams::create(){
   return new Harvard(this);
 }
 

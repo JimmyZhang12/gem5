@@ -4,17 +4,17 @@
 #include "event_type.hh"
 
 std::map<int, std::string> PPred::event_t_name = {
-  {BRANCH_T,     "BRANCH_T"},
-  {BRANCH_NT,    "BRANCH_NT"},
-  {BRANCH_MP,    "BRANCH_MISS"},
-  {MEM_MP,       "MEM_ORDER_VIO"},
-  {ICACHE_MISS,      "ICACHE_MISS"},
-  {DCACHE_MISS,      "DCACHE_MISS"},
-  {L2_MISS,      "L2_MISS"},
-  {L3_MISS,      "L3_MISS"},
-  {DTLB_MISS,    "DTLB_MISS"},
-  {ITLB_MISS,    "ITLB_MISS"},
-  {DUMMY_EVENT,  "DUMMY_EVENT"}
+  {BRANCH_T,     "BRAN_TA"},
+  {BRANCH_NT,    "BRAN_NT"},
+  {BRANCH_MP,    "BRAN_MP"},
+  {MEM_MP,       "MEM_OR"},
+  {ICACHE_MISS,  "ICHE_M"},
+  {DCACHE_MISS,  "DCHE_M"},
+  {L2_MISS,      "L2_C_M"},
+  {L3_MISS,      "L3_C_M"},
+  {DTLB_MISS,    "DTLB_M"},
+  {ITLB_MISS,    "ITLB_M"},
+  {DUMMY_EVENT,  "DUMMYE"}
   // {FETCH,        "FETCH"},
   // {ICACHE_FETCH, "ICACHE_FETCH"},
   // {ICACHE_BLOCK, "ICACHE_BLOCK"},
