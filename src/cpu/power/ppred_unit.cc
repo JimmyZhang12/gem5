@@ -67,7 +67,8 @@ PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     voltage_set(params->voltage_set),
     clk(params->clk),
     clk_half(params->clk/2),
-    LEAD_TIME_CAP(params->lead_time)
+    LEAD_TIME_CAP(params->lead_time_max),
+    LEAD_TIME_MIN(params->lead_time_min)
 {
     supply_voltage = 0.0;
     supply_current = 0.0;
@@ -327,6 +328,9 @@ PPredUnit::update_stats(bool pred, bool ve){
         }
         else{
             hits[cycles_since_pred] += 1;
+            if(cycles_since_pred < LEAD_TIME_MIN){
+                ves_outside_leadtime++;
+            }
             DPRINTF(PowerPred, "Emergency High, caught with prediction %d cycles ago\n", cycles_since_pred);
         }
     }

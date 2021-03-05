@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <deque>
+#include <algorithm>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -51,7 +52,8 @@ class HistoryRegister {
      * @return Entry type that can be hashed or looked up in a CAM
      */
     Entry get_entry();
-    Entry get_entry(int events_to_drop);
+    Entry get_entry_drop_front(int events_to_drop);
+    Entry get_entry_drop_back(int events_to_drop);
 
     /**
      * Convert the History Register to an Array2D type that can be used in the
@@ -136,6 +138,8 @@ class HistoryRegister {
     uint64_t get_pc() const {
       return pc;
     }
+
+    std::string to_str();
 };
 
 } // namespace PPred

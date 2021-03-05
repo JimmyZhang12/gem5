@@ -52,130 +52,87 @@
 #include "sim/stat_control.hh"
 
 
-
-
-PPred::TableBloom::TableBloom(uint64_t table_size,
-                              uint64_t history_length,
-                              uint64_t n,
-                              uint64_t bf_size,
-                              uint64_t seed,
-                              uint64_t threshold) {
-  this->threshold = threshold;
-  this->resize(table_size, history_length, n, bf_size, seed);
+PPred::Table::Table(uint64_t table_size, uint64_t history_length) {
+  this->resize(table_size, history_length);
 }
 
 void
-PPred::TableBloom::resize(uint64_t table_size,
-                          uint64_t history_length,
-                          uint64_t n,
-                          uint64_t bf_size,
-                          uint64_t seed) {
-  // Prediction TableBloom
+PPred::Table::resize(uint64_t table_size, uint64_t history_length) {
   prediction_table.resize(table_size, Entry(history_length));
-  bf.resize(n, bf_size, seed);
-
   // Stats
   insertions = 0;
-  matches_cam = 0;
-  matches_bloom = 0;
+  matches = 0;
   misses = 0;
+  last_find_index = 0;
+
 }
 
 bool
-PPred::TableBloom::find(uint64_t pc, std::vector<PPred::event_t> history) {
-  for (auto it = this->prediction_table.begin();
-      it != this->prediction_table.end(); it++) {
-    if (it->match(pc, history)) {
-      it->access();
-      matches_cam++;
+PPred::Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
+  Entry obj = Entry(pc, history);
+  return (this->find(obj));
+}
+
+bool
+PPred::Table::find(const PPred::Entry& obj) {
+  for (int i=0; i<prediction_table.size(); i++){
+    if (prediction_table[i] == obj){
+      last_find_index = i;
+      matches++;
       return true;
     }
-  }
-  PPred::Entry obj(pc, history);
-  if (bf.find(obj)) {
-    matches_bloom++;
-    return true;
-  }
+  }  
+  last_find_index = -1;
   misses++;
   return false;
 }
 
 bool
-PPred::TableBloom::find(const PPred::Entry& obj) {
-  for (auto it = this->prediction_table.begin();
-      it != this->prediction_table.end(); it++) {
-    if (*it == obj) {
-      it->access();
-      matches_cam++;
+PPred::Table::find(const PPred::Entry& obj, int hamming_distance) {
+  for (int i=0; i<prediction_table.size(); i++){
+    if (prediction_table[i].equals(obj, hamming_distance)){
+      last_find_index = i;
+      matches++;
       return true;
     }
-  }
-  if (bf.find(obj)) {
-    matches_bloom++;
-    return true;
-  }
+  }  
+  last_find_index = -1;
   misses++;
   return false;
 }
 
-bool
-PPred::TableBloom::insert(uint64_t pc, std::vector<PPred::event_t> history) {
-  insertions++;
-  uint64_t max_time = 0;
-  size_t idx = 0;
-  if (TableBloom::find(pc, history)) {
-    return true;
-  }
-  for (size_t i = 0; i < prediction_table.size(); i++) {
-    if (max_time < prediction_table[i].get_lru()) {
-      max_time = prediction_table[i].get_lru();
-      idx = i;
-    }
-  }
-  if (prediction_table[idx].get_access() >= threshold) {
-    bf.insert(prediction_table[idx]);
-  }
-  prediction_table[idx].update(pc, history);
-  prediction_table[idx].access();
-  return true;
+
+int
+PPred::Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {
+  PPred::Entry obj = Entry(pc, history);
+  return (this->insert(obj));
 }
 
-bool
-PPred::TableBloom::insert(const Entry& obj) {
+int
+PPred::Table::insert(const Entry& obj) {
   insertions++;
   uint64_t max_time = 0;
   size_t idx = 0;
-  if (find(obj)) {
-    return true;
-  }
+
   for (size_t i = 0; i < prediction_table.size(); i++) {
+    if (prediction_table[i] == obj){
+      prediction_table[i] = obj;   
+      // DPRINTF(PredictionTable, "PREDICTION TABLE MATCH: index = %d", i);
+      return i;
+    }
     if (max_time < prediction_table[i].get_lru()) {
       max_time = prediction_table[i].get_lru();
       idx = i;
     }
-  }
-  if (prediction_table[idx].get_access() >= threshold) {
-    bf.insert(prediction_table[idx]);
   }
   prediction_table[idx] = obj;
-  prediction_table[idx].access();
-  return true;
+  return idx;
 }
 
 void
-PPred::TableBloom::tick(void) {
-  for (auto it = this->prediction_table.begin();
-    it != this->prediction_table.end(); it++) {
+PPred::Table::tick(void) {
+  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {
     it->tick();
   }
 }
 
-void
-PPred::TableBloom::print() {
-  //TODO JIMMY
-  // std::cout << "\n\n";
-  // for (auto it = this->prediction_table.begin();
-  //   it != this->prediction_table.end(); it++) {
-  //   it->print();
-  // }
-}

@@ -190,6 +190,7 @@ class PPredUnit : public ClockedObject
     const double clk;
     const double clk_half;
     const int LEAD_TIME_CAP;
+    const int LEAD_TIME_MIN;
 
   private:
     std::vector<double> clk_vals;

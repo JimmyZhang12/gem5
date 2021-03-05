@@ -86,8 +86,7 @@ public:
    */
   bool match(uint64_t pc, std::vector<event_t> event);
   bool operator==(const Entry& obj);
-
-
+  bool equals(const Entry& entry, int hamming_distance);
 
   /**
    * Sets a new event/anchor_pc pair to this entry
@@ -121,6 +120,9 @@ public:
 
   std::vector<event_t> get_history(void) const { return history; }
 
+  int get_history_size(void) const { return history.size(); }
+  event_t get_history_element(int index) const { return history[index]; }
+
   std::string to_str();
 };
 
@@ -134,7 +136,7 @@ public:
   uint64_t insertions;
   uint64_t matches;
   uint64_t misses;
-
+  int last_find_index;
   /**
    * Create a new table
    * @param table_size The number of entries
@@ -158,6 +160,7 @@ public:
    * @return boolean return true if the event is in the table
    */
   bool find(uint64_t pc, std::vector<event_t> history);
+  bool find(const Entry& obj, int hamming_distance);
   bool find(const Entry& obj);
 
   /**
@@ -168,6 +171,10 @@ public:
    */
   int insert(uint64_t pc, std::vector<event_t> history);
   int insert(const Entry& obj);
+
+  Entry operator[](const int& index) {
+      return prediction_table[index];
+  }
 
   /**
    * Ticks the event history table for the LRU Policy

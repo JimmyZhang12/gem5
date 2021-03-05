@@ -56,10 +56,11 @@ class PowerPredictor(ClockedObject):
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
     cpu_id = Param.Unsigned(0, "Cpu ID")
-    signature_length = Param.Unsigned(256,"Length of History Snapshot " \
-        "(Figure 2)")
+    signature_length = Param.Unsigned(256,"Length of History Snapshot")
     action_length = Param.Unsigned(2,"Number of Throttle Actions")
-    lead_time = Param.Unsigned(40,"Lead time for predictions")
+    lead_time_max = Param.Unsigned(40,"predictions must be this many cycles or less before emergencies to count")
+    lead_time_min = Param.Unsigned(40,"predictions must be this many cycles or more before emergencies to count")
+
 
 class Test(PowerPredictor):
     type = 'Test'
@@ -81,9 +82,10 @@ class HarvardPowerPredictor(PowerPredictor):
     bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
         "to stop emergency throttle")
-    duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_duration = Param.Unsigned(50, "The number of cycles to throttle for")
     throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
     events_to_drop = Param.Unsigned(0, "Events to drop at front of signature to increase lead time")
+    hamming_distance = Param.Unsigned(0, "Allow approximate table matches less than specified hamming distance")
 
 # class HarvardPowerPredictor_dev(PowerPredictor):
 #     type = "HarvardPowerPredictor_dev"

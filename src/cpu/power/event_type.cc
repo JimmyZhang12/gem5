@@ -4,10 +4,10 @@
 #include "event_type.hh"
 
 std::map<int, std::string> PPred::event_t_name = {
-  {BRANCH_T,     "BRAN_TA"},
-  {BRANCH_NT,    "BRAN_NT"},
-  {BRANCH_MP,    "BRAN_MP"},
-  {MEM_MP,       "MEM_OR"},
+  {BRANCH_T,     "BRCH_T"},
+  {BRANCH_NT,    "BRCH_N"},
+  {BRANCH_MP,    "BRCH_M"},
+  {MEM_MP,       "MEMORV"},
   {ICACHE_MISS,  "ICHE_M"},
   {DCACHE_MISS,  "DCHE_M"},
   {L2_MISS,      "L2_C_M"},

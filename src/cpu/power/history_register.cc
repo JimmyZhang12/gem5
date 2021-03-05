@@ -32,7 +32,7 @@ PPred::Entry PPred::HistoryRegister::get_entry() {
   return PPred::Entry(this->pc, signature_temp);
 }
 
-PPred::Entry PPred::HistoryRegister::get_entry(int events_to_drop) {
+PPred::Entry PPred::HistoryRegister::get_entry_drop_front(int events_to_drop) {
   auto it_sig = signature.begin();
   auto it_pc = pc_history.begin();
 
@@ -48,6 +48,20 @@ PPred::Entry PPred::HistoryRegister::get_entry(int events_to_drop) {
 
   return PPred::Entry(pc_temp, signature_temp);
 }
+PPred::Entry PPred::HistoryRegister::get_entry_drop_back(int events_to_drop) {
+  auto end_ptr = signature.end();
+  std::advance(end_ptr, -1*events_to_drop); //backwards
+
+  auto it_sig = signature.begin();
+  std::vector<event_t> signature_temp;
+  while (it_sig != end_ptr){
+    signature_temp.push_back(*it_sig);
+    it_sig++;
+  }
+
+  return PPred::Entry(pc, signature_temp);
+}
+
 
 /**
  * Add Event
@@ -64,7 +78,6 @@ void PPred::HistoryRegister::add_event(PPred::event_t event) {
   signature.pop_back();
   pc_history.push_front(pc);
   pc_history.pop_back();
-
 }
 
 
@@ -76,3 +89,13 @@ void PPred::HistoryRegister::add_event(PPred::event_t event) {
 void PPred::HistoryRegister::set_pc(uint64_t pc) {
   this->pc = pc;
 }
+
+std::string 
+PPred::HistoryRegister::to_str(){
+  std::string ret;
+  ret += (std::to_string(pc) + ": ");
+  for (int i=0; i<signature.size(); i++){
+    ret += (event_t_name[signature[i]] + ", ");
+  }
+  return ret;
+};
