@@ -516,6 +516,19 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
     icache.prefetchb.stats_t.writeAc.access = icache.caches.stats_t.readAc.miss;
     icache.prefetchb.rtp_stats = icache.prefetchb.stats_t;
 
+    // std::cout << "d " << '\n'; 
+    // std::cout << "icache.caches.stats_t.readAc.access " << icache.caches.stats_t.readAc.access << '\n'; 
+    // std::cout << "icache.caches.stats_t.readAc.miss " << icache.caches.stats_t.readAc.miss << '\n'; 
+    // std::cout << "icache.caches.stats_t.readAc.hit " << icache.caches.stats_t.readAc.hit << '\n'; 
+    // std::cout << "icache.missb.stats_t.readAc.access " <<  icache.missb.stats_t.readAc.access << '\n'; 
+    // std::cout << "icache.missb.stats_t.writeAc.access " << icache.missb.stats_t.writeAc.access << '\n'; 
+    // std::cout << "icache.ifb.stats_t.readAc.access " << icache.ifb.stats_t.readAc.access << '\n'; 
+    // std::cout << "icache.ifb.stats_t.writeAc.access " << icache.ifb.stats_t.writeAc.access << '\n'; 
+    // std::cout << "icache.prefetchb.stats_t.readAc.access " << icache.prefetchb.stats_t.readAc.access << '\n'; 
+    // std::cout << "icache.prefetchb.stats_t.writeAc.access " << icache.prefetchb.stats_t.writeAc.access << '\n'; 
+    // std::cout << "d " << '\n'; 
+
+
     IB.stats_t.readAc.access = IB.stats_t.writeAc.access =
         XML->sys.core[ithCore].total_instructions;
     // std::cout << "XML->sys.core[ithCore].total_instructions " << XML->sys.core[ithCore].total_instructions << "\n";
@@ -663,6 +676,16 @@ void InstFetchU::computeDynamicPower(bool is_tdp) {
          icache.ifb.local_result.power + icache.prefetchb.local_result.power) *
             pppm_lkg;
 
+    // std::cout << "g_tp.sckt_co_eff " << g_tp.sckt_co_eff << '\n'; 
+
+    // std::cout << "icache.rt_power.readOp.dynamic " << icache.rt_power.readOp.dynamic  / executionTime<< '\n'; 
+    // std::cout << "icache.power_t.readOp.dynamic " << icache.power_t.readOp.dynamic  / executionTime<< '\n'; 
+    // std::cout << "icache.caches.local_result.power.readOp.dynamic " << icache.caches.local_result.power.readOp.dynamic  / executionTime<< '\n'; 
+    // std::cout << "icache.missb.local_result.power.readOp.dynamic " << icache.missb.local_result.power.readOp.dynamic  / executionTime<< '\n'; 
+    // std::cout << "icache.ifb.local_result.power.readOp.dynamic " << icache.ifb.local_result.power.readOp.dynamic  / executionTime << '\n'; 
+    // std::cout << "icache.prefetchb.local_result.power.readOp.dynamic " << icache.prefetchb.local_result.power.readOp.dynamic  / executionTime<< '\n'; 
+
+
     // std::cout << "IB.power_t.readOp.dynamic " << IB.power_t.readOp.dynamic  / executionTime << "\n";
     // std::cout << "IB.local_result.power.readOp.dynamic " << IB.local_result.power.readOp.dynamic  / executionTime << "\n";
 
@@ -699,6 +722,7 @@ void InstFetchU::reset() {
     Component::reset();
 
     icache.reset();
+
     IB.reset();
     BTB.reset();
     BPT.reset();

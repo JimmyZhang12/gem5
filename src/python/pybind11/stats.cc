@@ -66,11 +66,14 @@ pythonDump()
     m.attr("dump")();
 }
 
-void
+double
 runVerilog()
 {
     py::module m = py::module::import("m5.stats");
+    return m.attr("dump_verilog")().cast<double>();
     m.attr("dump_verilog")();
+    return 0;
+
 }
 
 void

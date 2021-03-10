@@ -545,11 +545,9 @@ void EXECU::computeDynamicPower(bool is_tdp) {
                XML->sys.core[ithCore].cdb_mul_accesses,
                2,
                2,
-               XML->sys.core[ithCore]
-                   .cdb_mul_accesses); // 2 means two source operands needs to
+               XML->sys.core[ithCore].cdb_mul_accesses); // 2 means two source operands needs to
                                        // be passed for each int instruction.
-      bypass.rt_power = bypass.rt_power + intTag_mul_Bypass.power * pppm_t +
-                        int_mul_bypass.power * pppm_t;
+      bypass.rt_power = bypass.rt_power + intTag_mul_Bypass.power * pppm_t + int_mul_bypass.power * pppm_t;
       rt_power = rt_power + mul.rt_power;
     }
 
@@ -561,6 +559,7 @@ void EXECU::computeDynamicPower(bool is_tdp) {
                XML->sys.core[ithCore].cdb_fpu_accesses);
       bypass.rt_power = bypass.rt_power + fp_bypass.power * pppm_t;
       bypass.rt_power = bypass.rt_power + fpTagBypass.power * pppm_t;
+
       rt_power = rt_power + fp_u.rt_power;
     }
     rt_power = rt_power + rfu.rt_power + exeu.rt_power + bypass.rt_power +

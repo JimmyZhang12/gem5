@@ -309,12 +309,14 @@ for i in range(np):
                     signature_length=64,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=4000,
+                    table_size=1000,
                     bloom_filter_size=10000,
                     hysteresis=0.005,
-                    duration=8,
-                    lead_time=options.power_pred_lead_time,
-                    events_to_drop=32)
+                    throttle_duration=16,
+                    lead_time_max=70,
+                    lead_time_min=0,
+                    events_to_drop=3,
+                    hamming_distance=8)
         elif options.power_pred_type == "HarvardPowerPredictor_dev":
             system.cpu[i].powerPred = \
                 powerPredClass(

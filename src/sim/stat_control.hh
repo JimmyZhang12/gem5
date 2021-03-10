@@ -58,7 +58,7 @@ Tick statFinalTick();
 
 void initSimStats();
 
-extern void runVerilog();
+extern double runVerilog();
 
 extern void pythonBeginProfile();
 

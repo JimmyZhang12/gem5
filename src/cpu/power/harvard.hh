@@ -83,14 +83,15 @@ class Harvard : public PPredUnit
     double hysteresis;
 
     /** # Cycles to throttle */
-    unsigned int throttle_duration;
 
     /** Throttle after DeCoR rollback */
     bool throttle_on_restore;
 
-    int events_to_drop;
-
     int cycles_since_pred;
+
+    const unsigned int throttle_duration;
+    const int events_to_drop;
+    const int hamming_distance;
 
   private:
     enum state_t {

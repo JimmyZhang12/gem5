@@ -577,8 +577,8 @@ def dump_verilog(root=None, exit=False):
                     380.0, options.mcpat_device_type)
 
 
-            max_dump = options.power_profile_duration
-            max_instr = options.power_profile_instrs
+            # max_dump = options.power_profile_duration
+            # max_instr = options.power_profile_instrs
             # if(numDump == max_dump or exit or committedInstrs >= max_instr):
             #     mcpat.dump()
             #     runtime_begin_profile = False
@@ -605,6 +605,8 @@ def dump_verilog(root=None, exit=False):
                 output.begin()
                 _dump_to_visitor(output, root=root)
                 output.end()
+
+    # return mcpat.get_last_p(voltage=1.4, power_gating=True, scale_factor=1.0)
 
 def create_xml():
     from m5 import options

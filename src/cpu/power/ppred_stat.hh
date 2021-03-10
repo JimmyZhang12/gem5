@@ -32,11 +32,8 @@
 #define __PPRED_STAT_DUMP_HH__
 
 #include <iostream>
-#include <list>
-#include <queue>
-#include <set>
 #include <string>
-#include <vector>
+#include <cmath>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -118,13 +115,16 @@ class PPredStat : public ClockedObject
 
     int count = 0;
 
-    int delay;
     int max_delay;
 
     int power_start_delay;
     unsigned int count_init = 0;
 
     bool run_verilog;
+
+    double run_debug();
+
+    
 };
 
 #endif // __PPRED_STAT_DUMP_HH__

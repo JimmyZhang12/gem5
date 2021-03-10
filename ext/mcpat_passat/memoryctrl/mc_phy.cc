@@ -219,6 +219,9 @@ void MCPHY::computeStaticPower() {
  *      None
  */
 void MCPHY::computeDynamicPower() {
+  //TODO jimmy find out why this is changing to 914...
+  mcp.peakDataTransferRate = 256000;
+
   if (!init_stats) {
     std::cerr << "[ MCPHY ] Error: must set stats before calling "
                  "computeDynamicPower()\n";
@@ -241,11 +244,20 @@ void MCPHY::computeDynamicPower() {
   // std::cout <<power_t.readOp.longer_channel_leakage<< " PHY: \n";
   // std::cout << "PHY: \n";
 
+  // std::cout<< "power.readOp.dynamic " << power.readOp.dynamic/ mcp.executionTime << "\n";
 
   power.readOp.dynamic =
       power.readOp.dynamic *
       (mcp.peakDataTransferRate * 8 * 1e6 / 1e9 /*change to Gbs*/) *
       mcp.dataBusWidth / data_transfer_unit * mcp.num_channels / mcp.clockRate;
+
+  // std::cout<< "power.readOp.dynamic " << power.readOp.dynamic/ mcp.executionTime << "\n";
+  // std::cout <<"mcp.peakDataTransferRate " << mcp.peakDataTransferRate << "\n";
+  // std::cout <<"mcp.dataBusWidth " << mcp.dataBusWidth << "\n";
+  // std::cout <<"data_transfer_unit " << data_transfer_unit << "\n";
+  // std::cout <<"mcp.clockRate " << mcp.clockRate << "\n";
+  // std::cout <<"mcp.num_channels " << mcp.num_channels << "\n";
+
   // divide by clock rate is for match the final computation where *clock is
   // used
   //(tdp_stats.readAc.access*power_t.readOp.dynamic+
@@ -263,6 +275,18 @@ void MCPHY::computeDynamicPower() {
   rt_power.readOp.dynamic =
       rt_power.readOp.dynamic + power.readOp.dynamic * 0.1 * mcp.clockRate *
                                     mcp.num_mcs * mcp.executionTime;
+
+  // std::cout <<"power_t.readOp.dynamic " << power_t.readOp.dynamic/ mcp.executionTime << "\n";
+  // std::cout <<"rt_power.readOp.dynamic " << rt_power.readOp.dynamic/ mcp.executionTime << "\n";
+  // std::cout<< "rtp_stats.readAc.access " << rtp_stats.readAc.access << "\n";
+  // std::cout <<"rtp_stats.writeAc.access " << rtp_stats.writeAc.access << "\n";
+  // std::cout <<"mcp.llcBlockSize " << mcp.llcBlockSize << "\n";
+  // std::cout <<"mcp.executionTime " << mcp.executionTime << "\n";
+  // std::cout<< "power.readOp.dynamic " << power.readOp.dynamic/ mcp.executionTime << "\n";
+  // std::cout <<"mcp.num_mcs " << mcp.num_mcs << "\n";
+
+
+                                  
 }
 
 /*

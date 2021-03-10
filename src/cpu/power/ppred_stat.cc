@@ -64,7 +64,6 @@ PPredStat::PPredStat(const PPredStatParams *params)
     params->frequency) 
   ),
   count(0),
-  delay(1),
   max_delay(params->debug_print_delay),
   power_start_delay(params->power_start_delay),
   count_init(0),
@@ -91,83 +90,68 @@ PPredStat::PPredStat(const PPredStatParams *params)
  * Global Stat Dump
  */
 void
-PPredStat::tick(void)
-{ 
+PPredStat::tick(void){ 
   if (Stats::pythonGetProfiling()) { //TODO move pythonGetProfiling to C++ side only
     begin = true;
     count++;
 
-    if (mcpat_ready){
-      mp.init_wrapper(xml_path, mcpat_output_path);
-      
-      // auto stop = high_resolution_clock::now(); 
-      // auto duration = duration_cast<microseconds>(stop - start); 
-      // std::cout <<"init_wrapper:" <<duration.count() << endl; 
-
-      if (delay >= max_delay && max_delay > 0){ //debug
-        mp.save_output(mcpat_output_path);
-        std::cout<<"mcpat proc_internal:" << std::endl;
-        mp.print_power();
-
-
-
-        std::cout << "---power = :" << mp.power << "\n";
-        std::cout << "---supply_current = :" << current << "\n";
-        std::cout << "---supply_voltage = :" << voltage << "\n";
-
-        if(run_verilog){
-          std::string xml_path_serial = mcpat_output_path + "/mp.xml";
-          mp.run_with_xml(xml_path_serial, mcpat_output_path);
-
-          Stats::runVerilog();
-          Stats::reset();
-          mp.stat_storage = Mcpat::_stat_storage();
-          mp.stat_storage_prev = Mcpat::_stat_storage_prev();
-          mp.proc.XML->reset_stats();        
-        }
-
-        std::cout << '\n' << "Press a key to continue...";
-        do {
-        } while (cin.get() != '\n');
-      }
-      else{
-        delay++;
-      }
-
-
-
-    }
-    else{
+    if (!mcpat_ready){
       Stats::pythonGenerateXML();
       mp.init(xml_path);
       mcpat_ready = true;
+      if(run_verilog)
+        static_cast<void>(run_debug()); 
     }
 
+    mp.init_wrapper(xml_path, mcpat_output_path);
+    // auto stop = high_resolution_clock::now(); 
+    // auto duration = duration_cast<microseconds>(stop - start); 
+    // std::cout <<"init_wrapper:" <<duration.count() << endl; 
     current = _pdn.get_current(mp.power);
     voltage = _pdn.get_voltage(mp.power);
-  
+
     //dump every cycle number of ticks
-    if (count == cycles){
-      count = 0;
+    if (count % cycles == 0){
       Stats::dump();
     }
 
-  }
+    if (max_delay > 0 && count >= max_delay){ //debug
+      std::cout<<"*****CYCLE: " << count << " *****" << std::endl;
+
+      mp.save_output(mcpat_output_path);
+      std::cout<<"mcpat proc_internal:" << std::endl;
+      mp.print_power();
+
+      std::cout << "---power = :" << mp.power << "\n";
+      std::cout << "---supply_current = :" << current << "\n";
+      std::cout << "---supply_voltage = :" << voltage << "\n";
+
+      if(run_verilog){
+        double verilog_power = run_debug();
+        std::cout << "---verilog_power = :" << verilog_power << "\n";
+
+        if (std::abs(verilog_power - mp.power) > 0.1 || count >= max_delay){
+          std::cout << '\n' << "Press a key to continue...";
+          do {
+          } while (cin.get() != '\n');   
+        }  
+      }
+      else{
+        std::cout << '\n' << "Press a key to continue...";
+        do {
+        } while (cin.get() != '\n'); 
+        
+      }
+    } //debug
+
+  } //pythonGetProfiling()
   else{
-    if (power_start_delay > 0){
       count_init++;
-      if (count_init > power_start_delay){
+      if (count_init > power_start_delay && power_start_delay>=0){
         Stats::pythonBeginProfile();
         Stats::reset();
       }
-    }
-    else{
-      Stats::pythonBeginProfile();
-      Stats::reset();   
-    }
-
   }
-
 
   if (!tickEvent.scheduled()) {
     DPRINTF(PPredStat, "Scheduling next tick at %lu\n", \
@@ -184,6 +168,19 @@ PPredStat::tick(void)
 bool
 PPredStat::get_begin() const {
   return this->begin;
+}
+
+double
+PPredStat::run_debug() {
+  double verilog_power = Stats::runVerilog();
+  std::string xml_path_serial = mcpat_output_path + "/mp.xml";
+  mp.run_with_xml(xml_path_serial, mcpat_output_path);
+
+  Stats::reset(); 
+  mp.stat_storage = Mcpat::_stat_storage();
+  mp.stat_storage_prev = Mcpat::_stat_storage_prev();
+  mp.proc.XML->reset_stats();  
+  return verilog_power;
 }
 
 PPredStat*

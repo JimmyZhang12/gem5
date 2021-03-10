@@ -256,9 +256,10 @@ void Mcpat::set_mcpat_stat(Stats::Info* stat, std::string name){
 
     case(51): //system.cpu.iq.int_alu_accesses
         proc.XML->sys.core[0].ialu_accesses = static_cast<Stats::ScalarInfo*>(stat)->result() - stat_storage.cpu_iq_int_alu_accesses;
+        proc.XML->sys.core[0].cdb_alu_accesses = static_cast<Stats::ScalarInfo*>(stat)->result() - stat_storage.cpu_iq_int_alu_accesses;
+
         stat_storage.cpu_iq_int_alu_accesses = static_cast<Stats::ScalarInfo*>(stat)->result();
 
-        proc.XML->sys.core[0].cdb_alu_accesses = static_cast<Stats::ScalarInfo*>(stat)->result() - stat_storage.cpu_iq_int_alu_accesses;
         break;
 
     case(50): //system.cpu.iq.fu_full

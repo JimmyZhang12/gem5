@@ -194,6 +194,7 @@ def calc_total_power(data, power_gating = False, scale_factor=1.0):
     return (float(data["Gate Leakage"]) + \
            float(data["Subthreshold Leakage with power gating"]) + \
            float(data["Runtime Dynamic"]))*scale_factor
+           
   return (float(data["Gate Leakage"]) + \
          float(data["Subthreshold Leakage"]) + \
          float(data["Runtime Dynamic"]))*scale_factor

@@ -49,9 +49,10 @@ def generate_xml(stat_file, config_file, out_file, stat_list=[],
   stat_dict = \
     build_gem5_stat_dict(stat_file, stat_list, read_from_file)
 
-  # print('stat_dict:')
-  # for k,v in stat_dict.items():
-  #   print(k, " :  ", v)
+  print('stat_dict:')
+  for k,v in stat_dict.items():
+    if 'pkt_count' in k:
+      print(k, " :  ", v)
 
 
   config_dict = build_gem5_config_dict(config_file)

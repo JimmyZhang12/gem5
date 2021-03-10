@@ -157,6 +157,7 @@ void MemoryController::computeStaticPower() {
 }
 
 void MemoryController::computeDynamicPower() {
+
   if (!init_stats) {
     std::cerr << "[ MemoryController ] Error: must set stats before calling "
                  "computeDynamicPower()\n";

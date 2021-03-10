@@ -45,7 +45,7 @@ from device import Device
 from epoch import Epoch
 
 rolling_avg_len=4
-rolling_avg=True
+rolling_avg=False
 
 power_gating = False
 scale_factor = 1.0
@@ -105,6 +105,7 @@ def m5_to_mcpat(stat_list, read_from_file, voltage, freq, temperature, device_ty
   if(rolling_avg):
     data = get_data("Processor", mcpat_trees)
     rolling_avg_p[idx] = calc_total_power(data, power_gating, scale_factor)
+  
 
 def dump():
   dump_stats(mcpat_trees)

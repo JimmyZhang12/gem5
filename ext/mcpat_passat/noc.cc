@@ -273,6 +273,10 @@ void NoC::computeRuntimeDynamicPower() {
         router.crossbar.power.readOp.dynamic * rtp_stats.readAc.access;
     router.arbiter.rt_power.readOp.dynamic =
         router.arbiter.power.readOp.dynamic * rtp_stats.readAc.access;
+    
+    // std::cout << router.crossbar.power.readOp.dynamic << "router.crossbar.power.readOp.dynamic" << '\n';
+    // std::cout << rtp_stats.readAc.access << "rtp_stats.readAc.access" << '\n';
+
 
     router.rt_power =
         router.rt_power +
@@ -281,6 +285,7 @@ void NoC::computeRuntimeDynamicPower() {
             pppm_t +
         router.power * pppm_lkg; // TDP power must be calculated first!
     rt_power = rt_power + router.rt_power;
+
   }
   if (link_bus_exist) {
     set_pppm(pppm_t, rtp_stats.readAc.access, 1, 1, rtp_stats.readAc.access);
