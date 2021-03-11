@@ -42,27 +42,28 @@ class Mcpat{
         void reset();
 
         void init_wrapper(std::string xml_dir, std::string output_path);
-        double run_with_xml(std::string xml_dir, std::string output_path);
+     
+        void update_stats();
 
+        double get_power(Processor &proc_t);   
+
+        void set_mcpat_stat(Stats::Info*, std::string name);
+
+        void clk_throttle(double new_clk);
+
+        double run_with_xml(std::string xml_dir, std::string output_path); //debug
         void save_output(std::string fname, Processor &proc_t);
         void save_output(std::string output_path);
-        
-        void update_stats();
 
         void print_power(Processor &proc_t);
         void print_power();
 
-        double get_power(Processor &proc_t);
-        
+        void print_stats(Stats::Info*);
+
+
         double power;
 
-
         Processor proc; //eventually make the private
-
-        void set_mcpat_stat(Stats::Info*, std::string name);
-        void init_mcpat_stat(Stats::Info*, std::string name);
-
-        void print_stats(Stats::Info*);
 
         PPredUnit* powerPred;
     

@@ -90,14 +90,14 @@ PPredStat::PPredStat(const PPredStatParams *params)
 void
 PPredStat::tick(void){ 
   if (Stats::pythonGetProfiling()) { //TODO move pythonGetProfiling to C++ side only
-    begin = true;
+    begin = true; //allow powerpred to start ticking
     count++;
 
     if (!mcpat_ready){
       Stats::pythonGenerateXML();
       mp.init(xml_path);
       mcpat_ready = true;
-      powerPred->ppred_stat = this;
+      powerPred->ppred_stat = this; //powerpred needs to get voltages/currents
       if(run_verilog){
         static_cast<void>(run_debug()); 
       }
@@ -115,35 +115,11 @@ PPredStat::tick(void){
       Stats::dump();
     }
 
-    if (max_delay > 0){ //debug
-      std::cout<<"*****CYCLE: " << count << " *****" << std::endl;
-
-      mp.save_output(mcpat_output_path);
-      std::cout<<"mcpat proc_internal:" << std::endl;
-      mp.print_power();
-
-      std::cout << "---power = :" << mp.power << "\n";
-      std::cout << "---supply_current = :" << current << "\n";
-      std::cout << "---supply_voltage = :" << voltage << "\n";
-
-      if(run_verilog){
-        double verilog_power = run_debug();
-        std::cout << "---verilog_power = :" << verilog_power << "\n";
-
-        if (std::abs(verilog_power - mp.power) > 0.1){
-          std::cout << '\n' << "Press a key to continue...";
-          do {
-          } while (cin.get() != '\n');   
-        }  
-      }
-      else{
-        std::cout << '\n' << "Press a key to continue...";
-        do {
-        } while (cin.get() != '\n'); 
-      }
-    } //debug
-
+    if (max_delay > 0){
+      run_debug();
+    }
   } //pythonGetProfiling()
+
   else{
       count_init++;
       if (count_init > power_start_delay && power_start_delay>=0){
@@ -169,17 +145,48 @@ PPredStat::get_begin() const {
   return this->begin;
 }
 
-double
+void
 PPredStat::run_debug() {
-  double verilog_power = Stats::runVerilog();
-  std::string xml_path_serial = mcpat_output_path + "/mp.xml";
-  verilog_power = mp.run_with_xml(xml_path_serial, mcpat_output_path);
+  std::cout<<"*****CYCLE: " << count << " *****" << std::endl;
 
-  Stats::reset(); 
-  mp.stat_storage = Mcpat::_stat_storage();
-  mp.stat_storage_prev = Mcpat::_stat_storage_prev();
-  mp.proc.XML->reset_stats();  
-  return verilog_power;
+  mp.save_output(mcpat_output_path);
+  std::cout<<"mcpat proc_internal:" << std::endl;
+  mp.print_power();
+
+  std::cout << "---power = :" << mp.power << "\n";
+  std::cout << "---supply_current = :" << current << "\n";
+  std::cout << "---supply_voltage = :" << voltage << "\n";
+
+  if(run_verilog){
+    double verilog_power = Stats::runVerilog();
+    std::string xml_path_serial = mcpat_output_path + "/mp.xml";
+    verilog_power = mp.run_with_xml(xml_path_serial, mcpat_output_path);
+
+    Stats::reset(); 
+    mp.stat_storage = Mcpat::_stat_storage();
+    mp.stat_storage_prev = Mcpat::_stat_storage_prev();
+    mp.proc.XML->reset_stats();  
+
+    std::cout << "---verilog_power = :" << verilog_power << "\n";
+
+    if (std::abs(verilog_power - mp.power) > 0.1){
+      std::cout << '\n' << "Press a key to continue...";
+      do {
+      } while (cin.get() != '\n');   
+    }  
+  }
+  else{
+    std::cout << '\n' << "Press a key to continue...";
+    do {
+    } while (cin.get() != '\n'); 
+  }
+}
+
+
+void
+PPredStat::clk_throttle(double new_clk){
+  _pdn.clk_throttle(new_clk);
+
 }
 
 PPredStat*

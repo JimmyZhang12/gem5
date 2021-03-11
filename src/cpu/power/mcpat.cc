@@ -78,6 +78,12 @@ Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
     power = get_power(proc);
 }
 
+void
+Mcpat::clk_throttle(double new_clk){
+    
+}
+
+
 double 
 Mcpat::run_with_xml(std::string xml_dir, std::string output_path){
     Processor proc_serial;

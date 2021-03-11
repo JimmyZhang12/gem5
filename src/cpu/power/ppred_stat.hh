@@ -77,8 +77,12 @@ class PPredStat : public ClockedObject
      */
     bool get_begin() const;
 
+    void clk_throttle(double new_clk);
+
+    void clk_restore();
 
     double get_voltage() const {return voltage;}
+
     double get_current() const {return current;}
 
 
@@ -88,7 +92,7 @@ class PPredStat : public ClockedObject
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
-    const PPredUnit* powerPred
+    PPredUnit* powerPred;
 
     /** Cycles between stat dumps */
     unsigned int cycles;
@@ -127,7 +131,7 @@ class PPredStat : public ClockedObject
 
     bool run_verilog;
 
-    double run_debug();
+    void run_debug();
 
     double voltage;
     double current;

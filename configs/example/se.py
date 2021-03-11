@@ -316,7 +316,7 @@ for i in range(np):
                     lead_time_max=50,
                     lead_time_min=0,
                     events_to_drop=0,
-                    hamming_distance=0)
+                    hamming_distance=1)
         elif options.power_pred_type == "HarvardPowerPredictorMitigation":
             system.cpu[i].powerPred = \
                 powerPredClass(

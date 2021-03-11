@@ -79,8 +79,8 @@ PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     stall = false;
     this->id = params->cpu_id;
     
-    vpi_shm::set_voltage_set(voltage_set, id);
-    vpi_shm::set_core_freq(clk, id);
+    // vpi_shm::set_voltage_set(voltage_set, id);
+    // vpi_shm::set_core_freq(clk, id);
 
     history.resize(params->signature_length);
     hr_updated = false;

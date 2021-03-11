@@ -40,7 +40,7 @@ pdn::get_current(double power){
 }
 
 void
-pdn::set_throttle(double throttled_CLK){
+pdn::clk_throttle(double throttled_CLK){
     this->CLK = throttled_CLK;
     this->ts = 1/throttled_CLK;
 }
