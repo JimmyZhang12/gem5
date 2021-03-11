@@ -44,13 +44,11 @@
 #include <chrono> 
 using namespace std::chrono; 
 
-double PPredStat::voltage = 0;
-double PPredStat::current = 0;
 
 PPredStat::PPredStat(const PPredStatParams *params)
   : ClockedObject(params),
-  tickEvent([this]{ tick(); }, "PPredStat tick",
-            false, Event::Power_Event_Pri),
+  tickEvent([this]{ tick(); }, "PPredStat tick", false, Event::Power_Event_Pri),
+  powerPred(params->powerpred),
   cycles(params->cycle_period),
   clkDomain(params->stat_clk_domain),
   frequency(params->frequency),
@@ -99,6 +97,7 @@ PPredStat::tick(void){
       Stats::pythonGenerateXML();
       mp.init(xml_path);
       mcpat_ready = true;
+      powerPred->ppred_stat = this;
       if(run_verilog){
         static_cast<void>(run_debug()); 
       }

@@ -307,7 +307,6 @@ for i in range(np):
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
                     signature_length=64,
-                    ppred_stat = system.ppred_stat,
                     # Specific
                     throttle_on_restore=False,
                     table_size=3000,
@@ -330,7 +329,6 @@ for i in range(np):
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
                     signature_length=64,
-                    ppred_stat = system.ppred_stat,
                     # Specific
                     throttle_on_restore=False,
                     table_size=1000,

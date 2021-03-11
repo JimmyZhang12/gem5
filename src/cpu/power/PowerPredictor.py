@@ -38,20 +38,16 @@ class PowerPredictor(ClockedObject):
     cxx_header = "cpu/power/ppred_unit.hh"
     abstract = True
 
-    min_current = Param.Unsigned(0, "Minimum Current Supply " \
-        "(Amps) of the PSU")
-    max_current = Param.Unsigned(40, "Maximum Current Supply " \
-        "(Amps) of the PSU")
+    min_current = Param.Unsigned(0, "Minimum Current Supply (Amps) of the PSU")
+    max_current = Param.Unsigned(40, "Maximum Current Supply (Amps) of the PSU")
 
-    sys_clk_domain = Param.SrcClockDomain(Parent.clk_domain,
-                         "Clk domain in which the handler is instantiated")
+    sys_clk_domain = Param.SrcClockDomain(Parent.clk_domain, "Clk domain in which the handler is instantiated")
 
     period = Param.Unsigned(100, "Number of sim-cycles")
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
     delta = Param.Float(0.75, "Rate at which to train")
     emergency = Param.Float(0.95, "% Voltage considered a supply emergency")
-    emergency_duration = Param.Unsigned(250, "Number of cycles to do a "
-        "DECOR Rollback")
+    emergency_duration = Param.Unsigned(250, "Number of cycles to do a DECOR Rollback")
     clk = Param.Float(3.5e9, "Default Clock Freq")
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
@@ -60,7 +56,6 @@ class PowerPredictor(ClockedObject):
     action_length = Param.Unsigned(2,"Number of Throttle Actions")
     lead_time_max = Param.Unsigned(40,"predictions must be this many cycles or less before emergencies to count")
     lead_time_min = Param.Unsigned(40,"predictions must be this many cycles or more before emergencies to count")
-    ppred_stat = Param.PowerPredictor(Parent.ppred_stat , "the power profiler")
 
 
 class Test(PowerPredictor):

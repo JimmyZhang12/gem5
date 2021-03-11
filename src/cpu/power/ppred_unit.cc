@@ -355,7 +355,7 @@ PPredUnit::update_stats(bool pred, bool ve){
 
     //stats
     supply_voltage_prev = supply_voltage;
-    supply_voltage = PPredStat::voltage;
+    supply_voltage = ppred_stat->get_voltage();
     
     double diff = 0;
     diff = supply_voltage - v_min;
@@ -372,8 +372,7 @@ PPredUnit::update_stats(bool pred, bool ve){
         voltage_dist[index_int] += 1;
     }
 
-
-    supply_current = PPredStat::current;
+    supply_current = ppred_stat->get_current();
 
     sv = supply_voltage;
     sv_p = supply_voltage_prev;

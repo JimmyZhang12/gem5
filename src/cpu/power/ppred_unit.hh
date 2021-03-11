@@ -133,6 +133,8 @@ class PPredUnit : public ClockedObject
     */
     void update_stats(bool pred, bool ve);
 
+    PPredStat* ppred_stat;
+
   protected:
     Stats::Scalar stat_freq;
     Stats::Scalar stat_ticks;
