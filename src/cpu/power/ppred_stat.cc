@@ -99,8 +99,9 @@ PPredStat::tick(void){
       Stats::pythonGenerateXML();
       mp.init(xml_path);
       mcpat_ready = true;
-      if(run_verilog)
+      if(run_verilog){
         static_cast<void>(run_debug()); 
+      }
     }
 
     mp.init_wrapper(xml_path, mcpat_output_path);
@@ -115,7 +116,7 @@ PPredStat::tick(void){
       Stats::dump();
     }
 
-    if (max_delay > 0 && count >= max_delay){ //debug
+    if (max_delay > 0){ //debug
       std::cout<<"*****CYCLE: " << count << " *****" << std::endl;
 
       mp.save_output(mcpat_output_path);
@@ -130,7 +131,7 @@ PPredStat::tick(void){
         double verilog_power = run_debug();
         std::cout << "---verilog_power = :" << verilog_power << "\n";
 
-        if (std::abs(verilog_power - mp.power) > 0.1 || count >= max_delay){
+        if (std::abs(verilog_power - mp.power) > 0.1){
           std::cout << '\n' << "Press a key to continue...";
           do {
           } while (cin.get() != '\n');   
@@ -140,7 +141,6 @@ PPredStat::tick(void){
         std::cout << '\n' << "Press a key to continue...";
         do {
         } while (cin.get() != '\n'); 
-        
       }
     } //debug
 
@@ -174,7 +174,7 @@ double
 PPredStat::run_debug() {
   double verilog_power = Stats::runVerilog();
   std::string xml_path_serial = mcpat_output_path + "/mp.xml";
-  mp.run_with_xml(xml_path_serial, mcpat_output_path);
+  verilog_power = mp.run_with_xml(xml_path_serial, mcpat_output_path);
 
   Stats::reset(); 
   mp.stat_storage = Mcpat::_stat_storage();

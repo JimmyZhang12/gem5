@@ -220,7 +220,8 @@ void MCPHY::computeStaticPower() {
  */
 void MCPHY::computeDynamicPower() {
   //TODO jimmy find out why this is changing to 914...
-  mcp.peakDataTransferRate = 256000;
+  // mcp.peakDataTransferRate = 256000;
+  // std::cout << "mcp.peakDataTransferRate " <<  mcp.peakDataTransferRate << '\n';
 
   if (!init_stats) {
     std::cerr << "[ MCPHY ] Error: must set stats before calling "
@@ -264,9 +265,9 @@ void MCPHY::computeDynamicPower() {
   //					tdp_stats.writeAc.access*power_t.readOp.dynamic);
 
   rt_power = power_t;
-  //    	rt_power.readOp.dynamic	=
-  //    (rtp_stats.readAc.access*power_t.readOp.dynamic+
-  //    						rtp_stats.writeAc.access*power_t.readOp.dynamic);
+    //  	rt_power.readOp.dynamic	=
+    //  (rtp_stats.readAc.access*power_t.readOp.dynamic+
+    //  						rtp_stats.writeAc.access*power_t.readOp.dynamic);
 
   rt_power.readOp.dynamic =
       power_t.readOp.dynamic *

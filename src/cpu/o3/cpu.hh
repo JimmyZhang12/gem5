@@ -123,7 +123,8 @@ class FullO3CPU : public BaseO3CPU
         Idle,
         Halted,
         Blocked,
-        SwitchedOut
+        SwitchedOut,
+        VE_Recovering
     };
 
     BaseTLB *itb;

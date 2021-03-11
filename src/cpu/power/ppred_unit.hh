@@ -91,6 +91,8 @@ class PPredUnit : public ClockedObject
 
     void clkRestore();
 
+    void Clk_Throttle();
+
     /**
      * Take an action from the LUT
      * Not nescescarily a Throttle Action

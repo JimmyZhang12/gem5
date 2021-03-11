@@ -78,7 +78,7 @@ Mcpat::init_wrapper(std::string xml_dir, std::string output_path){
     power = get_power(proc);
 }
 
-void 
+double 
 Mcpat::run_with_xml(std::string xml_dir, std::string output_path){
     Processor proc_serial;
     std::string serial = output_path + "/mcpat_serial.txt";
@@ -98,6 +98,15 @@ Mcpat::run_with_xml(std::string xml_dir, std::string output_path){
     print_power(proc_serial);
     std::string output_path_serial = output_path + "/out_mcpat_serial.txt";
     save_output(output_path_serial, proc_serial);
+
+    bool long_channel = proc_serial_xml->sys.longer_channel_device;
+    double gate_leakage = proc_serial.power.readOp.gate_leakage;
+    double sub_leakage = long_channel ? proc_serial.power.readOp.power_gated_with_long_channel_leakage
+                : proc_serial.power.readOp.power_gated_leakage;
+    double runtime_dynamic = proc_serial.rt_power.readOp.dynamic;
+    double power = gate_leakage + sub_leakage + runtime_dynamic;
+    return power;
+
 }
 
 

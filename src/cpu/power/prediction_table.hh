@@ -259,9 +259,58 @@ public:
   void print();
 };
 
-} 
+class Infinite_Table {
+  // Prediction Table, Table of Entries
+  std::vector<Entry> prediction_table;
 
-// namespace PPred
+public:
+  // Stats:
+  uint64_t insertions;
+  uint64_t matches;
+  uint64_t misses;
+  int last_find_index;
+  /**
+   * Create a new table
+   * @param table_size The number of entries
+   * @param history_length The number of events per history
+   * @return None
+   */
+  Infinite_Table();
+
+  /**
+   * Find an entry in the prediction table
+   * @param pc The anchor program counter
+   * @param history The event history register
+   * @return boolean return true if the event is in the table
+   */
+  bool find(uint64_t pc, std::vector<event_t> history);
+  bool find(const Entry& obj, int hamming_distance);
+  bool find(const Entry& obj);
+
+  /**
+   * Insert an Entry based on LRU Replacement Policy
+   * @param pc The anchor program counter
+   * @param history The event history register
+   * @return boolean insert success
+   */
+  int insert(uint64_t pc, std::vector<event_t> history);
+  int insert(const Entry& obj);
+
+  Entry operator[](const int& index) {
+      return prediction_table[index];
+  }
+
+  /**
+   * Ticks the event history table for the LRU Policy
+   */
+  void tick(void);
+
+  void print();
+};
+
+} // namespace PPred
+
+
 /**
  * Need to extend on the hash function to hash an arbitrary class
  */

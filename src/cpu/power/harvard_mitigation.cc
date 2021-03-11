@@ -41,7 +41,7 @@
  */
 
 
-#include "cpu/power/harvard.hh"
+#include "cpu/power/harvard_mitigation.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -56,7 +56,7 @@
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-Harvard::Harvard(const Params *params): 
+Harvard_Mitigation::Harvard_Mitigation(const Params *params): 
   PPredUnit(params),
   throttle_duration(params->throttle_duration),
   events_to_drop(params->events_to_drop),
@@ -67,7 +67,7 @@ Harvard::Harvard(const Params *params):
     // table.resize(params->table_size, (params->signature_length - events_to_drop), 3,
     //               params->bloom_filter_size);
 
-    table.resize(params->table_size, (params->signature_length - events_to_drop));
+    // table.resize(params->table_size, (params->signature_length - events_to_drop));
 
     history.resize(params->signature_length);
   
@@ -78,37 +78,16 @@ Harvard::Harvard(const Params *params):
 }
 
 void
-Harvard::regStats(){
+Harvard_Mitigation::regStats(){
     PPredUnit::regStats();
 }
 
 void
-Harvard::tick(void){
+Harvard_Mitigation::tick(void){
 
   table.tick();
   bool ve = false;
   bool prediction = false;
-
-  // if (hr_updated) {
-  if (cycles_since_pred > throttle_duration) {
-    PPred::Entry snapshot = history.get_entry_drop_back(events_to_drop);
-    // PPred::Entry snapshot = history.get_entry();
-    if (table.find(snapshot, hamming_distance)){
-      prediction = true;
-      total_pred_action++;
-      cycles_since_pred = 0;
-
-      DPRINTF(HarvardPowerPred, "PRED HIGH:  row=%4d: %s\n", 
-        table.last_find_index, table[table.last_find_index].to_str().c_str());
-      DPRINTF(HarvardPowerPred, "     HistoryRegister: %s\n", history.to_str().c_str());
-      DPRINTF(HarvardPowerPred, "            snapshot: %s\n", snapshot.to_str().c_str());
-    }
-    else {
-      total_pred_inaction++;
-    }
-    hr_updated = false;
-    total_preds++;
-  }
 
   if (supply_voltage < emergency && supply_voltage_prev > emergency) {
     ve = true;
@@ -130,16 +109,12 @@ Harvard::tick(void){
   update_stats(prediction, ve);
   cycles_since_pred++;
 
-  //do we need this?
-  clkRestore();
-  unsetStall();
-
   return;
 }
 
-Harvard*
-HarvardPowerPredictorParams::create(){
-  return new Harvard(this);
+Harvard_Mitigation*
+HarvardPowerPredictorMitigationParams::create(){
+  return new Harvard_Mitigation(this);
 }
 
 

@@ -247,6 +247,8 @@ PPredUnit::clkRestore()
     stat_freq = clk;
 }
 
+
+
 void
 PPredUnit::takeAction(size_t idx) {
     // Set the CPU Clock Object to Normal

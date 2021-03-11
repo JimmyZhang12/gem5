@@ -570,12 +570,7 @@ FullO3CPU<Impl>::tick()
           }
         }
         else {
-//std::cout << ppred_numCommittedInsts << ",";
-//std::cout << global_total_cycles - global_total_cycles_0 << ",";
-//std::cout << global_total_instrs - global_total_instrs_0 << ",";
-//std::cout << ppred_cycle_count - ppred_cycle_count_0 << ",";
-//std::cout << ppred_numCommittedInsts - ppred_instr_count_0 << ",";
-//std::cout << "\n";
+
           ppred_instr_count = ppred_numCommittedInsts;
           globalTotalCycles = global_total_cycles - global_total_cycles_0;
           globalTotalInstrs = global_total_instrs - global_total_instrs_0;

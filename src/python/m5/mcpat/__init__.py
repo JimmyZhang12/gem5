@@ -99,13 +99,10 @@ def m5_to_mcpat(stat_list, read_from_file, voltage, freq, temperature, device_ty
               read_from_file, voltage=voltage, \
               frequency=freq, temperature=temperature, device_type=device_type)
 
-  run_mcpat(i_f, "5", "1", o_f, e_f)
   mcpat_trees = [parse_output(o_f)]
-
   if(rolling_avg):
     data = get_data("Processor", mcpat_trees)
     rolling_avg_p[idx] = calc_total_power(data, power_gating, scale_factor)
-  
 
 def dump():
   dump_stats(mcpat_trees)

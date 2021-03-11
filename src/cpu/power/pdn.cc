@@ -38,3 +38,9 @@ double
 pdn::get_current(double power){
     return power/VDC;
 }
+
+void
+pdn::set_throttle(double throttled_CLK){
+    this->CLK = throttled_CLK;
+    this->ts = 1/throttled_CLK;
+}

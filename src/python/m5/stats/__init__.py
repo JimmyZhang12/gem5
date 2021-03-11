@@ -477,7 +477,7 @@ def dump_verilog(root=None, exit=False):
     # Don't allow multiple global stat dumps in the same tick. It's
     # still possible to dump a multiple sub-trees.
     if not new_dump and root is None:
-        return
+        return 0
 
     if(options.mcpat_enable):
         if((options.power_profile_start != -1 and
@@ -606,7 +606,10 @@ def dump_verilog(root=None, exit=False):
                 _dump_to_visitor(output, root=root)
                 output.end()
 
-    # return mcpat.get_last_p(voltage=1.4, power_gating=True, scale_factor=1.0)
+    power_ret = mcpat.get_last_p(voltage=1.4, power_gating=True, scale_factor=1.0)
+    if power_ret is None:
+        return 0
+    return power_ret
 
 def create_xml():
     from m5 import options

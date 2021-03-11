@@ -60,6 +60,7 @@ class PowerPredictor(ClockedObject):
     action_length = Param.Unsigned(2,"Number of Throttle Actions")
     lead_time_max = Param.Unsigned(40,"predictions must be this many cycles or less before emergencies to count")
     lead_time_min = Param.Unsigned(40,"predictions must be this many cycles or more before emergencies to count")
+    ppred_stat = Param.PowerPredictor(Parent.ppred_stat , "the power profiler")
 
 
 class Test(PowerPredictor):
@@ -87,16 +88,18 @@ class HarvardPowerPredictor(PowerPredictor):
     events_to_drop = Param.Unsigned(0, "Events to drop at front of signature to increase lead time")
     hamming_distance = Param.Unsigned(0, "Allow approximate table matches less than specified hamming distance")
 
-# class HarvardPowerPredictor_dev(PowerPredictor):
-#     type = "HarvardPowerPredictor_dev"
-#     cxx_class = "Harvard_dev"
-#     cxx_header = "cpu/power/harvard_dev.hh"
-#     table_size = Param.Unsigned(128, "Size of UArch Event Table")
-#     bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
-#     hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
-#         "to stop emergency throttle")
-#     duration = Param.Unsigned(50, "The number of cycles to throttle for")
-#     throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
+class HarvardPowerPredictorMitigation(PowerPredictor):
+    type = "HarvardPowerPredictorMitigation"
+    cxx_class = "Harvard_Mitigation"
+    cxx_header = "cpu/power/harvard_mitigation.hh"
+    table_size = Param.Unsigned(128, "Size of UArch Event Table")
+    bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    throttle_duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
+    events_to_drop = Param.Unsigned(0, "Events to drop at front of signature to increase lead time")
+    hamming_distance = Param.Unsigned(0, "Allow approximate table matches less than specified hamming distance")
 
 class PPredStat(ClockedObject):
     type = "PPredStat"

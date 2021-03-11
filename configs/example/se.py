@@ -307,17 +307,18 @@ for i in range(np):
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
                     signature_length=64,
+                    ppred_stat = system.ppred_stat,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=1000,
+                    table_size=3000,
                     bloom_filter_size=10000,
                     hysteresis=0.005,
-                    throttle_duration=16,
-                    lead_time_max=70,
+                    throttle_duration=40,
+                    lead_time_max=50,
                     lead_time_min=0,
-                    events_to_drop=3,
-                    hamming_distance=8)
-        elif options.power_pred_type == "HarvardPowerPredictor_dev":
+                    events_to_drop=0,
+                    hamming_distance=0)
+        elif options.power_pred_type == "HarvardPowerPredictorMitigation":
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
@@ -329,13 +330,17 @@ for i in range(np):
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
                     signature_length=64,
+                    ppred_stat = system.ppred_stat,
                     # Specific
                     throttle_on_restore=False,
                     table_size=1000,
                     bloom_filter_size=10000,
                     hysteresis=0.005,
-                    duration=8,
-                    lead_time=options.power_pred_lead_time)
+                    throttle_duration=45,
+                    lead_time_max=50,
+                    lead_time_min=0,
+                    events_to_drop=0,
+                    hamming_distance=0)
         elif options.power_pred_type == "DepAnalysis":
             system.cpu[i].powerPred = \
                 powerPredClass(
@@ -352,8 +357,7 @@ for i in range(np):
                     threshold = 4,
                     duration=8)
 
-        system.cpu[i].powerPred.clk_domain = \
-            system.cpu_clk_domain[i]
+        system.cpu[i].powerPred.clk_domain = system.cpu_clk_domain[i]
         # Give core a reference to the global stat dump
         system.cpu[i].ppred_stat = system.ppred_stat
 

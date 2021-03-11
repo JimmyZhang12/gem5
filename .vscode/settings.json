@@ -66,6 +66,9 @@
         "*.inc": "cpp",
         "bitset": "cpp",
         "random": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "hashtable": "cpp"
     }
 }

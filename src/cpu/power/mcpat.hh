@@ -42,7 +42,7 @@ class Mcpat{
         void reset();
 
         void init_wrapper(std::string xml_dir, std::string output_path);
-        void run_with_xml(std::string xml_dir, std::string output_path);
+        double run_with_xml(std::string xml_dir, std::string output_path);
 
         void save_output(std::string fname, Processor &proc_t);
         void save_output(std::string output_path);
