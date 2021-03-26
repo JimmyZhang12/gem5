@@ -101,7 +101,7 @@ class Harvard : public PPredUnit
     };
 
     // PPred::TableBloom table;
-    PPred::Table table;
+    PPred::Infinite_Table table;
 
     // Counter for # Cycles to delay
     unsigned int e_count;

@@ -33,6 +33,9 @@ class HistoryRegister {
      */
     uint64_t pc;
 
+    
+    std::deque<int> entry_head_time;
+
     /**
      * Default Constructor
      */
@@ -43,9 +46,9 @@ class HistoryRegister {
      * Resize the history register
      * @param len The length of the new history register
      */
-    void resize(size_t len = 4) {
-      signature.resize(len);
-    }
+    void resize(size_t len = 4);
+
+    void tick();
 
     /**
      * Convert the History Register to an Event type
@@ -138,6 +141,7 @@ class HistoryRegister {
     uint64_t get_pc() const {
       return pc;
     }
+
 
     std::string to_str();
 };

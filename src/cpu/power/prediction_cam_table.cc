@@ -67,6 +67,43 @@ PPred::Table::resize(uint64_t table_size, uint64_t history_length) {
 
 }
 
+bool 
+PPred::Table::find_variable_signature_len(const PPred::Entry& obj){
+  for (int i=0; i<prediction_table.size(); i++){
+    if (obj.history.size() != prediction_table[i].history.size()){
+      int min_size = (obj.history.size()<prediction_table[i].history.size())?\
+        obj.history.size():\
+        prediction_table[i].history.size();
+      
+      int flag=true;
+      for (int j=0; j<min_size;j++){
+        if (obj.history[j]!= prediction_table[i].history[j]){
+          flag = false;
+          break;
+        }
+      }
+      if (flag){
+        last_find_index = i;
+        matches++;
+        return true;      
+      }
+
+    }
+    else{
+      if (prediction_table[i] == obj){
+        last_find_index = i;
+        matches++;
+        return true;
+      }
+    }
+  }
+
+  last_find_index = -1;
+  misses++;
+  return false;
+}
+
+
 bool
 PPred::Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
   Entry obj = Entry(pc, history);

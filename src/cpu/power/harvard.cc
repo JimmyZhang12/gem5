@@ -67,8 +67,7 @@ Harvard::Harvard(const Params *params):
     // table.resize(params->table_size, (params->signature_length - events_to_drop), 3,
     //               params->bloom_filter_size);
 
-    table.resize(params->table_size, (params->signature_length - events_to_drop));
-
+    // table.resize(params->table_size, (params->signature_length - events_to_drop));
     history.resize(params->signature_length);
   
     throttle_on_restore = params->throttle_on_restore;
@@ -86,13 +85,13 @@ void
 Harvard::tick(void){
 
   table.tick();
+  
   bool ve = false;
   bool prediction = false;
 
   // if (hr_updated) {
   if (cycles_since_pred > throttle_duration) {
     PPred::Entry snapshot = history.get_entry_drop_back(events_to_drop);
-    // PPred::Entry snapshot = history.get_entry();
     if (table.find(snapshot, hamming_distance)){
       prediction = true;
       total_pred_action++;
@@ -112,27 +111,29 @@ Harvard::tick(void){
 
   if (supply_voltage < emergency && supply_voltage_prev > emergency) {
     ve = true;
-    if (cycles_since_pred>LEAD_TIME_CAP || cycles_since_pred<LEAD_TIME_MIN){
-      PPred::Entry snapshot = history.get_entry_drop_front(events_to_drop);
-      // PPred::Entry snapshot = history.get_entry();
-      int index = table.insert(snapshot);
+  }
+  update_stats(prediction, ve);
 
-      DPRINTF(HarvardPowerPred, "VE MISSED:  row=%4d: %s\n", index, table[index].to_str().c_str());
-      DPRINTF(HarvardPowerPred, "   cycles since pred: %d\n", cycles_since_pred);
-      DPRINTF(HarvardPowerPred, "     HistoryRegister: %s\n", history.to_str().c_str());
-      DPRINTF(HarvardPowerPred, "            snapshot: %s\n", snapshot.to_str().c_str());
+  if (ve){
+    if(is_ve_missed()){
+      if (cycles_since_pred>LEAD_TIME_CAP || cycles_since_pred<LEAD_TIME_MIN){
+        PPred::Entry snapshot = history.get_entry_drop_front(events_to_drop);
+        // PPred::Entry snapshot = history.get_entry();
+        int index = table.insert(snapshot);
+
+        DPRINTF(HarvardPowerPred, "VE MISSED:  row=%4d: %s\n", index, table[index].to_str().c_str());
+        DPRINTF(HarvardPowerPred, "   cycles since pred: %d\n", cycles_since_pred);
+        DPRINTF(HarvardPowerPred, "     HistoryRegister: %s\n", history.to_str().c_str());
+        DPRINTF(HarvardPowerPred, "            snapshot: %s\n", snapshot.to_str().c_str());
+      }
     }
     else{
       DPRINTF(HarvardPowerPred, "VE CAUGHT: pred %d cycles ago\n", cycles_since_pred);
     }
   }
 
-  update_stats(prediction, ve);
   cycles_since_pred++;
-
-  //do we need this?
-  clkRestore();
-  unsetStall();
+  history.tick();
 
   return;
 }

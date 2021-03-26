@@ -270,90 +270,89 @@ for i in range(np):
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     threshold=options.power_pred_voltage_threshold,
-                    emergency=options.power_pred_voltage_emergency)
+                    emergency=options.power_pred_voltage_emergency
+                )
 
         elif options.power_pred_type == "IdealSensor":
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    period=options.power_profile_interval,
                     cycle_period=options.power_pred_cpu_cycles,
-                    cpu_id=i,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    emergency_duration=100,
-                    action_length=options.power_pred_actions,
+                    emergency = 1.33,
+                    lead_time_max=50,
+                    lead_time_min=0,
                     # Specific
-                    throttle_on_restore=False,
-                    threshold=options.power_pred_voltage_threshold,
-                    hysteresis=0.005,
-                    duration=8)
+                    threshold = 1.34,
+                    voltage_max = 1.4,
+                    voltage_min = 1.3,
+                    num_buckets = 50,
+                    history_len = 500,
+                 )
         elif options.power_pred_type == "HarvardPowerPredictor":
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
                     emergency_duration=100,
                     signature_length=64,
+                    lead_time_max=50,
+                    lead_time_min=0,
+                    # Specific
+                    throttle_on_restore=False,
+                    table_size=500,
+                    bloom_filter_size=10000,
+                    hysteresis=0.005,
+                    events_to_drop=3,
+                    hamming_distance=0
+                )
+        elif options.power_pred_type == "HarvardPowerPredictorMitigation":
+            system.cpu[i].powerPred = \
+                powerPredClass(
+                    # Base
+                    cycle_period=options.power_pred_cpu_cycles,
+                    clk = options.power_pred_cpu_freq,
+                    voltage_set=options.power_pred_voltage,
+                    emergency=options.power_pred_voltage_emergency,
+                    emergency_duration=100,
+                    signature_length=64,
+                    lead_time_max=50,
+                    lead_time_min=0,
                     # Specific
                     throttle_on_restore=False,
                     table_size=3000,
                     bloom_filter_size=10000,
                     hysteresis=0.005,
-                    throttle_duration=40,
-                    lead_time_max=50,
-                    lead_time_min=0,
-                    events_to_drop=0,
-                    hamming_distance=1)
-        elif options.power_pred_type == "HarvardPowerPredictorMitigation":
+                    throttle_duration=45,
+                )
+        elif options.power_pred_type == "IdealSensorHarvardMitigation":
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
                     cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
+                    emergency = 1.33,
                     emergency_duration=100,
                     signature_length=64,
+                    lead_time_max=50,
+                    lead_time_min=0,
                     # Specific
                     throttle_on_restore=False,
-                    table_size=1000,
+                    table_size=3000,
                     bloom_filter_size=10000,
                     hysteresis=0.005,
                     throttle_duration=45,
-                    lead_time_max=50,
-                    lead_time_min=0,
-                    events_to_drop=0,
-                    hamming_distance=0)
-        elif options.power_pred_type == "DepAnalysis":
-            system.cpu[i].powerPred = \
-                powerPredClass(
-                    # Base
-                    period=options.power_profile_interval,
-                    cpu_id=i,
-                    cycle_period=options.power_pred_cpu_cycles,
-                    clk = options.power_pred_cpu_freq,
-                    voltage_set=options.power_pred_voltage,
-                    emergency=options.power_pred_voltage_emergency,
-                    emergency_duration=100,
-                    # Specific
-                    throttle_on_restore=False,
-                    threshold = 4,
-                    duration=8)
+                    threshold = 1.34
+                )
 
         system.cpu[i].powerPred.clk_domain = system.cpu_clk_domain[i]
         # Give core a reference to the global stat dump

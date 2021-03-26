@@ -17,8 +17,24 @@
  * Default Constructor
  */
 PPred::HistoryRegister::HistoryRegister(size_t len) {
-  this->signature.resize(len, BRANCH_T);
+  this->signature.resize(len, DUMMY_EVENT);
+  this->pc_history.resize(len, 0);
+  this->entry_head_time.resize(len, 0);
 }
+
+void 
+PPred::HistoryRegister::resize(size_t len) {
+  this->signature.resize(len, DUMMY_EVENT);
+  this->pc_history.resize(len, 0);
+  this->entry_head_time.resize(len, 0);
+}
+
+
+void
+PPred::HistoryRegister::tick() {
+  entry_head_time[0]++;
+}
+
 
 /**
  * Convert the History Register to an Event type
@@ -78,6 +94,8 @@ void PPred::HistoryRegister::add_event(PPred::event_t event) {
   signature.pop_back();
   pc_history.push_front(pc);
   pc_history.pop_back();
+  entry_head_time.push_front(0);
+  entry_head_time.pop_back();
 }
 
 
@@ -97,5 +115,14 @@ PPred::HistoryRegister::to_str(){
   for (int i=0; i<signature.size(); i++){
     ret += (event_t_name[signature[i]] + ", ");
   }
+
+  ret += "\n                                    cycles at head of history: ";
+  for (int i=0; i<entry_head_time.size(); i++){
+    ret += (std::to_string(entry_head_time[i]) + ",  ");
+  }  
   return ret;
-};
+}
+
+
+
+

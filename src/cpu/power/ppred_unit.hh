@@ -43,8 +43,8 @@
 #define __CPU_POWER_PPRED_UNIT_HH__
 
 #include <deque>
-#include <list>
 #include <string>
+#include <queue>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -84,64 +84,21 @@ class PPredUnit : public ClockedObject
      */
     virtual void tick(void) = 0;
 
-    /**
-     * Old Throttleing interface
-     */
-    void clkThrottle();
-
-    void clkRestore();
-
-    void Clk_Throttle();
-
-    /**
-     * Take an action from the LUT
-     * Not nescescarily a Throttle Action
-     */
-    void takeAction(size_t idx = 0);
-
-    void setStall();
-
-    void unsetStall();
-
     void historyInsert(const PPred::event_t event);
 
     void historySetPC(const uint64_t pc);
 
-    bool get_stall() const {
-      return stall;
-    }
-
-    int get_cycle_period() const {
-      return cycle_period;
-    }
-
-    /**
-     * setNumInstrsPending
-     * Used by the IEW or IQ to set the number of instructions that can be
-     * executed.
-     */
-    void setNumInstrsPending(const uint64_t inst);
-
-    /**
-     * setCPUStalled
-     * Set by the CPU if it is stalled.
-     */
-    void setCPUStalled(const bool stalled);
 
     /**
     * Update the various stats
     */
     void update_stats(bool pred, bool ve);
 
+    bool is_ve_missed();
+
     PPredStat* ppred_stat;
 
-  protected:
-    Stats::Scalar stat_freq;
-    Stats::Scalar stat_ticks;
-    Stats::Scalar stat_ttn;
-    Stats::Scalar stat_stall;
-    Stats::Scalar stat_insts_available;
-    Stats::Scalar stat_decode_idle;
+  protected:    
     //analog stats
     Stats::Scalar sv;
     Stats::Scalar sv_p;
@@ -165,16 +122,10 @@ class PPredUnit : public ClockedObject
     double supply_current;
     double supply_voltage_prev;
 
-
     // Number of Pending Instructions
     uint64_t pendingInstructions;
 
-    // Is Stalled
-    bool cpuStalled;
 
-    uint64_t PC;
-
-    int id;
     PPred::HistoryRegister history;
     bool hr_updated;
 
@@ -182,13 +133,9 @@ class PPredUnit : public ClockedObject
 
     //initialization list params
     SrcClockDomain* sysClkDomain;
-    const double min_current;
-    const double max_current;
     const int cycle_period;
     const double emergency;
     const double emergency_duration;
-    const int period;
-    const double delta;
     const bool emergency_throttle;
     const double voltage_set;
     const double clk;
@@ -208,7 +155,9 @@ class PPredUnit : public ClockedObject
     int total_action;
     int cycles_since_pred;
     int cycles_since_ve;
-    std::list<bool> action;
+    std::deque<bool> action; //TODO jimmy make queue
+    std::deque<bool> ve_history; //TODO jimmy make queue
+    bool ve_missed;
 
     /**
      * Rescale from range [a0, a1] -> [b0, b1]

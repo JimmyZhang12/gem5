@@ -38,20 +38,13 @@ class PowerPredictor(ClockedObject):
     cxx_header = "cpu/power/ppred_unit.hh"
     abstract = True
 
-    min_current = Param.Unsigned(0, "Minimum Current Supply (Amps) of the PSU")
-    max_current = Param.Unsigned(40, "Maximum Current Supply (Amps) of the PSU")
-
     sys_clk_domain = Param.SrcClockDomain(Parent.clk_domain, "Clk domain in which the handler is instantiated")
-
-    period = Param.Unsigned(100, "Number of sim-cycles")
     cycle_period = Param.Unsigned(1, "Clock Cycle Resolution")
-    delta = Param.Float(0.75, "Rate at which to train")
-    emergency = Param.Float(0.95, "% Voltage considered a supply emergency")
+    emergency = Param.Float(0, "Voltage considered a supply emergency")
     emergency_duration = Param.Unsigned(250, "Number of cycles to do a DECOR Rollback")
     clk = Param.Float(3.5e9, "Default Clock Freq")
     emergency_throttle = Param.Bool(True, "Throttle on emergency")
     voltage_set = Param.Float(True, "Voltage Set")
-    cpu_id = Param.Unsigned(0, "Cpu ID")
     signature_length = Param.Unsigned(256,"Length of History Snapshot")
     action_length = Param.Unsigned(2,"Number of Throttle Actions")
     lead_time_max = Param.Unsigned(40,"predictions must be this many cycles or less before emergencies to count")
@@ -62,13 +55,9 @@ class Test(PowerPredictor):
     type = 'Test'
     cxx_class = 'Test'
     cxx_header = 'cpu/power/test.hh'
-    threshold = Param.Float(0.975, "For evaluation purposes")
+    threshold = Param.Float(0, "threshold to predict")
 
 
-## Harvard Power Predictor
-#
-# This predictor is a reconstruction of the Power Predictor from:
-#
 # https://ieeexplore.ieee.org/document/4798233
 class HarvardPowerPredictor(PowerPredictor):
     type = "HarvardPowerPredictor"
@@ -93,8 +82,30 @@ class HarvardPowerPredictorMitigation(PowerPredictor):
         "to stop emergency throttle")
     throttle_duration = Param.Unsigned(50, "The number of cycles to throttle for")
     throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
-    events_to_drop = Param.Unsigned(0, "Events to drop at front of signature to increase lead time")
-    hamming_distance = Param.Unsigned(0, "Allow approximate table matches less than specified hamming distance")
+
+class IdealSensor(PowerPredictor):
+    type = "IdealSensor"
+    cxx_class = "IdealSensor"
+    cxx_header = "cpu/power/ideal_sensor.hh"
+    
+    threshold = Param.Float(0, "threshold to mitigate")
+    voltage_max = Param.Float(0, "bucket max voltage")
+    voltage_min = Param.Float(0, "bucket min voltage")
+    num_buckets = Param.Float(0, "how many buckets")
+    history_len = Param.Unsigned(64, "voltage history len")
+
+class IdealSensorHarvardMitigation(PowerPredictor):
+    type = "IdealSensorHarvardMitigation"
+    cxx_class = "IdealSensorHarvardMitigation"
+    cxx_header = "cpu/power/IdealSensorHarvardMitigation.hh"
+    table_size = Param.Unsigned(128, "Size of UArch Event Table")
+    bloom_filter_size = Param.Unsigned(2048, "Size of Bloom Filter")
+    hysteresis = Param.Float(0.01, "The Percentage of Supply Voltage " \
+        "to stop emergency throttle")
+    throttle_duration = Param.Unsigned(50, "The number of cycles to throttle for")
+    throttle_on_restore = Param.Bool(False, "Throttle on the Restore")
+    threshold = Param.Float(0, "threshold to mitigate")
+
 
 class PPredStat(ClockedObject):
     type = "PPredStat"

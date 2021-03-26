@@ -40,11 +40,10 @@
  * Authors: Andrew Smith
  */
 
-#include "cpu/power/ppred_unit.hh"
 
 #include <algorithm>
-#include <list>
 
+#include "cpu/power/ppred_unit.hh"
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
@@ -56,13 +55,9 @@
 
 PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     sysClkDomain(params->sys_clk_domain),
-    min_current((double)params->min_current),
-    max_current((double)params->max_current),
     cycle_period(params->cycle_period),
     emergency(params->emergency),
     emergency_duration(params->emergency_duration),
-    period(params->period),
-    delta(params->delta),
     emergency_throttle(params->emergency_throttle),
     voltage_set(params->voltage_set),
     clk(params->clk),
@@ -76,23 +71,22 @@ PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     period_normal = this->clockPeriod();
     period_half = this->clockPeriod()*2;
 
-    stall = false;
-    this->id = params->cpu_id;
-    
+    history.resize(params->signature_length);
+    hr_updated = false;
+      
     // vpi_shm::set_voltage_set(voltage_set, id);
     // vpi_shm::set_core_freq(clk, id);
 
-    history.resize(params->signature_length);
-    hr_updated = false;
-    clk_vals.resize(params->action_length);
-    period_vals.resize(params->action_length);
-    for (size_t i = 0; i < clk_vals.size(); i++) {
-        clk_vals[i] = rescale(((double)i/(double)params->action_length), \
-            0.0, 1.0, clk, clk_half);
-        period_vals[i] = (Tick)(int)rescale(((double)i/ \
-            (double)params->action_length),
-            0.0, 1.0, period_normal, period_half);
-    }
+
+    // clk_vals.resize(params->action_length);
+    // period_vals.resize(params->action_length);
+    // for (size_t i = 0; i < clk_vals.size(); i++) {
+    //     clk_vals[i] = rescale(((double)i/(double)params->action_length), 
+    //         0.0, 1.0, clk, clk_half);
+    //     period_vals[i] = (Tick)(int)rescale(((double)i/ 
+    //         (double)params->action_length),
+    //         0.0, 1.0, period_normal, period_half);
+    // }
 
     /*****Stats stuff*******/
     total_action = 0;
@@ -100,12 +94,8 @@ PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     cycles_since_pred = 0;
     cycles_since_ve = 0;
 
-    action.resize(LEAD_TIME_CAP);
-    for (auto &x:action){
-         x= false;
-    }
-
-  
+    action.resize(LEAD_TIME_CAP+1, false);
+    ve_history.resize(LEAD_TIME_CAP+1, false);  
 }
 
 void
@@ -115,30 +105,6 @@ PPredUnit::regStats()
 
     SimObject::regStats();
 
-    stat_freq
-        .name(name() + ".frequency")
-        .desc("Frequency set by Power Predictor")
-        ;
-    stat_ticks
-        .name(name() + ".ticks")
-        .desc("Num Ticks")
-        ;
-    stat_ttn
-        .name(name() + ".ttn")
-        .desc("Time to next tick in (ps)")
-        ;
-    stat_stall
-        .name(name() + ".stall")
-        .desc("PPred Issue a stall?")
-        ;
-    stat_decode_idle
-        .name(name() + ".decode_idle")
-        .desc("Decode Idle")
-        ;
-    stat_insts_available
-        .name(name() + ".insts_available")
-        .desc("Instructions Available")
-        ;
     sv
         .name(name() + ".supply_voltage")
         .desc("Supply Voltage")
@@ -155,14 +121,14 @@ PPredUnit::regStats()
         .precision(6)
         ;
     hits
-        .init(LEAD_TIME_CAP)
+        .init(LEAD_TIME_CAP+1)
         .name(name() + ".hit_rate")
         .desc("Noncumulative num hits per lead time")
         .precision(3)
         .flags(total)
         ;
     false_pos
-        .init(LEAD_TIME_CAP)
+        .init(LEAD_TIME_CAP+1)
         .name(name() + ".false_pos_rate")
         .desc("Noncumulative num false positives per lead time")
         .precision(3)
@@ -231,51 +197,6 @@ PPredUnit::regStats()
 
 }
 
-void
-PPredUnit::clkThrottle()
-{
-    // Set the CPU Clock Object to Half Freq
-    sysClkDomain->clockPeriod(period_half);
-    stat_freq = clk_half;
-}
-
-void
-PPredUnit::clkRestore()
-{
-    // Set the CPU Clock Object to Normal
-    sysClkDomain->clockPeriod(period_normal);
-    stat_freq = clk;
-}
-
-
-
-void
-PPredUnit::takeAction(size_t idx) {
-    // Set the CPU Clock Object to Normal
-    sysClkDomain->clockPeriod(period_vals[idx]);
-    stat_freq = clk_vals[idx];
-}
-
-double
-PPredUnit::rescale(double i, double a0, double a1, double b0, double b1) {
-  double d0 = a1 - a0;
-  double d1 = b1 - b0;
-  return (d1*(i-a0)/d0)+b0;
-}
-
-void
-PPredUnit::setStall()
-{
-    stall = true;
-    stat_stall = false;
-}
-
-void
-PPredUnit::unsetStall()
-{
-    stall = false;
-    stat_stall = false;
-}
 
 void
 PPredUnit::historyInsert(const PPred::event_t event) {
@@ -289,68 +210,53 @@ PPredUnit::historySetPC(const uint64_t pc) {
   history.set_pc(pc);
 }
 
-void
-PPredUnit::setNumInstrsPending(const uint64_t inst) {
-  pendingInstructions = inst;
-  stat_insts_available = pendingInstructions;
-}
-
-void
-PPredUnit::setCPUStalled(const bool stalled) {
-  cpuStalled = stalled;
-  stat_decode_idle = cpuStalled;
-}
 
 void
 PPredUnit::update_stats(bool pred, bool ve){
     action.push_front(pred);
     action.pop_back();
+    ve_history.push_front(ve);
+    ve_history.pop_back();
 
     if (pred){
-        DPRINTF(PowerPred, "Prediction High\n");
-
         total_action++;
         _total_action = total_action;
-
-        cycles_since_pred = 0;
     }
-    else{
-        cycles_since_pred++;
-    }
-
+ 
     if (ve){
-
         total_ve++;
         _total_ve = total_ve;
-
         cycles_since_ve = 0;
-        if (cycles_since_pred >= LEAD_TIME_CAP){
+
+        cycles_since_pred = LEAD_TIME_CAP + 10;
+        for (int i=LEAD_TIME_CAP; i>=0; i--){
+            if (action[i]){
+                cycles_since_pred = i;
+                break;
+            }
+        }
+        if (cycles_since_pred > LEAD_TIME_CAP || cycles_since_pred < LEAD_TIME_MIN){
             ves_outside_leadtime++;
-            DPRINTF(PowerPred, "Emergency High, MISSED\n");
+            ve_missed = true;
         }
         else{
-            hits[cycles_since_pred] += 1;
-            if(cycles_since_pred < LEAD_TIME_MIN){
-                ves_outside_leadtime++;
-            }
-            DPRINTF(PowerPred, "Emergency High, caught with prediction %d cycles ago\n", cycles_since_pred);
+            ve_missed = false;
         }
+        if (cycles_since_pred <= LEAD_TIME_CAP){
+            hits[cycles_since_pred] += 1;
+        }
+   
     }
     else{
         cycles_since_ve++;
     }
 
     if (action.back()){
-        if (cycles_since_ve >= LEAD_TIME_CAP){
+        if (cycles_since_ve <= LEAD_TIME_CAP)
+            false_pos[LEAD_TIME_CAP-cycles_since_ve] += 1;   
+        else
             preds_outside_leadtime++;
-            DPRINTF(PowerPred, "Prediction at end of action buffer, MISSED\n");
-        }
-        else{
-            false_pos[LEAD_TIME_CAP-cycles_since_ve-1] += 1;
-            DPRINTF(PowerPred, 
-                "Prediction at end of action buffer, caught with VE %d cycles ago\n",
-                 (LEAD_TIME_CAP-cycles_since_ve-1));
-        }
+        
     }
 
     //stats
@@ -377,6 +283,10 @@ PPredUnit::update_stats(bool pred, bool ve){
     sv = supply_voltage;
     sv_p = supply_voltage_prev;
     sc = supply_current;
-
-
 }
+
+bool
+PPredUnit::is_ve_missed(){
+    return ve_missed;
+}
+

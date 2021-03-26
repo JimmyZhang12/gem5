@@ -40,77 +40,79 @@
  * Authors: Andrew Smith
  */
 
+#ifndef __CPU_POWER_HARVARD_HH__
+#define __CPU_POWER_HARVARD_HH__
+
+#include <string>
+#include <vector>
+
+#include "base/statistics.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/power/history_register.hh"
+#include "cpu/power/ppred_unit.hh"
 #include "cpu/power/prediction_table.hh"
+#include "cpu/static_inst.hh"
+#include "params/IdealSensorHarvardMitigation.hh"
+#include "sim/probe/pmu.hh"
+#include "sim/sim_object.hh"
 
-#include "arch/isa_traits.hh"
-#include "arch/types.hh"
-#include "arch/utility.hh"
-#include "base/trace.hh"
-#include "config/the_isa.hh"
-#include "debug/PredictionTable.hh"
-#include "python/pybind11/vpi_shm.h"
-#include "sim/stat_control.hh"
+class IdealSensorHarvardMitigation : public PPredUnit
+{
+  public:
+    typedef IdealSensorHarvardMitigationParams Params;
 
-PPred::Entry::Entry(int size) {
-  anchor_pc = 0;
-  history.resize(size, DUMMY_EVENT);
-  last_updated = 0;
-  access_count = 0;
-  delay = 0;
-}
+    /**
+     * @param params The params object, that has the size of the BP and BTB.
+     */
+    IdealSensorHarvardMitigation(const Params *p);
 
-PPred::Entry::Entry(uint64_t anchor_pc, std::vector<PPred::event_t> history) {
-  this->anchor_pc = anchor_pc;
-  this->history = history;
-  last_updated = 0;
-  access_count = 0;
-  delay = 0;
-}
+    /**
+     * Registers statistics.
+     */
+    void regStats() override;
 
-bool
-PPred::Entry::operator==(const PPred::Entry& obj) {
-  return this->anchor_pc == obj.anchor_pc && this->history == obj.history;
-}
+    /**
+     * Update the Harvard State Machine.
+     */
+    void tick(void);
 
-bool
-PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
-  return this->anchor_pc == pc && this->history == history;
-}
+  protected:
+    /** Hysteresis level */
+    double hysteresis;
 
-bool
-PPred::Entry::equals(const PPred::Entry& entry, int hamming_distance){
-  if (this->history.size() != entry.get_history_size())
-    return false;
-  
-  int diffs = 0;
-  for (int i=0; i<this->history.size(); i++){
-    if (this->history[i] !=  entry.get_history_element(i))
-      diffs+=1;
-  }
+    /** # Cycles to throttle */
 
-  if (diffs > hamming_distance)
-    return false;
-  else
-    return true;
-}
+    /** Throttle after DeCoR rollback */
+    bool throttle_on_restore;
+    int cycles_since_pred;
+    const unsigned int throttle_duration;
+    float threshold;
 
 
 
-void
-PPred::Entry::update(uint64_t pc, std::vector<PPred::event_t> history) {
-  this->anchor_pc = pc;
-  this->history = history;
-  last_updated = 0;
-  access_count = 0;
-}
+  private:
+    enum state_t {
+      NORMAL=1,
+      THROTTLE,
+      EMERGENCY
+    };
 
-std::string
-PPred::Entry::to_str() {
-  std::string ret;
+    // PPred::TableBloom table;
+    PPred::Table table;
 
-  // std::cout << anchor_pc << "," << last_updated << "," << access_count;
-  ret += (std::to_string(anchor_pc) + ": ");
-  for (auto i : history) 
-    ret += (event_t_name[i] + ", ");
-  return ret;
-}
+    std::vector<int> prediction_delay;
+    // Counter for # Cycles to delay
+    unsigned int e_count;
+    unsigned int t_count;
+
+    // Permanant Stats:
+    // Num Voltage Emergencies
+    uint64_t num_ve;
+    uint64_t total_misspred;
+    uint64_t total_preds;
+    uint64_t total_pred_action;
+    uint64_t total_pred_inaction;
+};
+
+#endif // __CPU_PRED_HARVARD_HH__

@@ -43,7 +43,6 @@
 #ifndef __CPU_POWER_HARVARD_HH__
 #define __CPU_POWER_HARVARD_HH__
 
-#include <deque>
 #include <string>
 #include <vector>
 
@@ -90,8 +89,7 @@ class Harvard_Mitigation : public PPredUnit
     int cycles_since_pred;
 
     const unsigned int throttle_duration;
-    const int events_to_drop;
-    const int hamming_distance;
+
 
   private:
     enum state_t {
@@ -101,8 +99,9 @@ class Harvard_Mitigation : public PPredUnit
     };
 
     // PPred::TableBloom table;
-    PPred::Infinite_Table table;
+    PPred::Table table;
 
+    std::vector<int> prediction_delay;
     // Counter for # Cycles to delay
     unsigned int e_count;
     unsigned int t_count;

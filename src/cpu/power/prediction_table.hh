@@ -63,7 +63,6 @@ class Entry {
 private:
   // Event History
   uint64_t anchor_pc;
-  std::vector<event_t> history;
 
   // Stat Member Variables
   uint64_t last_updated;
@@ -77,6 +76,10 @@ public:
    */
   Entry(int size = 1);
   Entry(uint64_t anchor_pc, std::vector<event_t> history);
+
+  std::vector<event_t> history;
+  uint64_t delay;
+
 
   /**
    * Checks if the entry matches an event/anchor_pc pair
@@ -159,6 +162,7 @@ public:
    * @param history The event history register
    * @return boolean return true if the event is in the table
    */
+  bool find_variable_signature_len(const PPred::Entry& obj);
   bool find(uint64_t pc, std::vector<event_t> history);
   bool find(const Entry& obj, int hamming_distance);
   bool find(const Entry& obj);
