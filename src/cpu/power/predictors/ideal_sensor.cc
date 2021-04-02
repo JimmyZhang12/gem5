@@ -41,79 +41,70 @@
  */
 
 
-#include "cpu/power/test.hh"
-
-#include <algorithm>
-#include <cassert>
-#include <cstdlib>
+#include "cpu/power/predictors/ideal_sensor.hh"
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "debug/TestPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
+#include "debug/IdealSensor.hh"
 
-Test::Test(const Params *params)
-    : PPredUnit(params)
+
+IdealSensor::IdealSensor(const Params *params): 
+  PPredUnit(params),
+  threshold(params->threshold),
+  voltage_min(params->voltage_min),
+  voltage_max(params->voltage_max),
+  num_buckets(params->num_buckets)
 {
-    DPRINTF(TestPowerPred, "Test::Test()\n");
-    threshold = params->threshold;
-    num_ve = 0;
-    num_threshold = 0;
-    ve = false;
-    th = false;
+  bucket_len = (voltage_max - voltage_min) / num_buckets;
+  voltage_history.resize(params->history_len);
 }
 
 void
-Test::regStats()
-{
+IdealSensor::regStats(){
     PPredUnit::regStats();
-    nve
-        .name(name() + ".num_ve")
-        .desc("Num Voltage Emergencies")
-        ;
-    nth
-        .name(name() + ".num_tc")
-        .desc("Num Threshold Crossings")
-        ;
+}
+
+int
+IdealSensor::voltage_to_bucket(float voltage){
+  return (int) ((voltage - voltage_min) / bucket_len);
 }
 
 void
-Test::tick(void)
-{
-  DPRINTF(TestPowerPred, "Test::lookup()\n");
-  update_stats(false,false);
-  if (supply_voltage >= emergency) {
-    ve = false;
-  }
-  if (supply_voltage >= threshold) {
-    th = false;
-  }
-  if (supply_voltage < emergency) {
-    if (!ve) {
-      num_ve++;
-    }
+IdealSensor::tick(void){
+  bool ve = false;
+  bool prediction = false;
+  // voltage_history.push_front(voltage_to_bucket(supply_voltage));
+  // voltage_history.pop_back();
+
+  // set_vhistory::const_iterator got = voltage_history_table.find(voltage_history);
+
+  // if (got != voltage_history_table.end()){
+  //   prediction = true; 
+  // }
+
+  if (supply_voltage < threshold && supply_voltage_prev > threshold){
+    prediction = true; 
+  } 
+
+  if (supply_voltage < emergency && supply_voltage_prev > emergency){
     ve = true;
-  }
-  if (supply_voltage < threshold) {
-    if (!th) {
-      num_threshold++;
-    }
-    th = true;
-  }
+  } z
+  update_stats(prediction, ve);
 
-  // Assign Permanant stats:
-  nve = num_ve;
-  nth = num_threshold;
-  return;
+  // if (is_ve_missed()){
+  //   voltage_history_table.insert(voltage_history);
+  // }
+
 }
 
-Test*
-TestParams::create()
-{
-  return new Test(this);
+IdealSensor*
+IdealSensorParams::create(){
+  return new IdealSensor(this);
 }
+
 

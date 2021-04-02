@@ -40,7 +40,7 @@
  * Authors: Andrew Smith
  */
 
-#include "cpu/power/prediction_table.hh"
+#include "cpu/power/predictors/prediction_table.hh"
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
@@ -51,66 +51,66 @@
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
+PPred::Entry::Entry(int size) {
+  anchor_pc = 0;
+  history.resize(size, DUMMY_EVENT);
+  last_updated = 0;
+  access_count = 0;
+  delay = 0;
+}
 
-PPred::Infinite_Table::Infinite_Table() {}
-
-bool
-PPred::Infinite_Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
-  Entry obj = Entry(pc, history);
-  return (this->find(obj));
+PPred::Entry::Entry(uint64_t anchor_pc, std::vector<PPred::event_t> history) {
+  this->anchor_pc = anchor_pc;
+  this->history = history;
+  last_updated = 0;
+  access_count = 0;
+  delay = 0;
 }
 
 bool
-PPred::Infinite_Table::find(const PPred::Entry& obj) {
-  for (int i=0; i<prediction_table.size(); i++){
-    if (prediction_table[i] == obj){
-      last_find_index = i;
-      matches++;
-      return true;
-    }
-  }  
-  last_find_index = -1;
-  misses++;
-  return false;
+PPred::Entry::operator==(const PPred::Entry& obj) {
+  return this->anchor_pc == obj.anchor_pc && this->history == obj.history;
 }
 
 bool
-PPred::Infinite_Table::find(const PPred::Entry& obj, int hamming_distance) {
-  for (int i=0; i<prediction_table.size(); i++){
-    if (prediction_table[i].equals(obj, hamming_distance)){
-      last_find_index = i;
-      matches++;
-      return true;
-    }
-  }  
-  last_find_index = -1;
-  misses++;
-  return false;
+PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
+  return this->anchor_pc == pc && this->history == history;
 }
 
-
-int
-PPred::Infinite_Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {
-  PPred::Entry obj = Entry(pc, history);
-  return (this->insert(obj));
-}
-
-int
-PPred::Infinite_Table::insert(const Entry& obj) {
-  insertions++;
-  if (this->find(obj)){
-    prediction_table[last_find_index] = obj;  
-    return last_find_index; 
+bool
+PPred::Entry::equals(const PPred::Entry& entry, int hamming_distance){
+  if (this->history.size() != entry.get_history_size())
+    return false;
+  
+  int diffs = 0;
+  for (int i=0; i<this->history.size(); i++){
+    if (this->history[i] !=  entry.get_history_element(i))
+      diffs+=1;
   }
-  prediction_table.push_back(obj);
-  return prediction_table.size()-1;
 
+  if (diffs > hamming_distance)
+    return false;
+  else
+    return true;
 }
+
+
 
 void
-PPred::Infinite_Table::tick(void) {
-  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {
-    it->tick();
-  }
+PPred::Entry::update(uint64_t pc, std::vector<PPred::event_t> history) {
+  this->anchor_pc = pc;
+  this->history = history;
+  last_updated = 0;
+  access_count = 0;
 }
 
+std::string
+PPred::Entry::to_str() {
+  std::string ret;
+
+  // std::cout << anchor_pc << "," << last_updated << "," << access_count;
+  ret += (std::to_string(anchor_pc) + ": ");
+  for (auto i : history) 
+    ret += (event_t_name[i] + ", ");
+  return ret;
+}

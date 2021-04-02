@@ -468,8 +468,10 @@ def addSEOptions(parser):
                       default=10000, help="Interval for dumping stats in "
                       "sim cycles before profiling")
 
-    parser.add_option("--power_pred_cpu_cycles", type="int", default=1,
-                      help="How many cpu cycles to dump after")
+    parser.add_option("--power_pred_cycles_per_dump", type="int", default=1,
+                      help="cycles to simulate per stat dump")
+    parser.add_option("--power_pred_num_dumps", type="int", default=1,
+                    help="how many stat dumps to do")
     parser.add_option("--power_pred_cpu_freq", type="float", default=2.5e9,
                       help="Cpu frequency in Hz")
     parser.add_option("--power_pred_voltage", type="float", default=1.0,
@@ -478,36 +480,16 @@ def addSEOptions(parser):
                       default=0.90, help="Supply Voltage Emergency")
     parser.add_option("--power_pred_voltage_threshold", type="float",
                       default=0.95, help="Supply Voltage Threshold")
-
     parser.add_option("--power_pred_type", type="str",
                       default="TestPowerPredictor",
                       help="Power Predictor Type")
-    parser.add_option("--power_pred_table_size", type="int",
-                      default=1024,
-                      help="Power Predictor Table Size")
-    parser.add_option("--power_pred_pc_start", type="int",
-                      default=6,
-                      help="Power Predictor PC Start Addr")
-    parser.add_option("--power_pred_history_size", type="int",
-                      default=1,
-                      help="Number of PCs to concat")
-    parser.add_option("--power_pred_train_name", type="str",
-                      default="training.csv",
-                      help="File Name and Path for Gen Training Data")
-    parser.add_option("--power_pred_model", type="str",
-                      default="model.txt",
-                      help="File Name and Path to trained boost DNN/Perceptron"
-                      " Model")
-    parser.add_option("--power_pred_actions", type="int",
-                      default=2,
-                      help="Number of actions to take")
-    parser.add_option("--power_pred_events", type="int",
-                      default=16,
-                      help="Number of events to use in Perceptron/DNN")
-
+                      
     parser.add_option("--mcpat_output_path", type="str",
                       default="",
                       help="mcpat output write path")
+    parser.add_option("--gem5_output_path", type="str",
+                      default="",
+                      help="gem5_output write path")
     parser.add_option("--pdn_ind", type="float",
                       default=0,
                       help="pdn inductance, in units henrys")
@@ -517,10 +499,6 @@ def addSEOptions(parser):
     parser.add_option("--pdn_cap", type="float",
                       default=0,
                       help="pdn inductance, in units farads")
-
-    parser.add_option("--power_pred_lead_time", type="int",
-                      default=40,
-                      help="Lead time for stats calculation")
 
     parser.add_option("--debug_print_delay", type="int",
                       default=0,
@@ -533,6 +511,10 @@ def addSEOptions(parser):
     parser.add_option("--run_verilog_power_sim", type="int",
                     default=0,
                     help="also run the verilog sim alongside gem5/mcpat")
+
+    parser.add_option("--save_data", type="int",
+                    default=0,
+                    help="write runtime power stats to gem5 output file")
 
 
 def addFSOptions(parser):

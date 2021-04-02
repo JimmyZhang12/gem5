@@ -40,71 +40,79 @@
  * Authors: Andrew Smith
  */
 
+#ifndef __CPU_POWER_HARVARD_HH__
+#define __CPU_POWER_HARVARD_HH__
 
-#include "cpu/power/ideal_sensor.hh"
+#include <string>
+#include <vector>
 
-#include "arch/isa_traits.hh"
-#include "arch/types.hh"
-#include "arch/utility.hh"
-#include "base/trace.hh"
-#include "config/the_isa.hh"
-#include "python/pybind11/vpi_shm.h"
-#include "sim/stat_control.hh"
-#include "debug/IdealSensor.hh"
+#include "base/statistics.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/power/predictors/history_register.hh"
+#include "cpu/power/ppred_unit.hh"
+#include "cpu/power/predictors/prediction_table.hh"
+#include "cpu/static_inst.hh"
+#include "params/IdealSensorHarvardMitigation.hh"
+#include "sim/probe/pmu.hh"
+#include "sim/sim_object.hh"
 
-
-IdealSensor::IdealSensor(const Params *params): 
-  PPredUnit(params),
-  threshold(params->threshold),
-  voltage_min(params->voltage_min),
-  voltage_max(params->voltage_max),
-  num_buckets(params->num_buckets)
+class IdealSensorHarvardMitigation : public PPredUnit
 {
-  bucket_len = (voltage_max - voltage_min) / num_buckets;
-  voltage_history.resize(params->history_len);
-}
+  public:
+    typedef IdealSensorHarvardMitigationParams Params;
 
-void
-IdealSensor::regStats(){
-    PPredUnit::regStats();
-}
+    /**
+     * @param params The params object, that has the size of the BP and BTB.
+     */
+    IdealSensorHarvardMitigation(const Params *p);
 
-int
-IdealSensor::voltage_to_bucket(float voltage){
-  return (int) ((voltage - voltage_min) / bucket_len);
-}
+    /**
+     * Registers statistics.
+     */
+    void regStats() override;
 
-void
-IdealSensor::tick(void){
-  bool ve = false;
-  bool prediction = false;
-  voltage_history.push_front(voltage_to_bucket(supply_voltage));
-  voltage_history.pop_back();
+    /**
+     * Update the Harvard State Machine.
+     */
+    void tick(void);
 
-  set_vhistory::const_iterator got = voltage_history_table.find(voltage_history);
+  protected:
+    /** Hysteresis level */
+    double hysteresis;
 
-  if (got != voltage_history_table.end()){
-    prediction = true; 
-  }
+    /** # Cycles to throttle */
 
-  // if (supply_voltage < threshold && supply_voltage_prev > threshold){
-  //   prediction = true; 
-  // } 
-
-  if (supply_voltage < emergency && supply_voltage_prev > emergency){
-    ve = true;
-  } 
-  update_stats(prediction, ve);
-
-  if (is_ve_missed()){
-    voltage_history_table.insert(voltage_history);
-  }
-
-}
-
-IdealSensor*
-IdealSensorParams::create(){
-  return new IdealSensor(this);
-}
+    /** Throttle after DeCoR rollback */
+    bool throttle_on_restore;
+    int cycles_since_pred;
+    const unsigned int throttle_duration;
+    float threshold;
 
 
+
+  private:
+    enum state_t {
+      NORMAL=1,
+      THROTTLE,
+      EMERGENCY
+    };
+
+    // PPred::TableBloom table;
+    PPred::Table table;
+
+    std::vector<int> prediction_delay;
+    // Counter for # Cycles to delay
+    unsigned int e_count;
+    unsigned int t_count;
+
+    // Permanant Stats:
+    // Num Voltage Emergencies
+    uint64_t num_ve;
+    uint64_t total_misspred;
+    uint64_t total_preds;
+    uint64_t total_pred_action;
+    uint64_t total_pred_inaction;
+};
+
+#endif // __CPU_PRED_HARVARD_HH__

@@ -1,4 +1,4 @@
-#include "cpu/power/IdealSensorHarvardMitigation.hh"
+#include "cpu/power/predictors/harvard_mitigation.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -13,10 +13,9 @@
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-IdealSensorHarvardMitigation::IdealSensorHarvardMitigation(const Params *params): 
+Harvard_Mitigation::Harvard_Mitigation(const Params *params): 
   PPredUnit(params),
-  throttle_duration(params->throttle_duration),
-  threshold(params->threshold)
+  throttle_duration(params->throttle_duration)
 {
     cycles_since_pred = 0;
     table.resize(params->table_size, params->signature_length);
@@ -26,29 +25,27 @@ IdealSensorHarvardMitigation::IdealSensorHarvardMitigation(const Params *params)
     hysteresis = params->hysteresis;
     t_count = 0;
     e_count = 0;
-
 }
 
 void
-IdealSensorHarvardMitigation::regStats(){
+Harvard_Mitigation::regStats(){
     PPredUnit::regStats();
 }
 
 void
-IdealSensorHarvardMitigation::tick(void){
+Harvard_Mitigation::tick(void){
 
   table.tick();
   
   bool ve = false;
-  bool prediction_harvard = false;
-  bool prediction_idealsensor = false;
+  bool prediction = false;
 
   if (hr_updated) {
     PPred::Entry snapshot = history.get_entry();
     if (table.find_variable_signature_len(snapshot)){
       DPRINTF(HarvardPowerPred, "PRED HIGH:  row=%4d: %s\n", table.last_find_index, table[table.last_find_index].to_str().c_str());
       if (table[table.last_find_index].delay == 0){
-        prediction_harvard = true;
+        prediction = true;
         total_pred_action++;
         cycles_since_pred = 0;
         DPRINTF(HarvardPowerPred, "            snapshot: %s\n", snapshot.to_str().c_str());
@@ -70,7 +67,7 @@ IdealSensorHarvardMitigation::tick(void){
   while (it != prediction_delay.end()){
     (*it)--;
     if (*it <= 0){
-      prediction_harvard = true; 
+      prediction = true; 
       DPRINTF(HarvardPowerPred, "PRED HIGH on delay\n");
       cycles_since_pred = 0;
       it = prediction_delay.erase(it);
@@ -79,18 +76,10 @@ IdealSensorHarvardMitigation::tick(void){
       it++;
     }
   }
-
-  //IdealSensor
-  if (supply_voltage < threshold && supply_voltage_prev > threshold){
-    prediction_idealsensor = true; 
-  } 
-  //IdealSensor
-
-  if (supply_voltage < emergency && supply_voltage_prev > emergency){
+  if (supply_voltage < emergency && supply_voltage_prev > emergency) {
     ve = true;
-  } 
+  }
 
-  bool prediction = prediction_harvard || prediction_idealsensor;
   update_stats(prediction, ve);
 
   if (ve) {
@@ -130,9 +119,9 @@ IdealSensorHarvardMitigation::tick(void){
   return;
 }
 
-IdealSensorHarvardMitigation*
-IdealSensorHarvardMitigationParams::create(){
-  return new IdealSensorHarvardMitigation(this);
+Harvard_Mitigation*
+HarvardPowerPredictorMitigationParams::create(){
+  return new Harvard_Mitigation(this);
 }
 
 

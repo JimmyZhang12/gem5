@@ -52,7 +52,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/power/bloomfilter.h"
+#include "cpu/power/predictors/bloomfilter.h"
 #include "cpu/power/event_type.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"

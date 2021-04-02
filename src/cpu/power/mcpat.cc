@@ -100,7 +100,6 @@ Mcpat::run_with_xml(std::string xml_dir, std::string output_path){
     proc_serial_xml->parse(xml_dir);
     proc_serial.init(proc_serial_xml,true);
     
-    std::cout<<"mcpat proc_serial:" << std::endl;
     print_power(proc_serial);
     std::string output_path_serial = output_path + "/out_mcpat_serial.txt";
     save_output(output_path_serial, proc_serial);

@@ -40,7 +40,7 @@
  * Authors: Andrew Smith
  */
 
-#include "cpu/power/prediction_table.hh"
+#include "cpu/power/predictors/prediction_table.hh"
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"

@@ -40,45 +40,77 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __BLOOMFILTER_H__
-#define __BLOOMFILTER_H__
+#include "cpu/power/predictors/prediction_table.hh"
 
-#include <algorithm>
-#include <cassert>
-#include <functional>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/utility.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "debug/PredictionTable.hh"
+#include "python/pybind11/vpi_shm.h"
+#include "sim/stat_control.hh"
 
-template<class T>
-class Bloomfilter {
-  unsigned int n;           // Number of Hash Functions
-  unsigned int size;        // Size of the underlying table
-  unsigned int seed;        // Seed to create offsets from
-  std::vector<int> offset;
-  std::vector<bool> table;
 
-  size_t h(const int offset, const T& val) const;
+PPred::Infinite_Table::Infinite_Table() {}
 
-protected:
+bool
+PPred::Infinite_Table::find(uint64_t pc, std::vector<PPred::event_t> history) {
+  Entry obj = Entry(pc, history);
+  return (this->find(obj));
+}
 
-public:
-  Bloomfilter(unsigned int n = 0,
-              unsigned int size = 0,
-              unsigned int seed = 0);
+bool
+PPred::Infinite_Table::find(const PPred::Entry& obj) {
+  for (int i=0; i<prediction_table.size(); i++){
+    if (prediction_table[i] == obj){
+      last_find_index = i;
+      matches++;
+      return true;
+    }
+  }  
+  last_find_index = -1;
+  misses++;
+  return false;
+}
 
-  bool find(const T obj) const;
+bool
+PPred::Infinite_Table::find(const PPred::Entry& obj, int hamming_distance) {
+  for (int i=0; i<prediction_table.size(); i++){
+    if (prediction_table[i].equals(obj, hamming_distance)){
+      last_find_index = i;
+      matches++;
+      return true;
+    }
+  }  
+  last_find_index = -1;
+  misses++;
+  return false;
+}
 
-  void insert(const T obj);
 
-  void resize(unsigned int n = 3,
-              unsigned int size = 2048,
-              unsigned int seed = 0);
+int
+PPred::Infinite_Table::insert(uint64_t pc, std::vector<PPred::event_t> history) {
+  PPred::Entry obj = Entry(pc, history);
+  return (this->insert(obj));
+}
 
-  void clear();
-};
+int
+PPred::Infinite_Table::insert(const Entry& obj) {
+  insertions++;
+  if (this->find(obj)){
+    prediction_table[last_find_index] = obj;  
+    return last_find_index; 
+  }
+  prediction_table.push_back(obj);
+  return prediction_table.size()-1;
 
-#include "cpu/power/bloomfilter.tcc"
+}
 
-#endif // __BLOOMFILTER_H__
+void
+PPred::Infinite_Table::tick(void) {
+  for (auto it = this->prediction_table.begin(); it != this->prediction_table.end(); it++) {
+    it->tick();
+  }
+}
+

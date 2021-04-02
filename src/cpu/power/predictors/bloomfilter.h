@@ -40,79 +40,45 @@
  * Authors: Andrew Smith
  */
 
-#ifndef __CPU_POWER_HARVARD_HH__
-#define __CPU_POWER_HARVARD_HH__
+#ifndef __BLOOMFILTER_H__
+#define __BLOOMFILTER_H__
 
+#include <algorithm>
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "base/statistics.hh"
-#include "base/types.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/power/history_register.hh"
-#include "cpu/power/ppred_unit.hh"
-#include "cpu/power/prediction_table.hh"
-#include "cpu/static_inst.hh"
-#include "params/IdealSensorHarvardMitigation.hh"
-#include "sim/probe/pmu.hh"
-#include "sim/sim_object.hh"
+template<class T>
+class Bloomfilter {
+  unsigned int n;           // Number of Hash Functions
+  unsigned int size;        // Size of the underlying table
+  unsigned int seed;        // Seed to create offsets from
+  std::vector<int> offset;
+  std::vector<bool> table;
 
-class IdealSensorHarvardMitigation : public PPredUnit
-{
-  public:
-    typedef IdealSensorHarvardMitigationParams Params;
+  size_t h(const int offset, const T& val) const;
 
-    /**
-     * @param params The params object, that has the size of the BP and BTB.
-     */
-    IdealSensorHarvardMitigation(const Params *p);
+protected:
 
-    /**
-     * Registers statistics.
-     */
-    void regStats() override;
+public:
+  Bloomfilter(unsigned int n = 0,
+              unsigned int size = 0,
+              unsigned int seed = 0);
 
-    /**
-     * Update the Harvard State Machine.
-     */
-    void tick(void);
+  bool find(const T obj) const;
 
-  protected:
-    /** Hysteresis level */
-    double hysteresis;
+  void insert(const T obj);
 
-    /** # Cycles to throttle */
+  void resize(unsigned int n = 3,
+              unsigned int size = 2048,
+              unsigned int seed = 0);
 
-    /** Throttle after DeCoR rollback */
-    bool throttle_on_restore;
-    int cycles_since_pred;
-    const unsigned int throttle_duration;
-    float threshold;
-
-
-
-  private:
-    enum state_t {
-      NORMAL=1,
-      THROTTLE,
-      EMERGENCY
-    };
-
-    // PPred::TableBloom table;
-    PPred::Table table;
-
-    std::vector<int> prediction_delay;
-    // Counter for # Cycles to delay
-    unsigned int e_count;
-    unsigned int t_count;
-
-    // Permanant Stats:
-    // Num Voltage Emergencies
-    uint64_t num_ve;
-    uint64_t total_misspred;
-    uint64_t total_preds;
-    uint64_t total_pred_action;
-    uint64_t total_pred_inaction;
+  void clear();
 };
 
-#endif // __CPU_PRED_HARVARD_HH__
+#include "cpu/power/predictors/bloomfilter.tcc"
+
+#endif // __BLOOMFILTER_H__

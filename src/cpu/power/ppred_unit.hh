@@ -44,13 +44,13 @@
 
 #include <deque>
 #include <string>
-#include <queue>
+// #include <queue>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
 
 #include "cpu/inst_seq.hh"
-#include "cpu/power/history_register.hh"
+#include "cpu/power/predictors/history_register.hh"
 #include "cpu/static_inst.hh"
 
 #include "debug/PowerPred.hh"
@@ -133,7 +133,6 @@ class PPredUnit : public ClockedObject
 
     //initialization list params
     SrcClockDomain* sysClkDomain;
-    const int cycle_period;
     const double emergency;
     const double emergency_duration;
     const bool emergency_throttle;

@@ -229,11 +229,14 @@ if options.simpoint_profile:
 system.ppred_stat_clk = SrcClockDomain(clock = options.sys_clock, \
                                    voltage_domain = system.voltage_domain)
 
+
 system.ppred_stat = PPredStat( \
-    cycle_period = options.power_pred_cpu_cycles, \
+    cycles_per_stat_dump = options.power_pred_cycles_per_dump, \
+    num_dumps = options.power_pred_num_dumps, \
     frequency = options.power_pred_cpu_freq, \
     ncores = np, \
     mcpat_output_path = options.mcpat_output_path, \
+    gem5_output_path = options.gem5_output_path, \
     vdc = options.power_pred_voltage, \
     ind = options.pdn_ind, \
     cap = options.pdn_cap,\
@@ -241,6 +244,7 @@ system.ppred_stat = PPredStat( \
     debug_print_delay = options.debug_print_delay, \
     power_start_delay = options.power_start_delay, \
     run_verilog = bool(options.run_verilog_power_sim), \
+    save_data = bool(options.save_data) 
 )
 
 system.ppred_stat.clk_domain = system.ppred_stat_clk
@@ -281,10 +285,9 @@ for i in range(np):
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
-                    emergency = 1.33,
+                    emergency =options.power_pred_voltage_emergency,
                     lead_time_max=50,
                     lead_time_min=0,
                     # Specific
@@ -298,7 +301,6 @@ for i in range(np):
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
@@ -318,7 +320,6 @@ for i in range(np):
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
                     emergency=options.power_pred_voltage_emergency,
@@ -337,10 +338,9 @@ for i in range(np):
             system.cpu[i].powerPred = \
                 powerPredClass(
                     # Base
-                    cycle_period=options.power_pred_cpu_cycles,
                     clk = options.power_pred_cpu_freq,
                     voltage_set=options.power_pred_voltage,
-                    emergency = 1.33,
+                    emergency =options.power_pred_voltage_emergency,
                     emergency_duration=100,
                     signature_length=64,
                     lead_time_max=50,

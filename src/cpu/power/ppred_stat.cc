@@ -31,7 +31,6 @@
 #include "cpu/power/ppred_stat.hh"
 #include "cpu/power/ppred_unit.hh"
 
-#include <algorithm>
 #include <iostream>
 
 #include "arch/isa_traits.hh"
@@ -49,23 +48,27 @@ PPredStat::PPredStat(const PPredStatParams *params)
   : ClockedObject(params),
   tickEvent([this]{ tick(); }, "PPredStat tick", false, Event::Power_Event_Pri),
   powerPred(params->powerpred),
-  cycles(params->cycle_period),
   clkDomain(params->stat_clk_domain),
+  cycles(params->cycles_per_stat_dump),
+  num_dumps(params->num_dumps),
   frequency(params->frequency),
   ncores(params->ncores),
   mcpat_output_path(params->mcpat_output_path),
-  mp(Mcpat(params->powerpred)),
-  _pdn(pdn(params->ind,
-    params->res,
-    params->cap,
-    params->vdc,
-    params->frequency) 
-  ),
-  count(0),
-  max_delay(params->debug_print_delay),
+  gem5_output_path(params->gem5_output_path),
+  debug_print_delay(params->debug_print_delay),
   power_start_delay(params->power_start_delay),
-  count_init(0),
-  run_verilog(params->run_verilog)
+  run_verilog(params->run_verilog),
+  save_data(params->save_data),
+  mp(Mcpat(params->powerpred)),
+  _pdn(
+    pdn(
+      params->ind,
+      params->cap,
+      params->res,
+      params->vdc,
+      params->frequency
+      ) 
+  )
  { 
   xml_path = mcpat_output_path + "/serial_mp.xml";
   first_time = true;
@@ -96,30 +99,38 @@ PPredStat::tick(void){
     if (!mcpat_ready){
       Stats::pythonGenerateXML();
       mp.init(xml_path);
-      mcpat_ready = true;
       powerPred->ppred_stat = this; //powerpred needs to get voltages/currents
       if(run_verilog){
         static_cast<void>(run_debug()); 
       }
+      mcpat_ready = true;
     }
 
     mp.init_wrapper(xml_path, mcpat_output_path);
-    // auto stop = high_resolution_clock::now(); 
-    // auto duration = duration_cast<microseconds>(stop - start); 
-    // std::cout <<"init_wrapper:" <<duration.count() << endl; 
     current = _pdn.get_current(mp.power);
     voltage = _pdn.get_voltage(mp.power);
+
+
+    if(save_data){
+      if (count == cycles*num_dumps){
+        power_data.data_to_file(gem5_output_path, "power");
+      }
+      else{
+        power_data.save_data(mp.power);
+      }
+    }
 
     //dump every cycle number of ticks
     if (count % cycles == 0){
       Stats::dump();
     }
 
-    if (max_delay > 0){
-      run_debug();
-    }
-  } //pythonGetProfiling()
+    if (debug_print_delay > 0)
+      run_debug(); //also does a reset
 
+
+
+  } //pythonGetProfiling()
   else{
       count_init++;
       if (count_init > power_start_delay && power_start_delay>=0){
@@ -147,10 +158,9 @@ PPredStat::get_begin() const {
 
 void
 PPredStat::run_debug() {
-  std::cout<<"*****CYCLE: " << count << " *****" << std::endl;
-
+  std::cout<<"**********CYCLE: " << count << " *****" << std::endl;
+  std::cout<<"******mcpat proc_internal:" << std::endl;
   mp.save_output(mcpat_output_path);
-  std::cout<<"mcpat proc_internal:" << std::endl;
   mp.print_power();
 
   std::cout << "---power = :" << mp.power << "\n";
@@ -158,7 +168,12 @@ PPredStat::run_debug() {
   std::cout << "---supply_voltage = :" << voltage << "\n";
 
   if(run_verilog){
+    _pdn.print_params();
+    std::cout<<"******mcpat proc external:" << std::endl;
     double verilog_power = Stats::runVerilog();
+    std::cout << "---verilog_power = :" << verilog_power << "\n";
+
+    std::cout<<"******mcpat internal w serialization:" << std::endl;
     std::string xml_path_serial = mcpat_output_path + "/mp.xml";
     verilog_power = mp.run_with_xml(xml_path_serial, mcpat_output_path);
 
@@ -167,19 +182,22 @@ PPredStat::run_debug() {
     mp.stat_storage_prev = Mcpat::_stat_storage_prev();
     mp.proc.XML->reset_stats();  
 
-    std::cout << "---verilog_power = :" << verilog_power << "\n";
 
-    if (std::abs(verilog_power - mp.power) > 0.1){
-      std::cout << '\n' << "Press a key to continue...";
-      do {
-      } while (cin.get() != '\n');   
-    }  
+    // if (std::abs(verilog_power - mp.power) > 0.1){
+    //   std::cout << '\n' << "Press a key to continue...";
+    //   do {
+    //   } while (cin.get() != '\n');   
+    // }  
   }
-  else{
-    std::cout << '\n' << "Press a key to continue...";
+  std::cout << '\n' << "Press a key to continue...";
     do {
     } while (cin.get() != '\n'); 
-  }
+  // else{
+  //   std::cout << '\n' << "Press a key to continue...";
+  //   do {
+  //   } while (cin.get() != '\n'); 
+  // }
+
 }
 
 

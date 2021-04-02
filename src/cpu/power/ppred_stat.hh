@@ -31,7 +31,6 @@
 #ifndef __PPRED_STAT_DUMP_HH__
 #define __PPRED_STAT_DUMP_HH__
 
-#include <iostream>
 #include <string>
 #include <cmath>
 
@@ -39,7 +38,7 @@
 #include "base/types.hh"
 
 #include "cpu/inst_seq.hh"
-#include "cpu/power/history_register.hh"
+#include "cpu/power/predictors/history_register.hh"
 #include "cpu/static_inst.hh"
 
 // #include "debug/PowerPred.hh"
@@ -52,6 +51,7 @@
 
 #include "mcpat.hh"
 #include "pdn.hh"
+#include "write_data.hh"
 
 class PPredUnit;//forward declare to avoid circular includes
 
@@ -89,52 +89,46 @@ class PPredStat : public ClockedObject
 
   private:
 
+    void run_debug();
+
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
     PPredUnit* powerPred;
-
-    /** Cycles between stat dumps */
-    unsigned int cycles;
-
-    /** Clock Domain */
     SrcClockDomain* clkDomain;
 
-    /** Freq */
+    /** Cycles between stat dumps */
+    const unsigned int cycles;
+    const unsigned int num_dumps;
     double frequency;
-
-    /** Ncores */
     double ncores;
 
-    std::string mcpat_output_path;
-
+    const std::string mcpat_output_path;
+    const std::string gem5_output_path;
     std::string xml_path;
 
     /** Time */
     bool first_time;
 
-    bool mcpat_ready;
 
-    /** Flag to signal the PPred testing can begin */
-    bool begin;
+
+    const int debug_print_delay;
+    const int power_start_delay;
+    const bool run_verilog;
+    const bool save_data;
 
     Mcpat mp;
-
     pdn _pdn;
-
-    int count = 0;
-
-    int max_delay;
-
-    int power_start_delay;
-    unsigned int count_init = 0;
-
-    bool run_verilog;
-
-    void run_debug();
+    SaveData power_data;
 
     double voltage;
     double current;
+
+    bool mcpat_ready=false;
+    unsigned int count_init = 0;
+    int count = 0;
+    /** Flag to signal the PPred testing can begin */
+    bool begin = false;
 
     
 };

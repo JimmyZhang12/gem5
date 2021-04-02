@@ -1,4 +1,6 @@
 #include "pdn.hh"
+#include "debug/PPredStat.hh"
+#include <iostream>
 
 
 pdn::pdn(double _L, double _C, double _R, double _VDC, double _CLK) :
@@ -43,4 +45,12 @@ void
 pdn::clk_throttle(double throttled_CLK){
     this->CLK = throttled_CLK;
     this->ts = 1/throttled_CLK;
+}
+
+void
+pdn::print_params(){
+    // std::cout << "---PDN L = :" << this->L << "\n";
+    // std::cout << "---PDN C = :" << this->C << "\n";
+    // std::cout << "---PDN R = :" << this->R << "\n";
+    std::cout << "---PDN Clk = :" << this->CLK << "\n";
 }

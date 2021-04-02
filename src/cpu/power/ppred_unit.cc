@@ -55,7 +55,6 @@
 
 PPredUnit::PPredUnit(const Params *params):ClockedObject(params),
     sysClkDomain(params->sys_clk_domain),
-    cycle_period(params->cycle_period),
     emergency(params->emergency),
     emergency_duration(params->emergency_duration),
     emergency_throttle(params->emergency_throttle),

@@ -445,7 +445,7 @@ def dump(root=None, exit=False):
     # max_instr = options.power_profile_instrs
     max_dump = options.power_profile_duration
 
-    print("Num Dumps: ",numDump, "Committed Instrs: ",  committedInstrs)
+    print("Num Dumps: ",numDump)
 
     if(numDump == max_dump or exit):
         print("Ending after "+str(numDump)+

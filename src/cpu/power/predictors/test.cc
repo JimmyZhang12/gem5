@@ -40,77 +40,80 @@
  * Authors: Andrew Smith
  */
 
-#include "cpu/power/prediction_table.hh"
+
+#include "cpu/power/predictors/test.hh"
+
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "debug/PredictionTable.hh"
+#include "debug/TestPowerPred.hh"
 #include "python/pybind11/vpi_shm.h"
 #include "sim/stat_control.hh"
 
-PPred::Entry::Entry(int size) {
-  anchor_pc = 0;
-  history.resize(size, DUMMY_EVENT);
-  last_updated = 0;
-  access_count = 0;
-  delay = 0;
+Test::Test(const Params *params)
+    : PPredUnit(params)
+{
+    DPRINTF(TestPowerPred, "Test::Test()\n");
+    threshold = params->threshold;
+    num_ve = 0;
+    num_threshold = 0;
+    ve = false;
+    th = false;
 }
-
-PPred::Entry::Entry(uint64_t anchor_pc, std::vector<PPred::event_t> history) {
-  this->anchor_pc = anchor_pc;
-  this->history = history;
-  last_updated = 0;
-  access_count = 0;
-  delay = 0;
-}
-
-bool
-PPred::Entry::operator==(const PPred::Entry& obj) {
-  return this->anchor_pc == obj.anchor_pc && this->history == obj.history;
-}
-
-bool
-PPred::Entry::match(uint64_t pc, std::vector<PPred::event_t> history) {
-  return this->anchor_pc == pc && this->history == history;
-}
-
-bool
-PPred::Entry::equals(const PPred::Entry& entry, int hamming_distance){
-  if (this->history.size() != entry.get_history_size())
-    return false;
-  
-  int diffs = 0;
-  for (int i=0; i<this->history.size(); i++){
-    if (this->history[i] !=  entry.get_history_element(i))
-      diffs+=1;
-  }
-
-  if (diffs > hamming_distance)
-    return false;
-  else
-    return true;
-}
-
-
 
 void
-PPred::Entry::update(uint64_t pc, std::vector<PPred::event_t> history) {
-  this->anchor_pc = pc;
-  this->history = history;
-  last_updated = 0;
-  access_count = 0;
+Test::regStats()
+{
+    PPredUnit::regStats();
+    nve
+        .name(name() + ".num_ve")
+        .desc("Num Voltage Emergencies")
+        ;
+    nth
+        .name(name() + ".num_tc")
+        .desc("Num Threshold Crossings")
+        ;
 }
 
-std::string
-PPred::Entry::to_str() {
-  std::string ret;
+void
+Test::tick(void)
+{
+  DPRINTF(TestPowerPred, "Test::lookup()\n");
+  update_stats(false,false);
+  if (supply_voltage >= emergency) {
+    ve = false;
+  }
+  if (supply_voltage >= threshold) {
+    th = false;
+  }
+  if (supply_voltage < emergency) {
+    if (!ve) {
+      num_ve++;
+    }
+    ve = true;
+  }
+  if (supply_voltage < threshold) {
+    if (!th) {
+      num_threshold++;
+    }
+    th = true;
+  }
 
-  // std::cout << anchor_pc << "," << last_updated << "," << access_count;
-  ret += (std::to_string(anchor_pc) + ": ");
-  for (auto i : history) 
-    ret += (event_t_name[i] + ", ");
-  return ret;
+  // Assign Permanant stats:
+  nve = num_ve;
+  nth = num_threshold;
+  return;
 }
+
+Test*
+TestParams::create()
+{
+  return new Test(this);
+}
+

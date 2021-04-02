@@ -1,0 +1,25 @@
+Import('*')
+
+if env['TARGET_ISA'] == 'null':
+    Return()
+
+
+DebugFlag('PowerPred')
+DebugFlag('HarvardPowerPred')
+DebugFlag('IdealSensor')
+DebugFlag('PredictionTable')
+DebugFlag('HistoryRegister')
+DebugFlag('TestPowerPred')
+
+Source('test.cc')
+Source('harvard.cc')
+Source('harvard_mitigation.cc')
+Source('ideal_sensor.cc')
+Source('IdealSensorHarvardMitigation.cc')
+
+Source('prediction_table.cc')
+Source('prediction_cam_table.cc')
+Source('prediction_inf_table.cc')
+Source('table_entry.cc')
+Source('history_register.cc')
+

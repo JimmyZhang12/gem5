@@ -5,6 +5,7 @@ class pdn{
         double get_voltage(double current);
         double get_current(double power);
         void clk_throttle(double throttled_CLK);
+        void print_params();
 
     private:
         double vout_2_cycle_ago;

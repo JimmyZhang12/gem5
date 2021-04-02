@@ -13,7 +13,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/power/event_type.hh"
 #include "cpu/power/ml/array.h"
-#include "cpu/power/prediction_table.hh"
+#include "cpu/power/predictors/prediction_table.hh"
 #include "cpu/static_inst.hh"
 #include "sim/sim_object.hh"
 

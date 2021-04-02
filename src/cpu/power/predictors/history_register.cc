@@ -1,4 +1,4 @@
-#include "cpu/power/history_register.hh"
+#include "cpu/power/predictors/history_register.hh"
 
 #include <cmath>
 #include <iostream>

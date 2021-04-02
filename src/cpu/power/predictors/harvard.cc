@@ -41,7 +41,7 @@
  */
 
 
-#include "cpu/power/harvard.hh"
+#include "cpu/power/predictors/harvard.hh"
 
 #include <algorithm>
 #include <cassert>
